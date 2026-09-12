@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Exposing Home Assistant remotely using a Cloudflare Tunnel without open firewall ports, debugging container DNS resolution, and correcting proxy headers.">
+  <link rel="icon" href="../../assets/img/logo.png">
+  <title>Home Assistant Remote Access via Cloudflare Tunnel — ERI / CLI</title>
+  <link rel="stylesheet" href="../../assets/css/style.css">
+  <script defer src="../../assets/js/pages.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#article">Skip to article</a>
+  <header class="site-head">
+    <a class="brand" href="../../index.html" aria-label="ERI / CLI home"><img src="../../assets/img/logo.png" alt=""></a>
+    <nav class="site-nav" aria-label="Primary navigation">
+      <a href="../../projects.html">Projects</a>
+      <a href="../../about.html">About</a>
+      <a href="../../blog/index.html" aria-current="page">Blog</a>
+    </nav>
+  </header>
+
+  <main class="page-main reader-page" id="article">
+    <article>
+      <header class="reader-head three-grid">
+        <p class="reader-meta meta">Homelab<br><time datetime="2026-06-07">07 Jun 2026</time><br>2 min read</p>
+        <h1 class="page-title">Home Assistant Remote Access via Cloudflare Tunnel</h1>
+      </header>
+
+      <div class="reader-cut" aria-hidden="true">
+        <div class="lattice-host reader-lattice" data-lattice="reader"></div>
+      </div>
+
+      <div class="reader-body three-grid" id="article-body">
+        <div class="reader-prose">
+          <p class="reader-lede">Exposing Home Assistant for secure external access without forwarding router ports led to deploying <code>cloudflared</code> alongside Home Assistant in Docker, routing <code>ha.n5hq.me</code> to the local web interface.</p>
+          <h2>The 502 Bad Gateway</h2>
+          <p>The initial deployment returned a 502 Bad Gateway. In the Cloudflare Zero Trust tunnel configuration, the service URL was set to <code>http://homeassistant:8123</code> using the Docker container name. Because both containers ran with <code>network_mode: host</code>, Docker&#39;s internal bridge DNS was not active, preventing container name resolution. Updating the tunnel target to <code>http://localhost:8123</code> and restarting the tunnel resolved transport to the host.</p>
+          <p>However, requests continued to fail with 502 while <code>cloudflared</code> produced no access logs. Restarting the tunnel daemon with <code>--protocol http2 --loglevel debug</code> revealed that incoming requests were reaching the host, but Home Assistant was actively returning HTTP 400 Bad Request.</p>
+          <h2>Resolving Reverse Proxy Configuration</h2>
+          <p>Three separate configuration issues inside Home Assistant were rejecting the proxied requests:</p>
+          <ol><li><code>trusted_proxies</code> in <code>configuration.yaml</code> was set to <code>x.x.0.3</code>, an obsolete Docker bridge IP from an earlier installation.</li><li>When attempting to correct the IP address, a typographical error (<code>172.0.0.1</code> instead of <code>127.0.0.1</code>) kept the reverse proxy untrusted after a restart.</li><li><code>external_url</code> was unconfigured, causing Home Assistant&#39;s HTTP integration to drop requests where the incoming <code>Host</code> header (<code>ha.n5hq.me</code>) did not match any permitted domain.</li></ol>
+          <p>Correcting <code>trusted_proxies</code> to include <code>127.0.0.1</code> and <code>::1</code>, setting <code>use_x_forwarded_for: true</code>, defining <code>external_url: &quot;https://ha.n5hq.me&quot;</code>, and restarting Home Assistant cleared all 400 errors. External requests through the Cloudflare Tunnel established clean connections immediately.</p>
+          <h2>Next Steps</h2>
+          <p>With external transport established, subsequent work involves configuring Cloudflare Access policies for multi-factor authentication in front of the tunnel and exposing Immich using the same <code>cloudflared</code> instance.</p>
+        </div>
+      </div>
+    </article>
+
+    <nav class="reader-nav three-grid" aria-label="Article navigation">
+      <a href="../../blog/index.html">Back to Blog</a>
+      <div class="reader-adjacent"><a class="adjacent-post newer-post" href="../../blog/building-momentum-homelab-services-website-launch/index.html"><span class="meta">Newer</span>Deploying the Homelab Observability Stack and Initial Portfolio Site</a></div>
+    </nav>
+  </main>
+
+  <footer class="site-foot">
+    <p class="foot-home meta">ERI / CLI<br>Blog</p>
+    <a class="foot-contact" href="mailto:helloworld@n5hq.me">helloworld@n5hq.me</a>
+    <nav class="foot-links" aria-label="Footer navigation"><a href="../../projects.html">Projects</a><a href="../../about.html">About</a><a href="https://github.com/aerwk">GitHub</a></nav>
+  </footer>
+</body>
+</html>

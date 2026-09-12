@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Migrating 135GB of Immich photo data from a bus-powered external SSD to a network-attached storage pool, diagnosing USB link dropouts during sustained transfers, and verifying file counts.">
+  <link rel="icon" href="../../assets/img/logo.png">
+  <title>Migrating Immich Storage to the NAS and Diagnosing USB Bus Dropouts — ERI / CLI</title>
+  <link rel="stylesheet" href="../../assets/css/style.css">
+  <script defer src="../../assets/js/pages.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#article">Skip to article</a>
+  <header class="site-head">
+    <a class="brand" href="../../index.html" aria-label="ERI / CLI home"><img src="../../assets/img/logo.png" alt=""></a>
+    <nav class="site-nav" aria-label="Primary navigation">
+      <a href="../../projects.html">Projects</a>
+      <a href="../../about.html">About</a>
+      <a href="../../blog/index.html" aria-current="page">Blog</a>
+    </nav>
+  </header>
+
+  <main class="page-main reader-page" id="article">
+    <article>
+      <header class="reader-head three-grid">
+        <p class="reader-meta meta">Homelab<br><time datetime="2026-06-28">28 Jun 2026</time><br>2 min read</p>
+        <h1 class="page-title">Migrating Immich Storage to the NAS and Diagnosing USB Bus Dropouts</h1>
+      </header>
+
+      <div class="reader-cut" aria-hidden="true">
+        <div class="lattice-host reader-lattice" data-lattice="reader"></div>
+      </div>
+
+      <div class="reader-body three-grid" id="article-body">
+        <div class="reader-prose">
+          <p class="reader-lede">Migrating Immich photo storage from an external SSD to a network-attached storage pool relocated 135GB of media onto larger shared storage while exposing physical USB link instability under sustained load.</p>
+          <h2>Storage Scope and Architecture</h2>
+          <p>The photo library had initially been hosted on a bus-powered Samsung T7 Shield external SSD mounted at <code>/mnt/tmpnas</code>. To consolidate media onto a primary storage pool, Immich was re-targeted to <code>/mnt/ugnas01-personal</code>.</p>
+          <p>An inventory of dependencies confirmed the migration boundary:</p>
+          <ul><li>The external SSD held the 135GB Immich library directory along with two empty Samba shares (<code>/etc/samba/smb.conf</code>).</li><li>The PostgreSQL database and machine learning models were already running on the server&#39;s internal NVMe drive, keeping stateful transaction data off external drives.</li><li>The only configurations requiring modification were Immich&#39;s <code>UPLOAD_LOCATION</code> environment variable, container bind-mounts, <code>/etc/fstab</code>, and Samba shares.</li></ul>
+          <h2>Diagnosing Source Storage Dropouts</h2>
+          <p>Initiating the data copy to the NAS produced severe transfer degradation. While baseline write benchmarks to the NAS exceeded 190 MB/s, file transfer rates collapsed to individual files taking up to thirty seconds.</p>
+          <p>Analysis of kernel logs (<code>dmesg</code>) revealed that the source ext4 filesystem on <code>/dev/sdb</code> had remounted into <code>emergency_ro,shutdown</code> after logging unrecoverable I/O errors. The external drive was dropping off the USB bus entirely and re-enumerating under incrementing device numbers (<code>005</code>, <code>006</code>, <code>007</code>).</p>
+          <p>SMART telemetry confirmed that the NAND flash itself was completely healthy: 0% wear indicators and <code>PASSED</code> status across all health metrics. A filesystem check (<code>fsck</code>) required only replaying the ext4 journal, verifying that all 121,599 files remained uncorrupted.</p>
+          <p>The failure was physical USB bus instability under sustained throughput. The drive was stopped, unmounted, and reconnected using a verified USB cable attached directly to a rear motherboard USB 3.2 port. Re-executing the transfer with the new cable sustained a steady 107 MB/s without error.</p>
+          <h2>Verification and Decommissioning</h2>
+          <p>Following the physical cable swap, Immich was stopped to ensure point-in-time consistency. Data was synchronized via <code>rsync</code> with strict file-by-file count verification:</p>
+          <ul><li>Library directory: 25,125 files source, 25,125 files destination.</li><li>Thumbnails directory: 49,341 files source, 49,341 files destination.</li><li>Encoded video, automated backup archives, and upload profiles matched exactly.</li></ul>
+          <p><code>UPLOAD_LOCATION</code> was repointed to the NAS path, and the container stack was brought online. API healthchecks responded immediately, with new uploads writing directly to the network pool.</p>
+          <p>Following successful validation, the stale local SSD data was purged, the temporary Samba configurations were validated with <code>testparm</code> and removed, and the fstab entry was deleted.</p>
+          <h2>Pending Verification</h2>
+          <ul><li>Configure off-host scheduled backups for the NAS storage pool, which currently runs without parity redundancy.</li><li>Monitor long-term transfer stability on the replacement USB interface.</li></ul>
+        </div>
+      </div>
+    </article>
+
+    <nav class="reader-nav three-grid" aria-label="Article navigation">
+      <a href="../../blog/index.html">Back to Blog</a>
+      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/taking-the-email-off-the-page-and-knowing-when-to-undo-a-logo/index.html"><span class="meta">Older</span>Masking Contact Form Endpoints, Adding Blog Category Filters, and Reverting a Header Logo</a><a class="adjacent-post newer-post" href="../../blog/twenty-five-containers-updated-and-the-cleanup-that-ate-my-rollback/index.html"><span class="meta">Newer</span>Updating Twenty-Five Containers, Docker Image Pruning, and Upstream Build Failures</a></div>
+    </nav>
+  </main>
+
+  <footer class="site-foot">
+    <p class="foot-home meta">ERI / CLI<br>Blog</p>
+    <a class="foot-contact" href="mailto:helloworld@n5hq.me">helloworld@n5hq.me</a>
+    <nav class="foot-links" aria-label="Footer navigation"><a href="../../projects.html">Projects</a><a href="../../about.html">About</a><a href="https://github.com/aerwk">GitHub</a></nav>
+  </footer>
+</body>
+</html>

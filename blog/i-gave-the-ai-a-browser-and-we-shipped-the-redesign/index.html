@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Integrating Playwright and headless Chromium into the development workflow to catch layout bugs, font rendering issues, and responsive stylesheet regressions.">
+  <link rel="icon" href="../../assets/img/logo.png">
+  <title>Automating Frontend Visual Verification with Headless Chromium — ERI / CLI</title>
+  <link rel="stylesheet" href="../../assets/css/style.css">
+  <script defer src="../../assets/js/pages.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#article">Skip to article</a>
+  <header class="site-head">
+    <a class="brand" href="../../index.html" aria-label="ERI / CLI home"><img src="../../assets/img/logo.png" alt=""></a>
+    <nav class="site-nav" aria-label="Primary navigation">
+      <a href="../../projects.html">Projects</a>
+      <a href="../../about.html">About</a>
+      <a href="../../blog/index.html" aria-current="page">Blog</a>
+    </nav>
+  </header>
+
+  <main class="page-main reader-page" id="article">
+    <article>
+      <header class="reader-head three-grid">
+        <p class="reader-meta meta">Projects<br><time datetime="2026-07-13">13 Jul 2026</time><br>2 min read</p>
+        <h1 class="page-title">Automating Frontend Visual Verification with Headless Chromium</h1>
+      </header>
+
+      <div class="reader-cut" aria-hidden="true">
+        <div class="lattice-host reader-lattice" data-lattice="reader"></div>
+      </div>
+
+      <div class="reader-body three-grid" id="article-body">
+        <div class="reader-prose">
+          <p class="reader-lede">Iterating on website layout and responsive design manually created an inspection bottleneck during rapid development.</p>
+          <p>To eliminate guesswork, Playwright and headless Chromium were deployed on the development server, allowing automated full-page screenshot capture across various viewport dimensions.</p>
+          <p>The automated visual tests immediately caught an issue invisible in text diffs: an exotic Unicode character used for the square meter symbol (<code>m²</code>) failed to render, displaying an empty tofu glyph for clients without specialized fonts installed. Replacing the symbol with standard semantic markup resolved the rendering bug across all browsers.</p>
+          <h2>Stylesheet Caching and Component Sizing</h2>
+          <p>Rebuilding the footer layout to follow a clean card structure revealed a caching pitfall. On initial load, social media icons rendered at viewport width because the browser retained an earlier cached stylesheet that lacked explicit dimensions for new SVG elements.</p>
+          <p>The issue was resolved with two measures:</p>
+          <ol><li>Declaring hardcoded width and height attributes directly on SVG markup to guarantee baseline sizing before styles load.</li><li>Adding asset version query parameters to stylesheet links to invalidate stale client caches on updates.</li></ol>
+          <p>During this pass, internal homelab navigation links were moved out of the primary header and placed into the footer to reserve the main navigation for visitors.</p>
+          <h2>Visual Design and Interactive Scenes</h2>
+          <p>The About section background was updated with a dynamic 3D scene: a rotating server rack model paired with a canvas-rendered duotone projection of NASA&#39;s Blue Marble map. The scene maps real-time scroll position to axial rotation, using layered cloud textures to give depth to the sphere. Patch cable arcs connect rack port nodes to geographic coordinates on the globe surface.</p>
+          <h2>Homelab Metrics Automation</h2>
+          <p>The homelab overview page was transitioned from generic text blocks to an infrastructure ledger. The page displays a hardware rack photograph alongside live metrics: 7 Compose stacks, 27 running containers, 39 images, 11 volumes, and 12 networks. These statistics are queried directly from the local Docker daemon by an automated pre-commit hook, ensuring published figures match production deployments without manual data entry.</p>
+          <p>The updated design was deployed to production and verified across desktop and mobile viewports with clean cache invalidation.</p>
+        </div>
+      </div>
+    </article>
+
+    <nav class="reader-nav three-grid" aria-label="Article navigation">
+      <a href="../../blog/index.html">Back to Blog</a>
+      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/two-rooms-that-turn-themselves-off-once-i-worked-out-what-they-were-called/index.html"><span class="meta">Older</span>Home Assistant Occupancy Automation, Gateway Ingress Audit, and Blind CSS Refactoring</a><a class="adjacent-post newer-post" href="../../blog/discord-in-linux-isos-out/index.html"><span class="meta">Newer</span>Automating Media Ingestion Routing and Open-Sourcing Disclaude Sesh</a></div>
+    </nav>
+  </main>
+
+  <footer class="site-foot">
+    <p class="foot-home meta">ERI / CLI<br>Blog</p>
+    <a class="foot-contact" href="mailto:helloworld@n5hq.me">helloworld@n5hq.me</a>
+    <nav class="foot-links" aria-label="Footer navigation"><a href="../../projects.html">Projects</a><a href="../../about.html">About</a><a href="https://github.com/aerwk">GitHub</a></nav>
+  </footer>
+</body>
+</html>

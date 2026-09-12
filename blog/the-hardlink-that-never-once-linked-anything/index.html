@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Diagnosing 229 GB of silent file duplication across SSHFS mounts, pinning Maintainerr versions, and backing up Grafana, Prometheus, and Loki volumes ahead of node migration.">
+  <link rel="icon" href="../../assets/img/logo.png">
+  <title>Cross-Protocol Hardlink Limitations and Monitoring Migration Planning — ERI / CLI</title>
+  <link rel="stylesheet" href="../../assets/css/style.css">
+  <script defer src="../../assets/js/pages.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#article">Skip to article</a>
+  <header class="site-head">
+    <a class="brand" href="../../index.html" aria-label="ERI / CLI home"><img src="../../assets/img/logo.png" alt=""></a>
+    <nav class="site-nav" aria-label="Primary navigation">
+      <a href="../../projects.html">Projects</a>
+      <a href="../../about.html">About</a>
+      <a href="../../blog/index.html" aria-current="page">Blog</a>
+    </nav>
+  </header>
+
+  <main class="page-main reader-page" id="article">
+    <article>
+      <header class="reader-head three-grid">
+        <p class="reader-meta meta">Homelab<br><time datetime="2026-08-21">21 Aug 2026</time><br>3 min read</p>
+        <h1 class="page-title">Cross-Protocol Hardlink Limitations and Monitoring Migration Planning</h1>
+      </header>
+
+      <div class="reader-cut" aria-hidden="true">
+        <div class="lattice-host reader-lattice" data-lattice="reader"></div>
+      </div>
+
+      <div class="reader-body three-grid" id="article-body">
+        <div class="reader-prose">
+          <p class="reader-lede">Homelab maintenance on August 21 addressed two primary tracks: diagnosing silent file duplication across media services, and planning the migration of the monitoring stack off the primary host.</p>
+          <h2>Diagnosing hardlink failures across SSHFS mounts</h2>
+          <p>Research into automating disk maintenance with Maintainerr prompted an audit of existing library storage utilization. Both Radarr and Sonarr were configured with <code>copyUsingHardlinks: true</code> under the expectation that completed downloads and library entries shared identical filesystem inodes.</p>
+          <p>Inspecting files via <code>stat</code> disproved this assumption: library files and completed download files showed a link count of <code>Links: 1</code> rather than <code>Links: 2</code>, indicating two distinct copies of identical data.</p>
+          <p>The failure stems from underlying transport limitations: the path connecting download directories to the library is mounted via <code>sshfs</code> over SFTP. Because the SFTP protocol lacks remote hardlink primitives, requests to create hardlinks fall back silently to full file copies without logging errors. Consequently, removing items from media managers freed only the library copy while leaving the download copy intact, resulting in 229 GB of unmanaged duplicate storage across both libraries.</p>
+          <p>This finding altered the disk maintenance plan: running cleanup automation before resolving underlying filesystem duplication would have addressed only half the consumed storage.</p>
+          <h2>Version pinning rationale for Maintainerr</h2>
+          <p>Evaluating Maintainerr deployment required establishing version pinning practices. The service was configured with <code>ghcr.io/jorenn92/maintainerr:v3.24.0</code> rather than <code>:latest</code>.</p>
+          <p>This pinning decision was driven by upstream architecture: the v3.0.0 release introduced structural schema migrations, and subsequent minor releases in the v3.x series included breaking changes relative to v2.x. While legacy services in the stack (Radarr, Sonarr, Tautulli, Bazarr) historically operated on <code>:latest</code>, Maintainerr deployment manifests explicitly pinned the tested release tag to prevent unintended container updates from executing unreviewed database migrations.</p>
+          <h2>Pre-migration audit of monitoring containers</h2>
+          <p>Planning the migration of nine monitoring containers from the primary host to a guest on the second node surfaced two operational dependencies during architectural review:</p>
+          <ol><li><strong>Entity ID coupling in Home Assistant</strong>: Approximately 66 Home Assistant automation entities were bound to numeric Uptime Kuma monitor IDs rather than hostnames or URLs. Deleting and recreating monitors would generate new IDs, causing automations to fail silently. The migration procedure was updated to require in-place configuration edits rather than recreation.</li><li><strong>Unexported Grafana dashboards</strong>: Approximately 15 operational dashboards existed solely inside the Grafana container data volume, without Git repository backups or automated JSON exports. A volume removal during container recreation would result in unrecoverable dashboard loss.</li></ol>
+          <h2>Verifying monitoring volume snapshots</h2>
+          <p>Ahead of container migration, root-owned data volumes for the monitoring stack were backed up to external storage using a privileged helper container:</p>
+          <ul><li><strong>Prometheus TSDB</strong>: 2.85 GB</li><li><strong>Grafana</strong>: 95 MB</li><li><strong>Loki</strong>: 194 MB</li></ul>
+          <p>SHA256 checksums on source and destination archives matched exactly, and archive structures were verified: Prometheus contained valid ULID blocks, Grafana preserved its SQLite database file, and Loki retained 22,139 chunk files. A corrupted test archive confirmed the checksum validation script properly threw verification errors. With data volumes securely captured, migration of the monitoring containers to the secondary node was staged for the following maintenance window.</p>
+        </div>
+      </div>
+    </article>
+
+    <nav class="reader-nav three-grid" aria-label="Article navigation">
+      <a href="../../blog/index.html">Back to Blog</a>
+      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/a-regex-ate-half-a-selector-and-css-didnt-complain/index.html"><span class="meta">Older</span>Regex Selector Truncation and Animated Brand Integration</a><a class="adjacent-post newer-post" href="../../blog/every-number-i-started-with-was-measuring-something-else/index.html"><span class="meta">Newer</span>Monitoring Relocation, Linux Memory Pressure Analysis, and Hypervisor Maintenance</a></div>
+    </nav>
+  </main>
+
+  <footer class="site-foot">
+    <p class="foot-home meta">ERI / CLI<br>Blog</p>
+    <a class="foot-contact" href="mailto:helloworld@n5hq.me">helloworld@n5hq.me</a>
+    <nav class="foot-links" aria-label="Footer navigation"><a href="../../projects.html">Projects</a><a href="../../about.html">About</a><a href="https://github.com/aerwk">GitHub</a></nav>
+  </footer>
+</body>
+</html>

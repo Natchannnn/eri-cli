@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Mitigating subshell injection vulnerabilities in automated SSH workflows with forced-command dispatchers, recovering rules from memory buffers, and structuring infrastructure backlogs.">
+  <link rel="icon" href="../../assets/img/logo.png">
+  <title>SSH Command Dispatch Hardening, Context Recovery, and Infrastructure Backlogs — ERI / CLI</title>
+  <link rel="stylesheet" href="../../assets/css/style.css">
+  <script defer src="../../assets/js/pages.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#article">Skip to article</a>
+  <header class="site-head">
+    <a class="brand" href="../../index.html" aria-label="ERI / CLI home"><img src="../../assets/img/logo.png" alt=""></a>
+    <nav class="site-nav" aria-label="Primary navigation">
+      <a href="../../projects.html">Projects</a>
+      <a href="../../about.html">About</a>
+      <a href="../../blog/index.html" aria-current="page">Blog</a>
+    </nav>
+  </header>
+
+  <main class="page-main reader-page" id="article">
+    <article>
+      <header class="reader-head three-grid">
+        <p class="reader-meta meta">Homelab<br><time datetime="2026-07-30">30 Jul 2026</time><br>4 min read</p>
+        <h1 class="page-title">SSH Command Dispatch Hardening, Context Recovery, and Infrastructure Backlogs</h1>
+      </header>
+
+      <div class="reader-cut" aria-hidden="true">
+        <div class="lattice-host reader-lattice" data-lattice="reader"></div>
+      </div>
+
+      <div class="reader-body three-grid" id="article-body">
+        <div class="reader-prose">
+          <p class="reader-lede">A comprehensive infrastructure pass resolved an input-sanitization flaw in automated SSH workflows, restructured operational documentation across thirty runsheets, and established hardened execution boundaries for a planned automated task tracking service.</p>
+          <h2>Context recovery during tooling reinstallation</h2>
+          <p>A maintenance pass to update development skills and configuration rules on the primary workstation exposed a gap in backup coverage. The local skill directory had lagged behind upstream revisions, preventing user-level extensions from loading.</p>
+          <p>Executing an uninstaller purged local directory state under <code>~/.claude/</code>. However, four custom condensed rule files were deleted in the process. Inspecting the 03:02 automated host backup archive revealed that <code>~/.claude/rules</code> had historically been excluded from backup inclusion lists.</p>
+          <p>Fortunately, because the active terminal session had loaded all four rule files into its memory context at initialization, the exact configurations remained present in the active session buffer. The files were restaged directly from memory buffers and archived to an external repository. To prevent future data loss, user configuration directories were explicitly added to the nightly backup manifest, while avoiding divergent local rule customizations in favor of standard upstream packages.</p>
+          <h2>Mitigating subshell injection in automated SSH execution</h2>
+          <p>While auditing the parameter formatting of automated n8n workflows that invoke remote management scripts, I identified a command injection vulnerability.</p>
+          <p>The workflow constructed remote execution strings using JSON stringification:</p>
+          <pre><code class="language-text">n5-doc-stack.sh {{ JSON.stringify($json.body?.project ?? &#39;&#39;) }}</code></pre>
+          <p>While <code>JSON.stringify</code> escapes string boundary quotes, it does not prevent bash subshell interpolation (<code>$(...)</code>). Executing a test payload with <code>$(id -un)</code> caused the remote server to evaluate the subshell and return the host&#39;s administrative username. Because the initiating webhook listener was accessible across the local network without authentication, the injection vector presented a critical privilege escalation risk.</p>
+          <p>Rather than attempting to construct sanitization filters within the workflow engine, I enforced security at the SSH transport layer on the target server. In <code>/root/.ssh/authorized_keys</code>, the automation&#39;s public key was bound to a restricted forced command:</p>
+          <pre><code class="language-text">command=&quot;/usr/local/bin/ssh-dispatch.sh&quot;,no-port-forwarding,no-X11-forwarding,no-pty ssh-ed25519 ...</code></pre>
+          <p>The <code>ssh-dispatch.sh</code> handler intercepts <code>$SSH_ORIGINAL_COMMAND</code> as unparsed text, matches it against a strict whitelist of twelve predetermined commands, and executes corresponding static binaries.</p>
+          <p>During validation, live invocations initially failed because the n8n SSH client prepends <code>cd / ; </code> to all remote command strings by default. Once the dispatcher script was updated to strip and normalize leading shell prefixes, all twenty-four invocation variants (both bare and prefixed) passed verification. Unmatched command attempts trigger rate-limited alerts to a dedicated security monitoring channel.</p>
+          <h2>Automated infrastructure audit and runsheet maintenance</h2>
+          <p>To consolidate technical debt across the homelab, automated agents conducted a read-only audit across all system documentation, operational runsheets, and configuration files, generating <code>BACKLOG.md</code> (761 lines, 124 distinct actionable items). All supporting raw findings (403 cited references across 16 files, totaling 864 KB) were preserved and verified with cryptographic hashes.</p>
+          <p>A review of thirty operational runsheets evaluated proposals to condense historical incident logs:</p>
+          <ul><li><strong>Preserving Negative Evidence</strong>: An initial proposal to purge diagnostic dead-ends was rejected. Documented ruled-out hypotheses—such as records confirming stable 53.4V PoE delivery during hardware restarts—serve as critical negative evidence that prevents engineers from repeating refuted investigations.</li><li><strong>Pruning Stale Material</strong>: A targeted review safely removed 57 lines of obsolete command syntax while establishing static cross-links between runsheets and the central backlog.</li><li><strong>Reconciling Documentation Timestamps</strong>: An apparent conflict between two network audit reports listing different VLAN IDs was resolved by examining commit metadata. The reports had been generated 42 minutes apart, accurately capturing state before and after a planned network renumbering pass.</li></ul>
+          <h2>Repository mirroring and rsync delta performance</h2>
+          <p>To provide offline access to critical upstream dependencies, I configured Forgejo to maintain private mirrors of thirty-eight starred GitHub repositories:</p>
+          <ul><li><strong>Mirror Recovery Verification</strong>: Testing bare repository restoration revealed that invoking <code>git remote update</code> against an uninitialized repository directory fails with <code>no such file or directory</code>. Validated recovery procedures require executing a clean <code>git clone --mirror</code> into the target directory before database re-attachment.</li><li><strong>Incremental Rsync Backups</strong>: Backing up mirror data to the NAS via <code>rsync</code> encountered issues with permission bits and modification timestamps on the remote CIFS/NFS share. Configuring <code>rsync</code> to compare file size (<code>--size-only</code>) resolved synchronization stalls, reducing subsequent backup passes for 3.9 GB of repositories from 32 seconds to a 1.77-second incremental scan.</li><li><strong>SMB Error 1219</strong>: Windows workstation disconnects were traced to orphaned guest IPC$ sessions created during File Explorer browsing, resolved by terminating existing sessions before re-authenticating mapped drives.</li></ul>
+          <h2>Task execution architecture for Planka</h2>
+          <p>I initiated architectural planning for an automated task tracking board using Planka to manage infrastructure workflows.</p>
+          <p>A security review of early designs established strict execution boundaries:</p>
+          <ul><li><strong>Decoupling Authority from Cards</strong>: Rather than embedding execution privileges or script parameters within task card metadata (which risks privilege escalation if unauthorized sessions alter card text), permissions are enforced via immutable, root-owned host configuration files.</li><li><strong>Filesystem Isolation</strong>: Workflows execute within ephemeral containers utilizing read-only volume mounts and drop all supplementary Linux capabilities (<code>NoNewPrivileges=true</code>), ensuring that automated tasks cannot alter underlying host configuration files or hypervisor state.</li></ul>
+        </div>
+      </div>
+    </article>
+
+    <nav class="reader-nav three-grid" aria-label="Article navigation">
+      <a href="../../blog/index.html">Back to Blog</a>
+      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/i-built-a-downloads-sorter-in-six-hours-and-every-bug-in-it-looked-like-working-code/index.html"><span class="meta">Older</span>FileIt: Building a PowerShell Downloads Sorter, Windows Sandbox Harness, and Safe Repository Sanitization</a><a class="adjacent-post newer-post" href="../../blog/the-night-i-learned-a-model-cant-be-trusted-to-report-on-itself/index.html"><span class="meta">Newer</span>Testing Agent Harness Assumptions and Model Self-Reporting Boundaries</a></div>
+    </nav>
+  </main>
+
+  <footer class="site-foot">
+    <p class="foot-home meta">ERI / CLI<br>Blog</p>
+    <a class="foot-contact" href="mailto:helloworld@n5hq.me">helloworld@n5hq.me</a>
+    <nav class="foot-links" aria-label="Footer navigation"><a href="../../projects.html">Projects</a><a href="../../about.html">About</a><a href="https://github.com/aerwk">GitHub</a></nav>
+  </footer>
+</body>
+</html>

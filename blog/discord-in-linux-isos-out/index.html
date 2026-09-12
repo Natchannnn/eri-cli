@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Bridging the final ingestion gap in a media management pipeline with a custom metadata router, tuning indexer network timeouts, and open-sourcing the Disclaude Sesh management bridge.">
+  <link rel="icon" href="../../assets/img/logo.png">
+  <title>Automating Media Ingestion Routing and Open-Sourcing Disclaude Sesh — ERI / CLI</title>
+  <link rel="stylesheet" href="../../assets/css/style.css">
+  <script defer src="../../assets/js/pages.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#article">Skip to article</a>
+  <header class="site-head">
+    <a class="brand" href="../../index.html" aria-label="ERI / CLI home"><img src="../../assets/img/logo.png" alt=""></a>
+    <nav class="site-nav" aria-label="Primary navigation">
+      <a href="../../projects.html">Projects</a>
+      <a href="../../about.html">About</a>
+      <a href="../../blog/index.html" aria-current="page">Blog</a>
+    </nav>
+  </header>
+
+  <main class="page-main reader-page" id="article">
+    <article>
+      <header class="reader-head three-grid">
+        <p class="reader-meta meta">Projects<br><time datetime="2026-07-14">14 Jul 2026</time><br>4 min read</p>
+        <h1 class="page-title">Automating Media Ingestion Routing and Open-Sourcing Disclaude Sesh</h1>
+      </header>
+
+      <div class="reader-cut" aria-hidden="true">
+        <div class="lattice-host reader-lattice" data-lattice="reader"></div>
+      </div>
+
+      <div class="reader-body three-grid" id="article-body">
+        <div class="reader-prose">
+          <p class="reader-lede">My home server manages an automated archival and streaming pipeline for media distros and open-source release images.</p>
+          <p>While requests submitted via Discord routed cleanly through Seerr and downstream fetchers, the final ingestion step required manual intervention: downloads accumulated in generic landing folders rather than populating categorized library sections. Resolving this required developing a custom classification sidecar, tuning indexer fetch limits, and hardening server boot dependencies before packaging the Discord management daemon as an open-source utility.</p>
+          <h2>Eliminating the manual ingestion gap</h2>
+          <p>The media server organizes archives into eight structured categories based on release type and regional origin (feature releases, episodic series, regional foreign language libraries, and a protected family category).</p>
+          <p>The automated fetchers deposited completed downloads into two flat download staging directories that the media server did not monitor. While Seerr provided basic routing rules based on tags and languages, evaluating overlapping attributes—such as animated content originating in Asian languages—lacked deterministic priority handling in documentation.</p>
+          <h2>Deploying an automated classification sidecar</h2>
+          <p>Rather than testing speculative routing configurations against live downloads, I deployed a lightweight classification daemon in Docker. The service runs a Python script on a fifteen-minute polling schedule:</p>
+          <ol><li>Scans staging directories for completed archives.</li><li>Queries the upstream metadata API to parse genre and primary spoken language attributes.</li><li>Maps content deterministically:</li></ol>
+          <p>- Priority 1: Animation tags route directly to the animated library irrespective of source language. - Priority 2: Non-English live-action content routes to designated regional libraries. - Priority 3: English live-action content routes to primary library directories. - Protected family collections remain strictly isolated from automated routing.</p>
+          <ol><li>Executes atomic filesystem renames (<code>os.rename</code>) on the shared backing volume, moving multi-gigabyte archives instantaneously without data duplication.</li><li>Updates downstream fetcher state via REST API calls so the download manager tracks the new destination path without throwing missing file alarms.</li></ol>
+          <p>On its initial test run, the daemon correctly identified and routed pending episodic releases, moving them to their respective destination directories within seconds.</p>
+          <h2>Tuning indexer parameters: Size caps and magnet failover</h2>
+          <p>Investigating intermittent grab failures for large archival packages revealed three configuration bottlenecks:</p>
+          <ol><li><strong>Size Thresholds</strong>: The global download cap had been set to 5 GB, rejecting full-season releases and large distribution ISOs (typically 20–40 GB). I increased the ceiling to 50 GB, preserving protection against bloated spam archives while allowing legitimate bulk releases.</li><li><strong>Bitrate Quality Floors</strong>: Set minimum bitrate constraints to 10 MB per minute to filter low-bitrate transcodes.</li><li><strong>Indexer Mirror Timeouts</strong>: The highest-priority indexer routinely timed out fetching <code>.torrent</code> metadata files from a degraded mirror domain, producing 112-second HTTP connection hangs and placing the indexer into temporary penalty backoffs. Switching the indexer configuration to prioritize direct BitTorrent magnet URIs bypassed the broken HTTP mirrors, dropping grab latency from two minutes to under four seconds.</li></ol>
+          <h2>Unattended reboot validation and systemd mount order</h2>
+          <p>Following configuration updates, I executed an unattended reboot test to verify cold-start reliability across all Docker stacks, network shares, and tunnels.</p>
+          <p>All sixteen system probes returned healthy, but past boots had occasionally suffered from a race condition where the media server and photo daemon started before remote CIFS/NFS mounts were fully mounted by the kernel, presenting empty directories to the containers.</p>
+          <p>To permanently prevent this race, I added a systemd override drop-in for the Docker daemon:</p>
+          <pre><code class="language-ini">[Unit]
+After=remote-fs.target
+Requires=remote-fs.target</code></pre>
+          <p>This configuration ensures Docker delays container initialization until the kernel&#39;s remote filesystem targets are fully mounted and verified.</p>
+          <h2>Open-sourcing Disclaude Sesh</h2>
+          <p>The final phase of the session focused on sanitizing and publishing <code>disclaude-sesh</code>, a two-part bridge that enables managing homelab operations and interactive CLI sessions via Discord bots:</p>
+          <ul><li><strong>Sanitization Pass</strong>: Replaced hardcoded personal server IDs, webhook tokens, local network CIDRs, and absolute directory paths with environment variables and documented configuration templates (<code>config.example.json</code>).</li><li><strong>Security Defaults</strong>: Configured safe defaults out-of-the-box. Administrative privileges, auto-confirmation of destructive actions, and permission bypasses were implemented as explicit opt-in flags with documented security implications.</li><li><strong>Documentation</strong>: Provided two onboarding workflows—a step-by-step manual setup guide for bare-metal configurations, and a standardized deployment prompt for containerized automation.</li></ul>
+          <p>The repository was tagged as version <code>v1.0.0</code>, closing the loop from local operational automation to a documented, reproducible utility.</p>
+        </div>
+      </div>
+    </article>
+
+    <nav class="reader-nav three-grid" aria-label="Article navigation">
+      <a href="../../blog/index.html">Back to Blog</a>
+      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/i-gave-the-ai-a-browser-and-we-shipped-the-redesign/index.html"><span class="meta">Older</span>Automating Frontend Visual Verification with Headless Chromium</a><a class="adjacent-post newer-post" href="../../blog/i-certified-the-network-at-2-5-gigabit-then-spent-three-hours-losing-to-a-usb-dongle/index.html"><span class="meta">Newer</span>Benchmarking 2.5GbE Throughput with iperf3 and Isolating USB NIC Power Quirks</a></div>
+    </nav>
+  </main>
+
+  <footer class="site-foot">
+    <p class="foot-home meta">ERI / CLI<br>Blog</p>
+    <a class="foot-contact" href="mailto:helloworld@n5hq.me">helloworld@n5hq.me</a>
+    <nav class="foot-links" aria-label="Footer navigation"><a href="../../projects.html">Projects</a><a href="../../about.html">About</a><a href="https://github.com/aerwk">GitHub</a></nav>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Setting up Prometheus, Grafana, Loki, and UnPoller on an OptiPlex host, exposing Immich via Cloudflare Tunnel, and creating a static portfolio generator from Obsidian markdown notes.">
+  <link rel="icon" href="../../assets/img/logo.png">
+  <title>Deploying the Homelab Observability Stack and Initial Portfolio Site — ERI / CLI</title>
+  <link rel="stylesheet" href="../../assets/css/style.css">
+  <script defer src="../../assets/js/pages.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#article">Skip to article</a>
+  <header class="site-head">
+    <a class="brand" href="../../index.html" aria-label="ERI / CLI home"><img src="../../assets/img/logo.png" alt=""></a>
+    <nav class="site-nav" aria-label="Primary navigation">
+      <a href="../../projects.html">Projects</a>
+      <a href="../../about.html">About</a>
+      <a href="../../blog/index.html" aria-current="page">Blog</a>
+    </nav>
+  </header>
+
+  <main class="page-main reader-page" id="article">
+    <article>
+      <header class="reader-head three-grid">
+        <p class="reader-meta meta">Projects<br><time datetime="2026-06-08">08 Jun 2026</time><br>2 min read</p>
+        <h1 class="page-title">Deploying the Homelab Observability Stack and Initial Portfolio Site</h1>
+      </header>
+
+      <div class="reader-cut" aria-hidden="true">
+        <div class="lattice-host reader-lattice" data-lattice="reader"></div>
+      </div>
+
+      <div class="reader-body three-grid" id="article-body">
+        <div class="reader-prose">
+          <p class="reader-lede">Deploying a complete observability stack on the OptiPlex host brought Prometheus, Grafana, Loki, Promtail, Node Exporter, cAdvisor, and UnPoller online as a unified Docker Compose stack, routing operational metrics to a custom dashboard at <code>status.n5hq.me</code>.</p>
+          <h2>The Monitoring Stack</h2>
+          <p>The monitoring deployment focused on capturing system metrics across host hardware and networking components. Using the Grafana Python API, I built a custom Homelab Overview dashboard tracking WAN uptime, connected device counts, container lifecycle states, CPU and memory utilization, disk I/O, network throughput, and UniFi PoE power draw.</p>
+          <p>Several operational quirks required immediate adjustments:</p>
+          <ul><li>Dashboard template imports contained mismatched metric prefixes and unexpanded variables, requiring custom Python patch scripts to normalize datasources.</li><li>Under cgroup v2, cAdvisor failed to expose Docker container names by default, displaying raw hash cgroup paths instead of readable labels.</li><li>The WAN uptime query intermittently dragged down average availability metrics because the inactive failover WAN interface returned a <code>-1</code> state. A temporary filter (<code>wan_networkgroup=&quot;WAN&quot;</code>) was staged to isolate the primary interface.</li></ul>
+          <h2>Exposing Immich via Cloudflare Tunnel</h2>
+          <p>With the monitoring services running, Immich photo storage was configured for remote access at <code>photo.n5hq.me</code>. Rather than deploying a separate tunnel daemon, I added an ingress rule to the existing <code>cloudflared</code> instance already routing Home Assistant traffic. Because internal traffic stayed within the host network, no additional port forwarding or router exposure was required.</p>
+          <h2>Building the Static Site Pipeline</h2>
+          <p>The remainder of the day was spent developing the initial portfolio website and publishing workflow.</p>
+          <p>The frontend was structured as a mobile-first responsive layout with dedicated sections for homelab infrastructure, active projects, and contact routing via FormSubmit.co.</p>
+          <p>To eliminate friction in publishing homelab notes, I wrote a Node.js build script to interface directly with markdown journal notes in Obsidian. The script parses frontmatter metadata, synchronizes source files to <code>blog/posts/</code>, and compiles a structured <code>posts.json</code> manifest for the client-side archive. Initial edge cases—such as duplicate sidebar references and incorrect relative paths in the markdown reader—were resolved during local testing.</p>
+          <h2>Pending Verification</h2>
+          <ul><li>Apply the <code>wan_networkgroup=&quot;WAN&quot;</code> query filter to the Grafana uptime dashboard.</li><li>Evaluate Cloudflare Access policies to add an extra authentication layer in front of the Immich tunnel.</li><li>Update Cloudflare DNS records to point <code>n5hq.me</code> apex and <code>www</code> CNAMEs to the static hosting target.</li></ul>
+        </div>
+      </div>
+    </article>
+
+    <nav class="reader-nav three-grid" aria-label="Article navigation">
+      <a href="../../blog/index.html">Back to Blog</a>
+      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/home-assistant-goes-public/index.html"><span class="meta">Older</span>Home Assistant Remote Access via Cloudflare Tunnel</a><a class="adjacent-post newer-post" href="../../blog/automating-the-blog-and-cleaning-up-the-portfolio/index.html"><span class="meta">Newer</span>Automating the Blog Publishing Pipeline and Cleaning Portfolio Placeholders</a></div>
+    </nav>
+  </main>
+
+  <footer class="site-foot">
+    <p class="foot-home meta">ERI / CLI<br>Blog</p>
+    <a class="foot-contact" href="mailto:helloworld@n5hq.me">helloworld@n5hq.me</a>
+    <nav class="foot-links" aria-label="Footer navigation"><a href="../../projects.html">Projects</a><a href="../../about.html">About</a><a href="https://github.com/aerwk">GitHub</a></nav>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Projects built and maintained by Eric Li across infrastructure, networking and software.">
+  <link rel="icon" href="assets/img/logo.png">
+  <title>Projects — ERI / CLI</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script defer src="assets/js/pages.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#content">Skip to projects</a>
+  <header class="site-head">
+    <a class="brand" href="index.html" aria-label="ERI / CLI home"><img src="assets/img/logo.png" alt=""></a>
+    <nav class="site-nav" aria-label="Primary navigation">
+      <a href="projects.html" aria-current="page">Projects</a>
+      <a href="about.html">About</a>
+      <a href="blog/index.html">Blog</a>
+    </nav>
+  </header>
+
+  <main class="page-main projects-page" id="content">
+    <header class="projects-intro three-grid">
+      <h1 class="page-title">Projects</h1>
+      <p class="page-note">Six projects across infrastructure, networking, and software. Four released and in active use; two currently in development.</p>
+    </header>
+
+    <section class="project-stage" aria-label="Project index">
+      <div class="lattice-host project-lattice" data-lattice="projects" aria-hidden="true"></div>
+      <ol class="project-ledger">
+        <li class="project-entry" data-lattice-target="0">
+          <article class="project-copy">
+            <h2 id="homelab">HomeLab</h2>
+            <p>Operational 24/7 homelab stack running UniFi routing, Proxmox virtualization, Docker containers, automated storage, and monitoring used by 29 friends and family.</p>
+          </article>
+          <aside class="project-facts">
+            <p>Operational / In use<br>23 active users · 5,769 hrs</p>
+            <p class="meta">UniFi / Proxmox / Docker</p>
+          </aside>
+        </li>
+
+        <li class="project-entry" data-lattice-target="1">
+          <article class="project-copy">
+            <h2><a href="https://github.com/aerwk/disclaude-sesh" target="_blank" rel="noopener">Disclaude Sesh ↗</a></h2>
+            <p>An open-source Discord bridge for running Claude Code on a headless server. Provides remote session control and supervision from a phone via dedicated bot services.</p>
+          </article>
+          <aside class="project-facts">
+            <p>v1.0.0 Released<br>Unattended reboot tested</p>
+            <p class="meta">TypeScript / Bun / systemd</p>
+          </aside>
+        </li>
+
+        <li class="project-entry" data-lattice-target="2">
+          <article class="project-copy">
+            <h2 id="usage-meter">Stream Deck Usage Meter</h2>
+            <p>A Stream Deck+ plugin fork providing live token, cost, and usage limit meters with dial and touch input support.</p>
+          </article>
+          <aside class="project-facts">
+            <p>Fork Released<br>Dial and touch input</p>
+            <p class="meta">TypeScript / Node.js / CI</p>
+          </aside>
+        </li>
+
+        <li class="project-entry" data-lattice-target="3">
+          <article class="project-copy">
+            <h2 id="fileit">FileIt</h2>
+            <p>A Windows automation tool that monitors Downloads, classifies incoming files by type, and sorts them into target directories without manual intervention.</p>
+          </article>
+          <aside class="project-facts">
+            <p>v1.1.0 Released<br>Immutable installer</p>
+            <p class="meta">Python / Windows</p>
+          </aside>
+        </li>
+
+        <li class="project-entry" data-lattice-target="4">
+          <article class="project-copy">
+            <h2 id="family-dashboard">Family Home Dashboard</h2>
+            <p>A wall-mounted touchscreen interface for household calendar synchronization, local weather, and smart home controls, deployed on Raspberry Pi 5 with Home Assistant.</p>
+          </article>
+          <aside class="project-facts">
+            <p>In development<br>Touchscreen deployment</p>
+            <p class="meta">Raspberry Pi / Docker</p>
+          </aside>
+        </li>
+
+        <li class="project-entry" data-lattice-target="5">
+          <article class="project-copy">
+            <h2 id="caddy-rating">Caddy Rating App</h2>
+            <p>A mobile rating application with real-time Firestore sync to a provider dashboard, built with React Native and Cloud Functions.</p>
+          </article>
+          <aside class="project-facts">
+            <p>In development<br>Live submissions</p>
+            <p class="meta">React Native / Firebase</p>
+          </aside>
+        </li>
+      </ol>
+    </section>
+
+    <section class="upcoming" aria-labelledby="upcoming-title">
+      <h2 class="meta" id="upcoming-title">Upcoming</h2>
+      <ul class="upcoming-list">
+        <li><b>Hotel IPTV System — 100+ Rooms</b><span class="meta">Network design / IPTV</span></li>
+        <li><b>Multi-Site Network Unification</b><span class="meta">Routing / surveillance</span></li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="site-foot">
+    <p class="foot-home meta">ERI / CLI<br>Projects</p>
+    <a class="foot-contact" href="mailto:helloworld@n5hq.me">helloworld@n5hq.me</a>
+    <nav class="foot-links" aria-label="Footer navigation"><a href="about.html">About</a><a href="blog/index.html">Blog</a><a href="https://github.com/aerwk">GitHub</a></nav>
+  </footer>
+</body>
+</html>

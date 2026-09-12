@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Moving a gateway WAN link caused a transient 3-minute Cloudflare tunnel reconnect cycle, followed by troubleshooting a Windows diskpart VDS concurrency lock on a 256 GB USB drive.">
+  <link rel="icon" href="../../assets/img/logo.png">
+  <title>WAN Link Migration Edge Recovery and Windows Diskpart Formatting Lockups — ERI / CLI</title>
+  <link rel="stylesheet" href="../../assets/css/style.css">
+  <script defer src="../../assets/js/pages.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#article">Skip to article</a>
+  <header class="site-head">
+    <a class="brand" href="../../index.html" aria-label="ERI / CLI home"><img src="../../assets/img/logo.png" alt=""></a>
+    <nav class="site-nav" aria-label="Primary navigation">
+      <a href="../../projects.html">Projects</a>
+      <a href="../../about.html">About</a>
+      <a href="../../blog/index.html" aria-current="page">Blog</a>
+    </nav>
+  </header>
+
+  <main class="page-main reader-page" id="article">
+    <article>
+      <header class="reader-head three-grid">
+        <p class="reader-meta meta">Homelab<br><time datetime="2026-06-30">30 Jun 2026</time><br>4 min read</p>
+        <h1 class="page-title">WAN Link Migration Edge Recovery and Windows Diskpart Formatting Lockups</h1>
+      </header>
+
+      <div class="reader-cut" aria-hidden="true">
+        <div class="lattice-host reader-lattice" data-lattice="reader"></div>
+      </div>
+
+      <div class="reader-body three-grid" id="article-body">
+        <div class="reader-prose">
+          <p class="reader-lede">Migrating the physical WAN uplink on my UniFi gateway off a 10GbE SFP+ port down to an RJ45 port freed up high-bandwidth interfaces for local interconnects.</p>
+          <p>While the public IP remained unchanged, the momentary interface drop initiated an edge reconnection cycle across all Cloudflare Tunnel hostnames. Investigating the subsequent alerts highlighted how outbound-only tunnels recover, alongside a separate troubleshooting session dealing with Windows Virtual Disk Service (VDS) locking during flash drive partitioning.</p>
+          <h2>Cloudflare Tunnel reconnect cycle during WAN failover</h2>
+          <p>Immediately following the cable swap at 04:41, public endpoints (<code>sonarr</code>, <code>radarr</code>, <code>nas</code>, <code>immich</code>) returned HTTP 530 / Cloudflare Error 1033, indicating that Cloudflare&#39;s edge could not establish a route to the local connector.</p>
+          <p>Reviewing <code>cloudflared</code> container logs showed the connector remained continuously running without a daemon restart. The logs documented the link bounce and reconnect sequence:</p>
+          <ul><li><strong>04:37:36 - 04:39:01</strong>: All four outbound TLS connections to Cloudflare edge points of presence (PoPs in Perth and Melbourne) timed out following the physical interface flap.</li><li><strong>04:40:13</strong>: The connector&#39;s automated retry backoff initiated new outbound dials over TCP port 443.</li><li><strong>04:41:45</strong>: Four redundant edge sessions successfully registered, resuming traffic forwarding.</li></ul>
+          <p>By 04:42, direct automated curl probes returned HTTP 200 on <code>immich</code>, 302 on <code>radarr</code>, and 307 on <code>nas</code>. The physical link drop had caused approximately three minutes of true edge unavailability. Local browser sessions continued to display cached 1033 error pages until a hard refresh bypassed client-side socket caching. Because <code>cloudflared</code> operates entirely via outbound-initiated tunnels, no static firewall pinholes or port forwarding rules were disrupted by the WAN port change.</p>
+          <h2>DNS probe misconfiguration and apex routing</h2>
+          <p>During post-recovery verification, an automated script was run to validate all eight subdomains. Rather than querying authoritative DNS records directly, the script attempted to resolve endpoints by binding requests against the IP returned for the apex domain.</p>
+          <p>Because the apex domain resolves to an external static hosting platform rather than the Cloudflare Tunnel ingress, the requests were routed to an origin that possessed no routing context for internal homelab subdomains. Every endpoint returned HTTP 000 (connection refused/empty response). Once the probe script was corrected to query each subdomain&#39;s distinct CNAME target directly against Cloudflare edge resolvers, all eight hostnames validated cleanly.</p>
+          <h2>Windows Diskpart partitioning and VDS concurrency lock</h2>
+          <p>Later that morning, I prepared a 256 GB Kingston DataTraveler USB 3.0 flash drive for external data transfer. The drive contained three preexisting OEM volumes and refused to format as exFAT via the standard GUI.</p>
+          <p>Executing <code>diskpart</code> on the attached Windows system allowed inspecting the disk layout:</p>
+          <pre><code class="language-text">DISKPART&gt; list disk
+
+  Disk ###  Status         Size     Free     Dyn  Gpt
+  --------  -------------  -------  -------  ---  ---
+  Disk 2    Online          231 GB      0 B</code></pre>
+          <p>The drive showed 231 GB of usable capacity, confirming genuine NAND geometry despite the legacy partition layout. After running <code>clean</code> and <code>create partition primary</code>, attempting an immediate format failed:</p>
+          <pre><code class="language-text">There is no volume selected.
+Please select a volume and try again.</code></pre>
+          <p>Because <code>clean</code> resets diskpart&#39;s active context, the newly created primary partition required explicit selection via <code>select partition 1</code>.</p>
+          <p>During the subsequent format attempt, the command was initiated without the <code>quick</code> flag (<code>format fs=exfat</code>). On a 231 GB volume, a full format executes a continuous block-zeroing pass. Terminating the running process via Ctrl+C left Windows Virtual Disk Service (VDS) in a deadlock:</p>
+          <pre><code class="language-text">Virtual Disk Service error:
+A concurrent second call is made on an object before the first is completed.</code></pre>
+          <p>The background service retained a lock on the volume handle. Attempting to restart the service via <code>net stop vds</code> returned:</p>
+          <pre><code class="language-text">The requested pause, continue, or stop is not valid for this service.</code></pre>
+          <p>To release the stuck kernel handle without forcing low-level driver crashes, the workstation was rebooted to clear the VDS deadlock, leaving the drive cleaned and partitioned awaiting a quick format cycle.</p>
+          <h2>Synchronized access point reboots</h2>
+          <p>Cross-referencing uptime metrics across the UniFi controller later revealed that around 06:20, all wireless access points and in-wall switches rebooted simultaneously, whereas the core switch and gateway maintained continuous uptime. Because the affected devices exclusively draw power via Power-over-Ethernet (PoE) from a shared distribution bank, the clustered timestamp pointed to a momentary PoE power supply fluctuation rather than network-level link failures.</p>
+        </div>
+      </div>
+    </article>
+
+    <nav class="reader-nav three-grid" aria-label="Article navigation">
+      <a href="../../blog/index.html">Back to Blog</a>
+      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/twenty-five-containers-updated-and-the-cleanup-that-ate-my-rollback/index.html"><span class="meta">Older</span>Updating Twenty-Five Containers, Docker Image Pruning, and Upstream Build Failures</a><a class="adjacent-post newer-post" href="../../blog/i-built-a-status-page-and-it-caught-my-nas-crashing-before-i-finished-setting-it-up/index.html"><span class="meta">Newer</span>Uptime Kuma Deployment and Diagnosing Samba Internal DB Corruption</a></div>
+    </nav>
+  </main>
+
+  <footer class="site-foot">
+    <p class="foot-home meta">ERI / CLI<br>Blog</p>
+    <a class="foot-contact" href="mailto:helloworld@n5hq.me">helloworld@n5hq.me</a>
+    <nav class="foot-links" aria-label="Footer navigation"><a href="../../projects.html">Projects</a><a href="../../about.html">About</a><a href="https://github.com/aerwk">GitHub</a></nav>
+  </footer>
+</body>
+</html>

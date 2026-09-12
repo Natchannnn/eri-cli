@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Expanding the Proxmox cluster to three nodes, diagnosing an e1000e transmit hang on pve02, and fixing a vzdump monitoring hook that reported false positives.">
+  <link rel="icon" href="../../assets/img/logo.png">
+  <title>Cluster Quorum, NIC Failure Isolation, and Verifying Backup Hooks — ERI / CLI</title>
+  <link rel="stylesheet" href="../../assets/css/style.css">
+  <script defer src="../../assets/js/pages.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#article">Skip to article</a>
+  <header class="site-head">
+    <a class="brand" href="../../index.html" aria-label="ERI / CLI home"><img src="../../assets/img/logo.png" alt=""></a>
+    <nav class="site-nav" aria-label="Primary navigation">
+      <a href="../../projects.html">Projects</a>
+      <a href="../../about.html">About</a>
+      <a href="../../blog/index.html" aria-current="page">Blog</a>
+    </nav>
+  </header>
+
+  <main class="page-main reader-page" id="article">
+    <article>
+      <header class="reader-head three-grid">
+        <p class="reader-meta meta">Homelab<br><time datetime="2026-08-10">10 Aug 2026</time><br>3 min read</p>
+        <h1 class="page-title">Cluster Quorum, NIC Failure Isolation, and Verifying Backup Hooks</h1>
+      </header>
+
+      <div class="reader-cut" aria-hidden="true">
+        <div class="lattice-host reader-lattice" data-lattice="reader"></div>
+      </div>
+
+      <div class="reader-body three-grid" id="article-body">
+        <div class="reader-prose">
+          <p class="reader-lede">Expanding the homelab to a three-node Proxmox cluster with <code>pve03</code> established a 2-of-3 quorum, retiring reliance on <code>n5ubuntu</code> for cluster voting.</p>
+          <p>During the expansion, two operational issues surfaced: an <code>e1000e</code> NIC lockup that mimicked a host crash, and a backup notification hook that had been reporting false positives on failed runs since late July.</p>
+          <h2>Three Nodes, One Cluster</h2>
+          <p><code>pve03</code> joined the <code>n5hq</code> cluster as node ID 3 using <code>pvecm add x.x.0.20 --use_ssh 1 --link0 x.x.0.25</code>. Cluster quorum updated to 2-of-3 with expected votes set to 3. All guest virtual machines and containers remained operational throughout the join without requiring migration or downtime.</p>
+          <p>Networking on <code>pve03</code> was configured with an active-backup bond mirroring <code>pve01</code>, pairing a 2.5G USB NIC as primary with the onboard 1GbE interface as failover. A backup of the network configuration was preserved at <code>/root/interfaces.bak-2026-08-10</code> prior to applying changes. An apt repository lockout caused by an unauthenticated enterprise repo was removed during the same maintenance pass.</p>
+          <h2>Isolating the pve02 NIC Failure</h2>
+          <p>At 11:29, <code>pve02</code> dropped off the local network, taking the <code>n5ubuntu</code> VM (VM 200) with it. Corosync logs on <code>pve01</code> recorded link failure on link 0 at 11:29:18, followed by token loss at 11:29:19 and node membership departure at 11:29:24. While these symptoms matched a total host crash, kernel logs showed the machine was operational: the onboard Intel <code>e1000e</code> NIC had suffered a transmit-unit hang.</p>
+          <p>To restore reliable connectivity, a secondary 2.5G USB NIC was connected to <code>pve02</code> and configured in an active-backup bond. Failover testing confirmed zero packet loss under link disconnect. The new MAC address was registered on the UniFi network whitelist, and a transient IP conflict from the onboard interface was resolved.</p>
+          <h2>Correcting the vzdump Backup Hook</h2>
+          <p>Audit of the backup monitoring pipeline revealed that <code>vzdump-kuma-hook</code> had been reporting success for failed backup jobs since 2026-07-28. The script pushed status to Uptime Kuma on the <code>job-end</code> event, which executes unconditionally whether a backup completes or fails. The <code>job-abort</code> event was not triggered in this Proxmox release&#39;s hook sequence.</p>
+          <p>The hook script was rewritten to parse exit status directly and deployed across all three cluster nodes. Each node received an individual push token, and monitor retry counts were set to zero (<code>maxretries: 0</code>) to prevent temporary retries from obscuring first-attempt failures. The rewritten hook was validated by running both standard backup jobs and deliberately triggered failure scenarios. Additionally, the <code>ugnas01-backup</code> storage target was unpinned from single-node access to cluster-wide availability, allowing all nodes to write backups directly.</p>
+          <h2>Infrastructure Relocation and Memory Gates</h2>
+          <p>Services running on <code>n5ubuntu</code> were migrated ahead of its planned decommissioning. The primary Claude workspace was moved into an unprivileged Debian 13 LXC (<code>n5claude</code>, CT 109, <code>x.x.0.9</code>) on <code>pve01</code>. Five automation consumers (<code>n5-update-judge.sh</code>, <code>n5-doc-stack.sh</code>, and internal proxy scripts) were repointed to the new container. Security items identified during the migration, including credential exposure and permission hardening, were cataloged in <code>runsheets/BACKLOG-n5claude-followups.md</code> for resolution.</p>
+          <p>The Tailscale subnet router (<code>1.102.2</code> at <code>x.x.27.67</code>) was transferred to <code>pve01</code>. Finally, the memory allocation policy for VM 200 was formalized: the gate was set at host RAM &gt;= 23 GiB with a 16 GiB allocation verified under active workload, maintaining stability without requiring hardware expansion.</p>
+        </div>
+      </div>
+    </article>
+
+    <nav class="reader-nav three-grid" aria-label="Article navigation">
+      <a href="../../blog/index.html">Back to Blog</a>
+      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/three-times-this-morning-something-told-me-it-worked-and-hadnt/index.html"><span class="meta">Older</span>Hardening Command Execution and Resolving Deployment Pipeline Blocks</a><a class="adjacent-post newer-post" href="../../blog/everything-redundant-turned-out-to-share-something/index.html"><span class="meta">Newer</span>Cluster Migration, Proxmox Backup Server Deployment, and Failure Domain Auditing</a></div>
+    </nav>
+  </main>
+
+  <footer class="site-foot">
+    <p class="foot-home meta">ERI / CLI<br>Blog</p>
+    <a class="foot-contact" href="mailto:helloworld@n5hq.me">helloworld@n5hq.me</a>
+    <nav class="foot-links" aria-label="Footer navigation"><a href="../../projects.html">Projects</a><a href="../../about.html">About</a><a href="https://github.com/aerwk">GitHub</a></nav>
+  </footer>
+</body>
+</html>

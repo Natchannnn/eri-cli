@@ -1,0 +1,21 @@
+---
+title: "NAS Storage Pool Read-Only Diagnostics and Node-Local Guest Evacuation"
+date: 2026-09-05
+category: Homelab
+summary: "Diagnosing a NAS btrfs pool failure, evacuating dependent Proxmox guests and containers to node-local storage under HA, and validating restore integrity."
+---
+Four homelab services that looked like four separate faults turned out to share one root cause: a storage pool on the NAS had gone read-only, taking down a home automation VM, a container, a backup datastore, and a backup target. Fixing it meant diagnosing the pool, safely evacuating every guest that depended on it, and moving them onto node-local storage instead.
+
+A btrfs scrub ruled out the failure mode I'd assumed. The pool had logged parent transid verify failed and 150 corruption errors, which reads like metadata damage. The scrub showed the metadata was clean; the real damage was 8 uncorrectable checksum errors in two archived video files. That changed the plan: no rescue mount, and no --repair either, since the array has no redundancy to repair against. Both drives passed SMART, ruling out a failing disk.
+
+A firmware reboot brought the pool back writable, but I didn't trust it on its own: the same reboot had "fixed" the same pool once already, and it dropped read-only again three days later.
+
+Getting guests off the pool meant working around cluster HA, which reverts a plain qm stop or pct stop by restarting the guest. Every stop went through ha-manager set --state disabled first. The home automation VM and a model-proxy VM were restored from backup to node-local storage, and each restore was verified with an HTTP 200 check, a read-write check on the data mount, the service bridge listening, and both monitors reporting up within 45 seconds, before the temporary VM ID was renumbered back. The restore also surfaced a stale config: the proxy VM's running memory was 12,288 MB against a config that showed 8,192 MB (a change applied live but never saved). The restore kept the true, larger value.
+
+The container's problem was a journal abort rather than a dead disk, so pct fsck (clean, exit 0) and a move to local storage were enough, with the original volume kept as a forensic copy. All four of its workflows came back and were confirmed registering in logs, not just marked active.
+
+Every backup pulled from the affected datastore was verified with zstd -t before being used for a restore, since a backup taken through a degraded filesystem can complete successfully without the source having been intact.
+
+One mistake along the way: an early manual copy off the failing pool ran through sudo -i, which dropped the destination variable partway through and sent the copy to the NAS root overlay instead, filling it to 100% and hanging. Re-run correctly, it worked the second time.
+
+Everything that had a disk on that pool now lives on node-local storage. The pool itself is writable again, but given its history, it's being watched rather than called fixed.

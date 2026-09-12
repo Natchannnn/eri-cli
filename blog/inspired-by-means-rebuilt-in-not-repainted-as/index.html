@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Rebuilding site layouts and tokens referencing LaunchDarkly&#39;s banded section architecture, resolving nested anchor bugs, and updating generator templates.">
+  <link rel="icon" href="../../assets/img/logo.png">
+  <title>Site Redesign on LaunchDarkly Page Architecture and Component Vocabulary — ERI / CLI</title>
+  <link rel="stylesheet" href="../../assets/css/style.css">
+  <script defer src="../../assets/js/pages.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#article">Skip to article</a>
+  <header class="site-head">
+    <a class="brand" href="../../index.html" aria-label="ERI / CLI home"><img src="../../assets/img/logo.png" alt=""></a>
+    <nav class="site-nav" aria-label="Primary navigation">
+      <a href="../../projects.html">Projects</a>
+      <a href="../../about.html">About</a>
+      <a href="../../blog/index.html" aria-current="page">Blog</a>
+    </nav>
+  </header>
+
+  <main class="page-main reader-page" id="article">
+    <article>
+      <header class="reader-head three-grid">
+        <p class="reader-meta meta">Web<br><time datetime="2026-09-06">06 Sept 2026</time><br>3 min read</p>
+        <h1 class="page-title">Site Redesign on LaunchDarkly Page Architecture and Component Vocabulary</h1>
+      </header>
+
+      <div class="reader-cut" aria-hidden="true">
+        <div class="lattice-host reader-lattice" data-lattice="reader"></div>
+      </div>
+
+      <div class="reader-body three-grid" id="article-body">
+        <div class="reader-prose">
+          <p class="reader-lede">Shipped a full redesign today, rebuilt from LaunchDarkly&#39;s page architecture rather than its colours: banded sections, a persistent rail, one fixed section order, and a small vocabulary of components reused everywhere.</p>
+          <p>The home page, the lab page, the blog index, all 34 post pages, five portfolio pages and the 404 now share that vocabulary, with no new class names invented past the first two pages.</p>
+          <p>Section order (About, Portfolio, Blog, Lab, Contact) is locked across three surfaces that have to agree: the nav links, the page flow, and the footer&#39;s section column. The lab page picked up the same top bar and components, with its terminal panel now showing real cluster and container status instead of placeholder text.</p>
+          <p>Colour moved to a single accent system: a blue for fills, a violet for paint, three neutrals, near-black panels and canvas. Type dropped to a text face plus a mono, replacing the old single variable family. Contrast got measured, not eyeballed: the muted label colour was 58% lightness against the near-black panel, which works out to 3.82:1 and fails AA for small text. Raised to 60.5%, for a 5.1:1 minimum with margin. The accent violet needed a second token, --violet-txt, for small text specifically, since the value that worked at large sizes failed at small ones.</p>
+          <p>Two bugs turned up in the card markup: cards were anchors with tag-pill anchors nested inside them, which browsers silently un-nest by closing the outer tag early. Hit on the resource cards, then again on the post cards before the pattern was recognized. Both were fixed by moving the click target to the card&#39;s container and making the card itself a plain article.</p>
+          <p>build_blog.py, the script that generates each new post&#39;s HTML, keeps its own copy of the page chrome independent of the real templates, and had to be rewritten by hand to match. Skipping that step would have shipped the next generated post with the old header and footer sitting inside the new stylesheet.</p>
+          <p>One page sits behind an access gate and links the shared stylesheet directly. It was frozen to its own copy and repointed before the public redesign went out, so it kept rendering correctly through the change and is now deliberately separate from the new system rather than accidentally behind. After all 34 posts were re-templated, their prose content was checked byte-identical against the previous version, confirming the re-template changed only the frame and not the words.</p>
+          <p>The day started with a different approach: keep the existing markup and swap in the reference&#39;s palette and fonts, verified across 45 files and 49 replaced colour values. Review rejected it outright, since the point of the reference was its structure, not its hex codes, so that version was scrapped and the shipped one was built from an empty stylesheet instead.</p>
+        </div>
+      </div>
+    </article>
+
+    <nav class="reader-nav three-grid" aria-label="Article navigation">
+      <a href="../../blog/index.html">Back to Blog</a>
+      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/the-reboot-that-fixed-it-once-before-and-didnt-the-second-time/index.html"><span class="meta">Older</span>NAS Storage Pool Read-Only Diagnostics and Node-Local Guest Evacuation</a><a class="adjacent-post newer-post" href="../../blog/an-animation-you-cannot-pause-is-one-you-cannot-review/index.html"><span class="meta">Newer</span>Animation Review Controls, Deterministic Frame Capture, and Multi-Critic Evaluation</a></div>
+    </nav>
+  </main>
+
+  <footer class="site-foot">
+    <p class="foot-home meta">ERI / CLI<br>Blog</p>
+    <a class="foot-contact" href="mailto:helloworld@n5hq.me">helloworld@n5hq.me</a>
+    <nav class="foot-links" aria-label="Footer navigation"><a href="../../projects.html">Projects</a><a href="../../about.html">About</a><a href="https://github.com/aerwk">GitHub</a></nav>
+  </footer>
+</body>
+</html>

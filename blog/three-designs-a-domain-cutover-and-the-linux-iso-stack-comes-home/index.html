@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Splitting automation workloads between a local Proxmox host and a remote 22TB seedbox using SSHFS remote hardlinks, alongside deploying the V2 portfolio to Vercel.">
+  <link rel="icon" href="../../assets/img/logo.png">
+  <title>Hybrid Seedbox Migration via SSHFS and Portfolio V2 Deployment — ERI / CLI</title>
+  <link rel="stylesheet" href="../../assets/css/style.css">
+  <script defer src="../../assets/js/pages.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#article">Skip to article</a>
+  <header class="site-head">
+    <a class="brand" href="../../index.html" aria-label="ERI / CLI home"><img src="../../assets/img/logo.png" alt=""></a>
+    <nav class="site-nav" aria-label="Primary navigation">
+      <a href="../../projects.html">Projects</a>
+      <a href="../../about.html">About</a>
+      <a href="../../blog/index.html" aria-current="page">Blog</a>
+    </nav>
+  </header>
+
+  <main class="page-main reader-page" id="article">
+    <article>
+      <header class="reader-head three-grid">
+        <p class="reader-meta meta">Projects<br><time datetime="2026-06-12">12 Jun 2026</time><br>3 min read</p>
+        <h1 class="page-title">Hybrid Seedbox Migration via SSHFS and Portfolio V2 Deployment</h1>
+      </header>
+
+      <div class="reader-cut" aria-hidden="true">
+        <div class="lattice-host reader-lattice" data-lattice="reader"></div>
+      </div>
+
+      <div class="reader-body three-grid" id="article-body">
+        <div class="reader-prose">
+          <p class="reader-lede">Migrating media automation workloads off a remote seedbox split responsibilities between local compute and remote high-capacity storage, while the V2 static portfolio was cut over to production.</p>
+          <h2>Portfolio V2 Redesign and Deployment</h2>
+          <p>The initial portfolio redesign iterated through three visual treatments. The first (an engineering paper aesthetic) was discarded in favor of a dark minimal structure inspired by Premier CS. Because the headless server lacked graphical rendering libraries, I captured video recordings of reference interfaces and extracted thirty discrete frames via <code>ffmpeg</code> to guide frontend styling without guessing at layout proportions.</p>
+          <p>The resulting site features modular project cards, a unified stylesheet, and an automated Markdown-to-HTML reader. The code was migrated to a dedicated repository (<code>aerwk/Portfolio-V2</code>), with security scans in place to prevent private notes and keys from committing. Production deployment was established on Vercel under <code>www.n5hq.me</code>, with apex redirects and security headers enforced at the edge.</p>
+          <h2>Hybrid Seedbox Architecture via SSHFS</h2>
+          <p>The primary infrastructure initiative involved decoupling automation daemons from the remote 22TB seedbox. The seedbox retains storage, BitTorrent seeding, and Plex media streaming, while management applications—Radarr, Sonarr, Prowlarr, Overseerr, and a Discord request bridge—were moved to local Docker containers on the home server.</p>
+          <p>The critical technical challenge was preventing remote downloads from traversing the WAN during automated import. In a standard setup, media managers hardlink completed downloads into library directories instantly on the same filesystem. Over a WAN mount, naïve moves would pull multi-gigabyte files locally before uploading them back.</p>
+          <p>To resolve this:</p>
+          <ol><li>The remote filesystem was mounted locally over SSHFS using identical relative path structures.</li><li>Hardlinking behavior was tested directly: executing a hardlink through the SSHFS mount point and inspecting the remote filesystem via SSH confirmed identical inode numbers and an incremented link count (<code>Links: 2</code>). Data remained entirely on the remote storage plane without WAN transfer.</li><li>SSH connection pooling was established to prevent the remote host from rate-limiting concurrent application requests.</li></ol>
+          <h2>Database Migration and Inactive Telemetry</h2>
+          <p>Application databases were exported and restored into local container instances, preserving historical indexer rules and quality profiles.</p>
+          <p>During migration, Tautulli monitoring was discovered to have stalled three weeks prior due to a stale container IP link to the Plex server. Over 16,000 historical watch records were migrated into the local instance and reconnected to a static internal host address.</p>
+          <h2>Remote Ingress and Persistence</h2>
+          <p>The local management instances were exposed via Cloudflare Tunnel across subdomains of <code>n5hq.me</code> (<code>radarr</code>, <code>sonarr</code>, <code>tautulli</code>, <code>overseerr</code>), each requiring local authentication. A systemd service unit was provisioned on the host to manage SSHFS reconnects and mount persistence across system restarts.</p>
+          <h2>Pending Verification</h2>
+          <ul><li>Verify automated SSHFS remount behavior following simulated network drops.</li><li>Monitor remote hardlink creation across completed large-file transfers.</li><li>Decommission redundant indexer proxies remaining on the remote slot.</li></ul>
+        </div>
+      </div>
+    </article>
+
+    <nav class="reader-nav three-grid" aria-label="Article navigation">
+      <a href="../../blog/index.html">Back to Blog</a>
+      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/storage-fixes-vault-cleanup-and-the-reboot-that-bit-back/index.html"><span class="meta">Older</span>Samsung T7 Shield UAS Timeouts, GRUB Quirks, and Post-Reboot Service Recovery</a><a class="adjacent-post newer-post" href="../../blog/sharper-words-smaller-cards-a-copy-pass-on-the-portfolio/index.html"><span class="meta">Newer</span>Editorial and Card Layout Revisions for the Portfolio</a></div>
+    </nav>
+  </main>
+
+  <footer class="site-foot">
+    <p class="foot-home meta">ERI / CLI<br>Blog</p>
+    <a class="foot-contact" href="mailto:helloworld@n5hq.me">helloworld@n5hq.me</a>
+    <nav class="foot-links" aria-label="Footer navigation"><a href="../../projects.html">Projects</a><a href="../../about.html">About</a><a href="https://github.com/aerwk">GitHub</a></nav>
+  </footer>
+</body>
+</html>

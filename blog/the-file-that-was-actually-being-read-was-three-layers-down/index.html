@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Resolving configuration hierarchy and stdin exhaustion in network-controller plugins, diagnosing recurring NAS interface flapping, and observing backup no-touch windows.">
+  <link rel="icon" href="../../assets/img/logo.png">
+  <title>Network Controller Configuration Precedence and NAS Link Flapping Diagnostics — ERI / CLI</title>
+  <link rel="stylesheet" href="../../assets/css/style.css">
+  <script defer src="../../assets/js/pages.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#article">Skip to article</a>
+  <header class="site-head">
+    <a class="brand" href="../../index.html" aria-label="ERI / CLI home"><img src="../../assets/img/logo.png" alt=""></a>
+    <nav class="site-nav" aria-label="Primary navigation">
+      <a href="../../projects.html">Projects</a>
+      <a href="../../about.html">About</a>
+      <a href="../../blog/index.html" aria-current="page">Blog</a>
+    </nav>
+  </header>
+
+  <main class="page-main reader-page" id="article">
+    <article>
+      <header class="reader-head three-grid">
+        <p class="reader-meta meta">Homelab<br><time datetime="2026-08-24">24 Aug 2026</time><br>3 min read</p>
+        <h1 class="page-title">Network Controller Configuration Precedence and NAS Link Flapping Diagnostics</h1>
+      </header>
+
+      <div class="reader-cut" aria-hidden="true">
+        <div class="lattice-host reader-lattice" data-lattice="reader"></div>
+      </div>
+
+      <div class="reader-body three-grid" id="article-body">
+        <div class="reader-prose">
+          <p class="reader-lede">Engineering work on August 24 focused on migrating secrets into vault storage, resolving an authentication failure in network controller integrations, and diagnosing recurring link drops on NAS backup storage.</p>
+          <h2>Resolving configuration precedence and stdin contention</h2>
+          <p>The network controller integration repeatedly returned HTTP 403 authorization errors during initial initialization. Two rounds of configuration edits against the standalone configuration file failed to resolve the error.</p>
+          <p>Investigating startup execution paths revealed that the runtime loader did not read the standalone file; the controller plugin relied on an inline configuration block cached inside the plugin module directory, which took precedence over external paths. Updating the inline configuration block cleared the HTTP 403 error.</p>
+          <p>A subsequent login failure occurred due to empty credential submission. Analysis revealed that an early cache-warming step read from standard input (<code>stdin</code>) to prime cache state, consuming input before the credential authentication routine executed. Reordering initialization steps prevented <code>stdin</code> exhaustion, allowing credentials to reach the handshake handler and completing authentication.</p>
+          <h2>Diagnosing daily NAS link-state flapping</h2>
+          <p>Auditing storage target logs ahead of authentication updates uncovered an unmonitored link-state anomaly: the NAS network interface dropped link for 60 to 90 seconds at approximately 07:02 and 11:49 daily. Cross-referencing 30 days of historical logs confirmed the drops occurred consistently at both timestamps.</p>
+          <p>While initial alerts pointed to DHCP lease renewal timeouts, timestamp correlation proved interface loss preceded renewal attempts: DHCP failure was a symptom of physical interface unreachability rather than its cause. Other local network endpoints connected to the same switch showed zero link transitions during these windows, isolating the fault to the storage appliance. Because low-level kernel logs on the appliance are restricted behind administrative access, root cause remains unresolved.</p>
+          <p>To prevent interface drops from destabilizing downstream services, client mount definitions were hardened:</p>
+          <ul><li>Added <code>nofail</code> to <code>/etc/fstab</code> entries to prevent filesystem mount hangs during host reboots.</li><li>Set filesystem pass (<code>fsck</code>) order from <code>2</code> to <code>0</code>, ensuring network mounts bypass local boot filesystem checks.</li><li>Changes were verified using <code>findmnt --verify</code>.</li></ul>
+          <p>Planning for storage authentication was paused; introducing additional authentication handshakes over an interface undergoing daily drops would add failure modes without addressing underlying physical link instability.</p>
+          <h2>Documentation verification and backup no-touch enforcement</h2>
+          <p>A verification pass evaluated 17 operational claims against production systems, identifying multiple discrepancies: a documented backup timer was absent from systemd, an unmaintained utility was confirmed decommissioned, and several monitoring probes exhibited unreported flapping.</p>
+          <p>Additionally, a deployment near-miss was avoided when an automated task was triggered at 01:04, overlapping with the scheduled nightly backup no-touch window (01:00 to 05:30). The agent parsed the operational schedule, flagged the active maintenance restriction, and halted execution without making host modifications.</p>
+        </div>
+      </div>
+    </article>
+
+    <nav class="reader-nav three-grid" aria-label="Article navigation">
+      <a href="../../blog/index.html">Back to Blog</a>
+      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/the-rule-that-could-only-see-one-user-in-thirty-one/index.html"><span class="meta">Older</span>Retention Rule Scoping Across Multi-User Libraries and Service Freshness Monitoring</a><a class="adjacent-post newer-post" href="../../blog/the-check-meant-to-avoid-touching-a-secret-printed-it-anyway/index.html"><span class="meta">Newer</span>Shell Parameter Expansion Traps in Credential Migration and Log Timezone Correlation</a></div>
+    </nav>
+  </main>
+
+  <footer class="site-foot">
+    <p class="foot-home meta">ERI / CLI<br>Blog</p>
+    <a class="foot-contact" href="mailto:helloworld@n5hq.me">helloworld@n5hq.me</a>
+    <nav class="foot-links" aria-label="Footer navigation"><a href="../../projects.html">Projects</a><a href="../../about.html">About</a><a href="https://github.com/aerwk">GitHub</a></nav>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Deploying Uptime Kuma to monitor 33 homelab services immediately caught an active Immich outage caused by an smbd segmentation fault in /run/samba.">
+  <link rel="icon" href="../../assets/img/logo.png">
+  <title>Uptime Kuma Deployment and Diagnosing Samba Internal DB Corruption — ERI / CLI</title>
+  <link rel="stylesheet" href="../../assets/css/style.css">
+  <script defer src="../../assets/js/pages.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#article">Skip to article</a>
+  <header class="site-head">
+    <a class="brand" href="../../index.html" aria-label="ERI / CLI home"><img src="../../assets/img/logo.png" alt=""></a>
+    <nav class="site-nav" aria-label="Primary navigation">
+      <a href="../../projects.html">Projects</a>
+      <a href="../../about.html">About</a>
+      <a href="../../blog/index.html" aria-current="page">Blog</a>
+    </nav>
+  </header>
+
+  <main class="page-main reader-page" id="article">
+    <article>
+      <header class="reader-head three-grid">
+        <p class="reader-meta meta">Homelab<br><time datetime="2026-07-01">01 Jul 2026</time><br>4 min read</p>
+        <h1 class="page-title">Uptime Kuma Deployment and Diagnosing Samba Internal DB Corruption</h1>
+      </header>
+
+      <div class="reader-cut" aria-hidden="true">
+        <div class="lattice-host reader-lattice" data-lattice="reader"></div>
+      </div>
+
+      <div class="reader-body three-grid" id="article-body">
+        <div class="reader-prose">
+          <p class="reader-lede">To replace ad-hoc manual checks with automated uptime tracking, I deployed an Uptime Kuma instance across the homelab infrastructure.</p>
+          <p>Within minutes of provisioning, the monitoring stack flagged a live outage on <code>photo.n5hq.me</code>, leading into a diagnostic trace that isolated a silent CIFS mount drop back to corrupted state files within Samba&#39;s runtime directory on the NAS.</p>
+          <h2>Provisioning Uptime Kuma across 33 endpoints</h2>
+          <p>Uptime Kuma was deployed as a container connected to the internal monitoring network bridge, allowing it to communicate with Prometheus and Grafana instances via Docker service discovery. Rather than manually configuring monitors through the web interface, I scripted the initial setup via the Uptime Kuma socket API using a lightweight Python script.</p>
+          <p>The script populated 33 monitors across seven operational groups:</p>
+          <ul><li>Gateway interfaces and WAN uplinks</li><li>Core hypervisor and NAS hardware endpoints</li><li>Media ingestion and indexing pipelines</li><li>Public-facing reverse proxy domains (<code>n5hq.me</code>)</li><li>Offsite seedbox connections</li><li>Local network cameras</li></ul>
+          <p>The UniFi Protect camera pool resides on an isolated VLAN with no inbound routing from the general server network. To allow HTTP/ICMP status checks without opening broad inter-VLAN routing, I created a firewall rule scoped strictly from the monitoring host&#39;s static IP to the camera subnet ports, verifying reachability across all five camera units.</p>
+          <h2>Detecting the Immich storage outage</h2>
+          <p>Immediately following monitor initialization, the <code>photo.n5hq.me</code> healthcheck reported HTTP 502 Bad Gateway. Inspecting the host showed the <code>immich_server</code> container in an unhealthy crash loop.</p>
+          <p>Container error logs reported:</p>
+          <pre><code class="language-text">Error: EIO: i/o error, write &#39;/data/upload&#39;</code></pre>
+          <p>The underlying CIFS mount <code>/mnt/nas/photos</code> had fallen into an unresponsive I/O state. The host system had been utilizing a systemd automount unit configured with aggressive timeouts. When the network share hung, the automount unit exhausted its retry counter and unmounted the backing directory, causing the container to attempt writes against an unmounted mount point.</p>
+          <p>Initial attempts to remount the share via <code>mount -a</code> failed immediately:</p>
+          <pre><code class="language-text">mount error(104): Connection reset by peer
+Refer to the mount.cifs(8) manual page (e.g. man mount.cifs)</code></pre>
+          <p>The NAS web interface was fully responsive, ICMP ping latency was sub-millisecond, and port 445 was open. However, every SMB session negotiation terminated abruptly during the protocol handshake. A service restart via the NAS management UI temporarily restored connectivity, but the mount dropped again within two hours under moderate I/O.</p>
+          <h2>Tracing the Samba segfault to /run/samba</h2>
+          <p>To rule out storage hardware failure on the non-redundant striped volume, I accessed the NAS via SSH and queried SMART status across both 8 TB Seagate IronWolf disks:</p>
+          <pre><code class="language-bash">smartctl -H /dev/sda
+smartctl -H /dev/sdb</code></pre>
+          <p>Both drives reported <code>PASSED</code>, with zero reallocated sectors, zero pending sectors, and no ATA error counts. The filesystem journals showed no underlying block allocation errors.</p>
+          <p>Inspecting <code>/var/log/samba/</code> and checking core dump traces revealed the origin of the connection resets:</p>
+          <pre><code class="language-text">smbXsrv_open_create: ... NT_STATUS_INTERNAL_DB_CORRUPTION
+INTERNAL ERROR: Signal 11: Segmentation fault in pid 14822</code></pre>
+          <p>The <code>smbd</code> daemon crashed and dumped core whenever client connections triggered operations requiring access to its internal session tracking database. Because Samba places its runtime lock and database files (<code>*.tdb</code>) in <code>/run/samba</code>—a <code>tmpfs</code> RAM-backed filesystem—simply toggling the daemon through the management interface kept the corrupted in-memory database file intact. Each restarted daemon instance read the corrupted table and faulted immediately upon client handshake.</p>
+          <p>Purging the corrupted database files from <code>/run/samba</code> while the daemon was stopped, followed by a clean reboot, permanently cleared the state.</p>
+          <h2>Mount resilience and alert webhooks</h2>
+          <p>To prevent transient file server drops from permanently wedging Docker mounts in the future, I adjusted the <code>/etc/fstab</code> configuration for the NAS shares:</p>
+          <ul><li>Replaced on-demand systemd automounting with persistent kernel mounts (<code>_netdev,nofail,hard,intr</code>).</li><li>Configured connection retry behavior so that momentary network hiccups stall I/O rather than dropping the filesystem out from underneath running containers.</li></ul>
+          <p>Finally, I integrated Discord webhook alerts within Uptime Kuma using the homelab monitoring bot credentials. The integration delivers push notifications on state changes across all 33 monitored endpoints, ensuring real-time awareness of infrastructure status while the broader task of implementing comprehensive offsite backup redundancy for the NAS array remains ongoing.</p>
+        </div>
+      </div>
+    </article>
+
+    <nav class="reader-nav three-grid" aria-label="Article navigation">
+      <a href="../../blog/index.html">Back to Blog</a>
+      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/the-outage-was-already-over-and-the-fake-flash-drive-wasnt-fake/index.html"><span class="meta">Older</span>WAN Link Migration Edge Recovery and Windows Diskpart Formatting Lockups</a><a class="adjacent-post newer-post" href="../../blog/i-sat-down-to-add-one-button-and-rebuilt-half-my-smart-home/index.html"><span class="meta">Newer</span>Home Assistant Integration Alignment: Matter Server, Meross LAN, and Cross-VLAN Discovery</a></div>
+    </nav>
+  </main>
+
+  <footer class="site-foot">
+    <p class="foot-home meta">ERI / CLI<br>Blog</p>
+    <a class="foot-contact" href="mailto:helloworld@n5hq.me">helloworld@n5hq.me</a>
+    <nav class="foot-links" aria-label="Footer navigation"><a href="../../projects.html">Projects</a><a href="../../about.html">About</a><a href="https://github.com/aerwk">GitHub</a></nav>
+  </footer>
+</body>
+</html>

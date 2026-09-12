@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Deploying a multi-tier model gateway proxy backed by PostgreSQL, debugging systemd container restart failures, benchmarking prompt caching thresholds, and isolating migration breakages.">
+  <link rel="icon" href="../../assets/img/logo.png">
+  <title>Model Proxy Architecture, Prompt Cache Thresholds, and Container Lifecycle Traps — ERI / CLI</title>
+  <link rel="stylesheet" href="../../assets/css/style.css">
+  <script defer src="../../assets/js/pages.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#article">Skip to article</a>
+  <header class="site-head">
+    <a class="brand" href="../../index.html" aria-label="ERI / CLI home"><img src="../../assets/img/logo.png" alt=""></a>
+    <nav class="site-nav" aria-label="Primary navigation">
+      <a href="../../projects.html">Projects</a>
+      <a href="../../about.html">About</a>
+      <a href="../../blog/index.html" aria-current="page">Blog</a>
+    </nav>
+  </header>
+
+  <main class="page-main reader-page" id="article">
+    <article>
+      <header class="reader-head three-grid">
+        <p class="reader-meta meta">Homelab<br><time datetime="2026-08-26">26 Aug 2026</time><br>3 min read</p>
+        <h1 class="page-title">Model Proxy Architecture, Prompt Cache Thresholds, and Container Lifecycle Traps</h1>
+      </header>
+
+      <div class="reader-cut" aria-hidden="true">
+        <div class="lattice-host reader-lattice" data-lattice="reader"></div>
+      </div>
+
+      <div class="reader-body three-grid" id="article-body">
+        <div class="reader-prose">
+          <p class="reader-lede">Engineering work on August 26 centered on deploying a multi-tier model proxy gateway with database-backed cost accounting, benchmarking prompt caching characteristics, and migrating workloads across cluster nodes.</p>
+          <h2>Deploying the model proxy and isolating systemd container restart failures</h2>
+          <p>A multi-tier model routing proxy was provisioned on the primary node to enforce hard spend limits across upstream providers. The gateway defined four operational tiers: two routed to subscription-backed model endpoints and two connected to metered third-party providers with hard spending caps ($20 and $10 per 30-day rolling window). The proxy was deployed with a PostgreSQL database backend to persist request logs and enforce spend limits transactionally.</p>
+          <p>During initial validation, 21 live requests passed through the capped tiers, but every request logged a cost of $0.00.</p>
+          <p>Configuration syntax, tier mapping tables, and pricing definitions were verified as correct. Investigating the running environment revealed a discrepancy in process management: executing <code>systemctl restart</code> against the proxy wrapper unit returned exit code 0, yet the underlying container process was never terminated. Container uptime metrics confirmed the process had run continuously without picking up modified configuration mounts. The service manager reported successful execution of the wrapper unit while the underlying workload remained unchanged.</p>
+          <p>Terminating and recreating the container explicitly resolved the issue, after which request costs accumulated accurately in PostgreSQL.</p>
+          <h2>Empirical benchmarking of prompt caching thresholds</h2>
+          <p>Investigating model token economics addressed an assumption that a ~4,000-token prompt prefix was failing to leverage prompt caching.</p>
+          <p>Rather than relying on proxy summary statistics, caching mechanics were benchmarked across three configurations at matched intervals:</p>
+          <ol><li>Prefix placed in the system message block.</li><li>Prefix placed in the initial user turn.</li><li>Explicit caching control headers applied.</li></ol>
+          <p>The tests demonstrated that caching was operational but constrained by upstream architecture: input prompt caching required a minimum prefix length of approximately 10,700 tokens before activation. Once crossing the 10.7k-token threshold, caching efficiency reached 91% of input tokens, yielding an effective 3.6× cost reduction verified against upstream provider billing telemetry. Documenting the 10.7k minimum threshold codified clear parameters for prompt structuring.</p>
+          <h2>Workload migrations and hardcoded hostname dependencies</h2>
+          <p>To accommodate the model proxy deployment, three containers were migrated off the primary node, incurring between 40 and 120 seconds of scheduled maintenance per guest. A storage snapshot was temporarily removed to permit volume migration and regenerated immediately post-cutover to preserve rollback capability. Public ingress was validated through external health checks (HTTP 200) on both primary hostnames.</p>
+          <p>The migration exposed brittle operational dependencies: four update-rehearsal scripts failed because legacy node hostnames were hardcoded into execution paths. Three scripts were updated immediately, while a fourth failed during subsequent batch runs. This prompted a policy change across operational documentation: removing physical hostnames from file names in favor of abstract service references to prevent documentation drift during future migrations.</p>
+          <h2>Current operational status</h2>
+          <p>Two items concluded the day with distinct statuses:</p>
+          <ul><li><strong>Key Rotation (Closed)</strong>: A provider API key exposed in an agent session transcript during benchmark testing was revoked immediately, with invalidation verified via upstream HTTP 401 responses, and replaced with a newly minted secret.</li><li><strong>Client Routing Mapping (Open)</strong>: A client-side routing alias mismatch—where a front-end client passes an unmapped display name unhandled by the gateway proxy—remains unresolved in the project backlog pending client configuration updates.</li></ul>
+        </div>
+      </div>
+    </article>
+
+    <nav class="reader-nav three-grid" aria-label="Article navigation">
+      <a href="../../blog/index.html">Back to Blog</a>
+      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/the-check-meant-to-avoid-touching-a-secret-printed-it-anyway/index.html"><span class="meta">Older</span>Shell Parameter Expansion Traps in Credential Migration and Log Timezone Correlation</a><a class="adjacent-post newer-post" href="../../blog/the-validator-was-checking-the-same-wrong-path-as-the-bug/index.html"><span class="meta">Newer</span>Configuring Model Proxy Spend Caps, Documentation Tiering, and Availability Trade-offs</a></div>
+    </nav>
+  </main>
+
+  <footer class="site-foot">
+    <p class="foot-home meta">ERI / CLI<br>Blog</p>
+    <a class="foot-contact" href="mailto:helloworld@n5hq.me">helloworld@n5hq.me</a>
+    <nav class="foot-links" aria-label="Footer navigation"><a href="../../projects.html">Projects</a><a href="../../about.html">About</a><a href="https://github.com/aerwk">GitHub</a></nav>
+  </footer>
+</body>
+</html>

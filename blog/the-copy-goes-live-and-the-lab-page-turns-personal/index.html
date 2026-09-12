@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Deploying the revised portfolio copy, removing marketing embellishments from the Lab page, and creating a lightweight public service launcher restricted to tunnel-routed services.">
+  <link rel="icon" href="../../assets/img/logo.png">
+  <title>Restructuring the Homelab Page as a Service Launcher — ERI / CLI</title>
+  <link rel="stylesheet" href="../../assets/css/style.css">
+  <script defer src="../../assets/js/pages.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#article">Skip to article</a>
+  <header class="site-head">
+    <a class="brand" href="../../index.html" aria-label="ERI / CLI home"><img src="../../assets/img/logo.png" alt=""></a>
+    <nav class="site-nav" aria-label="Primary navigation">
+      <a href="../../projects.html">Projects</a>
+      <a href="../../about.html">About</a>
+      <a href="../../blog/index.html" aria-current="page">Blog</a>
+    </nav>
+  </header>
+
+  <main class="page-main reader-page" id="article">
+    <article>
+      <header class="reader-head three-grid">
+        <p class="reader-meta meta">Projects<br><time datetime="2026-06-20">20 Jun 2026</time><br>2 min read</p>
+        <h1 class="page-title">Restructuring the Homelab Page as a Service Launcher</h1>
+      </header>
+
+      <div class="reader-cut" aria-hidden="true">
+        <div class="lattice-host reader-lattice" data-lattice="reader"></div>
+      </div>
+
+      <div class="reader-body three-grid" id="article-body">
+        <div class="reader-prose">
+          <p class="reader-lede">Deploying the staged portfolio revisions to production provided an opportunity to audit <code>/lab</code>, transforming it from an unfocused promotional section into a clean operational launcher.</p>
+          <h2>Deploying Staged Copy Revisions</h2>
+          <p>The copy adjustments, native <code>&lt;details&gt;</code> project cards, and navigation jump targets staged locally were deployed to production.</p>
+          <p>To maintain consistency across views:</p>
+          <ul><li>The four dedicated portfolio subpages were updated to use the same <code>&lt;details&gt;</code> card markup as the homepage.</li><li>On subpages, the details block is expanded by default via the HTML <code>open</code> attribute, ensuring that users navigating to dedicated project routes immediately see technical specifications.</li><li>A broken anchor reference on the completed projects archive was corrected.</li></ul>
+          <h2>Decoupling Public Launcher from Internal Topologies</h2>
+          <p>The original <code>/lab</code> page attempted to function as both a public portfolio showcase and a personal bookmark utility, presenting an excessive list of private services and infrastructure specs.</p>
+          <p>Committing comprehensive container topologies and internal addresses to a public GitHub repository introduces unnecessary reconnaissance exposure. The page was refactored with clear boundaries:</p>
+          <ul><li>The promotional homelab section on the homepage was eliminated.</li><li>The public <code>/lab</code> route was rebuilt as a lightweight launcher containing links strictly to services already exposed via Cloudflare Tunnel with active authentication (e.g. Home Assistant, Immich).</li><li>Private local network IPs, direct management ports, and internal Grafana dashboards remain unexposed, deferred to a dedicated private internal portal.</li><li>Host metrics (stack, container, image, and volume counts) are updated via a local git pre-commit hook that queries Docker daemon statistics directly.</li></ul>
+          <h2>Scripting Blog Generation</h2>
+          <p>Closing an inconsistency where the June 13 journal entry was omitted from the static build led to automating article publishing. Previously, reader pages had been generated manually.</p>
+          <p>A Node.js build script was written to parse markdown frontmatter, compile HTML prose templates, generate adjacent post navigation, and update the blog archive manifest. This script ensures that published articles retain correct chronologies without manual page assembly.</p>
+          <h2>Pending Verification</h2>
+          <ul><li>Verify that no private host IPs appear in public repository manifests.</li><li>Test blog generator against missing or malformed frontmatter.</li></ul>
+        </div>
+      </div>
+    </article>
+
+    <nav class="reader-nav three-grid" aria-label="Article navigation">
+      <a href="../../blog/index.html">Back to Blog</a>
+      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/sharper-words-smaller-cards-a-copy-pass-on-the-portfolio/index.html"><span class="meta">Older</span>Editorial and Card Layout Revisions for the Portfolio</a><a class="adjacent-post newer-post" href="../../blog/taking-the-email-off-the-page-and-knowing-when-to-undo-a-logo/index.html"><span class="meta">Newer</span>Masking Contact Form Endpoints, Adding Blog Category Filters, and Reverting a Header Logo</a></div>
+    </nav>
+  </main>
+
+  <footer class="site-foot">
+    <p class="foot-home meta">ERI / CLI<br>Blog</p>
+    <a class="foot-contact" href="mailto:helloworld@n5hq.me">helloworld@n5hq.me</a>
+    <nav class="foot-links" aria-label="Footer navigation"><a href="../../projects.html">Projects</a><a href="../../about.html">About</a><a href="https://github.com/aerwk">GitHub</a></nav>
+  </footer>
+</body>
+</html>

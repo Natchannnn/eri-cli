@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Measuring cost breakdown in a document transcription pipeline revealed that agent scaffolding and cache write churn represented 97% of total token usage.">
+  <link rel="icon" href="../../assets/img/logo.png">
+  <title>Auditing Token Overhead and Cache Inefficiencies in Vision Pipelines — ERI / CLI</title>
+  <link rel="stylesheet" href="../../assets/css/style.css">
+  <script defer src="../../assets/js/pages.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#article">Skip to article</a>
+  <header class="site-head">
+    <a class="brand" href="../../index.html" aria-label="ERI / CLI home"><img src="../../assets/img/logo.png" alt=""></a>
+    <nav class="site-nav" aria-label="Primary navigation">
+      <a href="../../projects.html">Projects</a>
+      <a href="../../about.html">About</a>
+      <a href="../../blog/index.html" aria-current="page">Blog</a>
+    </nav>
+  </header>
+
+  <main class="page-main reader-page" id="article">
+    <article>
+      <header class="reader-head three-grid">
+        <p class="reader-meta meta">Projects<br><time datetime="2026-07-25">25 Jul 2026</time><br>2 min read</p>
+        <h1 class="page-title">Auditing Token Overhead and Cache Inefficiencies in Vision Pipelines</h1>
+      </header>
+
+      <div class="reader-cut" aria-hidden="true">
+        <div class="lattice-host reader-lattice" data-lattice="reader"></div>
+      </div>
+
+      <div class="reader-body three-grid" id="article-body">
+        <div class="reader-prose">
+          <p class="reader-lede">Auditing the operational cost of an automated document transcription pipeline revealed significant inefficiencies in how image inputs were being processed.</p>
+          <p>The service, which monitors incoming handwritten work order photos to extract tabular records into CSV format, was averaging approximately $0.23 per invocation. Over 97% of that expense came from execution scaffolding rather than image analysis.</p>
+          <h2>Measuring Invocation Cost</h2>
+          <p>The original extraction script invoked <code>claude -p</code> (one-shot CLI mode) via a subprocess and parsed the final output string. Because the script ignored the returned <code>usage</code> and <code>total_cost_usd</code> fields, cost had never been logged.</p>
+          <p>Benchmarking three sequential runs against a sample 1248×1760 work order image produced consistent transcriptions (confidence scores 0.85 to 1.0) with costs measuring $0.2499, $0.2189, and $0.2277 per document.</p>
+          <h2>Token Breakdown and Cache Write Churn</h2>
+          <p>Analyzing the token billing logs revealed the source of the cost:</p>
+          <ul><li><strong>Actual payload</strong>: The task prompt consumed approximately 300 tokens, and the document image consumed ~2,900 tokens (roughly 3,200 tokens of substantive data).</li><li><strong>Harness overhead</strong>: Total input tokens per call reached ~117,000. Around 114,000 tokens consisted of system prompt definitions, MCP tool declarations, and CLI session scaffolding transmitted across multiple agent turns.</li><li><strong>Cache write penalty</strong>: Prompt caching accounted for the majority of the invoice. Each call incurred 36,312 tokens at the 2× cache write rate ($0.218, or 87% of the total bill). Because each CLI subprocess operated in a fresh ephemeral session with a distinct prefix, cached data was never reused on subsequent runs, incurring continuous write fees for zero read discount.</li><li><strong>Unvalidated image processing</strong>: Blurry or corrupted images failing downstream validation incurred the full token fee before rejection.</li></ul>
+          <h2>Architecture Refactor</h2>
+          <p>The pipeline was redesigned to interface directly with the model:</p>
+          <ol><li><strong>Direct API calls</strong>: Replaced the CLI wrapper with direct calls to the Anthropic Messages API, passing images as base64 content blocks and reducing input scaffolding from 114,000 tokens to baseline system instructions.</li><li><strong>Structured JSON output</strong>: Replaced prompt-based extraction instructions with JSON schema enforcement, eliminating regex parsing routines and malformed response retries.</li><li><strong>Image downscaling</strong>: Added automated resizing to constrain input photos to 2,000 pixels along the longest edge. This reduced image token volume from ~16,000 tokens (for full 4032×3024 smartphone captures) to ~4,000 tokens while preserving handwriting legibility.</li><li><strong>Disabled extended thinking</strong>: Removed reasoning token overhead unnecessary for direct transcription.</li></ol>
+          <p>The refactored module passed all 17 unit tests using mocked endpoints. Estimated per-document cost drops to approximately $0.017—an estimated 14× reduction in per-photo processing expense.</p>
+        </div>
+      </div>
+    </article>
+
+    <nav class="reader-nav three-grid" aria-label="Article navigation">
+      <a href="../../blog/index.html">Back to Blog</a>
+      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/i-asked-if-my-containers-were-up-to-date-and-ended-the-day-running-my-own-git-forge/index.html"><span class="meta">Older</span>Automated Patch Auditing with n8n and Deploying a Self-Hosted Forgejo Git Forge</a><a class="adjacent-post newer-post" href="../../blog/i-diagnosed-the-same-outage-twice-and-got-two-different-answers/index.html"><span class="meta">Newer</span>Stirling-PDF Container Hardening, Camera Proxy Failures, and Diagnosing Uncorrelated Outages</a></div>
+    </nav>
+  </main>
+
+  <footer class="site-foot">
+    <p class="foot-home meta">ERI / CLI<br>Blog</p>
+    <a class="foot-contact" href="mailto:helloworld@n5hq.me">helloworld@n5hq.me</a>
+    <nav class="foot-links" aria-label="Footer navigation"><a href="../../projects.html">Projects</a><a href="../../about.html">About</a><a href="https://github.com/aerwk">GitHub</a></nav>
+  </footer>
+</body>
+</html>
