@@ -1,0 +1,20 @@
+{
+  "name": "eri-cli",
+  "version": "1.1.0",
+  "private": true,
+  "description": "Eric Li — Infrastructure, Homelab & Systems Engineering Portfolio",
+  "homepage": "https://natchannnn.github.io/eri-cli/",
+  "scripts": {
+    "build": "node scripts/build-blog.js",
+    "test": "node scripts/verify.js"
+  },
+  "keywords": [
+    "portfolio",
+    "systems-engineering",
+    "infrastructure",
+    "threejs",
+    "homelab"
+  ],
+  "author": "Eric Li <helloworld@n5hq.me>",
+  "license": "MIT"
+}

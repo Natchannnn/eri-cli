@@ -84,14 +84,6 @@ html.about-snap-html {
   margin-bottom: 14px;
 }
 
-.about-scroll-hint {
-  color: var(--signal-48);
-  font-family: var(--pitch);
-  font-size: 11px;
-  letter-spacing: .08em;
-  padding-top: 12px;
-}
-
 /* Roadmap (Page 3) */
 .about-roadmap-container {
   width: 100%;
@@ -156,10 +148,6 @@ html.about-snap-html {
     display: block;
     padding: var(--head-space) var(--edge) 40px;
     overflow: visible;
-  }
-
-  .about-scroll-hint {
-    display: none;
   }
 
   .about-intro {
