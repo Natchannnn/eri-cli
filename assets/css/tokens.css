@@ -1,6 +1,4 @@
-/* ==========================================================================
-   Design Tokens & Typography Registrations
-   ========================================================================== */
+/* Tokens */
 
 @font-face {
   font-family: "PP Kyoto";
@@ -80,7 +78,6 @@
 
   /* Calibrated contrast tokens (tuned for WCAG AAA against --ink) */
   --signal-high: rgba(229, 231, 235, .82);
-  --signal-72: var(--signal-high); /* legacy alias retained for compatibility */
   --signal-48: #8892a0;
   --signal-24: rgba(75, 85, 101, .38);
   --signal-12: rgba(75, 85, 101, .18);

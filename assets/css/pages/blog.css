@@ -1,6 +1,4 @@
-/* ==========================================================================
-   Blog Index & Article Reader Layout
-   ========================================================================== */
+/* Blog */
 
 /* Blog Index (blog/index.html) */
 .blog-intro {
@@ -189,7 +187,7 @@
 .reader-prose {
   grid-column: 2;
   width: min(100%, 68ch);
-  color: var(--signal-72);
+  color: var(--signal-high);
   font-size: clamp(17px, 1.32vw, 21px);
   line-height: 1.68;
 }

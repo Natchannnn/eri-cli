@@ -1,6 +1,4 @@
-/* ==========================================================================
-   Base Styles, Reset, & Global Primitives
-   ========================================================================== */
+/* Base */
 
 * {
   box-sizing: border-box;
@@ -87,7 +85,7 @@ button {
 .page-note {
   margin: 0;
   max-width: 39ch;
-  color: var(--signal-72);
+  color: var(--signal-high);
   text-wrap: pretty;
 }
 

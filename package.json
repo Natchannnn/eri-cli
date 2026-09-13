@@ -5,7 +5,9 @@
   "description": "Eric Li — Infrastructure, Homelab & Systems Engineering Portfolio",
   "homepage": "https://natchannnn.github.io/eri-cli/",
   "scripts": {
-    "build": "node scripts/build-blog.js",
+    "build:css": "node scripts/build-css.js",
+    "build:blog": "node scripts/build-blog.js",
+    "build": "node scripts/build-css.js && node scripts/build-blog.js",
     "test": "node scripts/verify.js"
   },
   "keywords": [
@@ -16,5 +18,5 @@
     "homelab"
   ],
   "author": "Eric Li <helloworld@n5hq.me>",
-  "license": "MIT"
+  "license": "UNLICENSED"
 }

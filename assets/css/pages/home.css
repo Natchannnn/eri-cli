@@ -1,6 +1,4 @@
-/* ==========================================================================
-   Homepage (index.html) Specific Layout, Curtain & Sections
-   ========================================================================== */
+/* Home */
 
 html.home-html {
   scroll-behavior: smooth;
@@ -83,7 +81,7 @@ html.curtain-running #terrain-stage {
 
 .body-copy {
   margin: 0;
-  color: var(--signal-72);
+  color: var(--signal-high);
   text-wrap: pretty;
 }
 
@@ -222,13 +220,31 @@ html.curtain-running #terrain-stage {
   text-transform: uppercase;
 }
 
-/* ==========================================================================
-   Homepage Responsive: Ultrawide & Short Viewports
-   ========================================================================== */
+/* Viewport adaptations */
 @media (min-width: 1920px) {
   .page {
     max-width: 1800px;
     margin-inline: auto;
+  }
+}
+
+@media (min-width: 821px) and (max-width: 960px) {
+  .page {
+    grid-template-columns: minmax(140px, 23fr) minmax(320px, 49fr) minmax(180px, 28fr);
+    gap: 12px 18px;
+    padding-inline: 18px;
+  }
+
+  #proof .headline {
+    font-size: clamp(42px, 5.5vw, 68px);
+  }
+
+  #proof .position {
+    font-size: 14px;
+  }
+
+  .selected-project h2 {
+    font-size: clamp(44px, 6vw, 76px);
   }
 }
 

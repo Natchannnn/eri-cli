@@ -1,6 +1,4 @@
-/* ==========================================================================
-   About Page (about.html) 3-Slide Snapped Layout & Roadmap
-   ========================================================================== */
+/* About */
 
 html.about-snap-html {
   scroll-behavior: smooth;
@@ -62,7 +60,7 @@ html.about-snap-html {
 
 .about-story-grid .story-block {
   max-width: 38ch;
-  color: var(--signal-72);
+  color: var(--signal-high);
 }
 
 .about-story-grid .story-block h2 {

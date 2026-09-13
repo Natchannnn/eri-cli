@@ -1,6 +1,4 @@
-/* ==========================================================================
-   Projects Page (projects.html) Layout & Archive
-   ========================================================================== */
+/* Projects */
 
 .projects-intro {
   align-items: end;
@@ -74,14 +72,14 @@
 .project-copy p {
   margin: 18px 0 0;
   max-width: 55ch;
-  color: var(--signal-72);
+  color: var(--signal-high);
   font-size: clamp(14px, 1.08vw, 17px);
 }
 
 .project-facts {
   grid-column: 3;
   padding-top: .8em;
-  color: var(--signal-72);
+  color: var(--signal-high);
 }
 
 .project-facts p {

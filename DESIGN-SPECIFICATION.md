@@ -5,7 +5,7 @@
 
 This document covers the portfolio’s design system, page structure, interactive landscape and delivery architecture.
 
-> **Specification baseline** — This document defines the canonical visual design system, interaction models, and delivery architecture for the production repository. All tokens, geometry definitions, and layout constraints documented here are fully reconciled with the production codebase.
+> **Specification baseline** — Canonical target specification defining the visual design system, interaction models, and delivery architecture for the production repository.
 
 ## Contents
 
@@ -66,7 +66,7 @@ Black and white carry most of the interface. Blue marks selected interactions an
 Titan White uses calibrated contrast levels to establish clear visual hierarchy:
 
 - **100%:** primary headlines and active states (`--signal`, `#E5E7EB`).
-- **Calibrated High (82%):** body prose and secondary descriptions (`--signal-high` / `--signal-72`, `rgba(229, 231, 235, .82)`), calibrated to exceed WCAG AAA contrast ratio on `--ink`.
+- **Calibrated High (82%):** body prose and secondary descriptions (`--signal-high`, `rgba(229, 231, 235, .82)`), calibrated to exceed WCAG AAA contrast ratio on `--ink`.
 - **48%:** metadata, hardware tags and captions (`--signal-48`, `#8892a0`).
 - **Subtle (38%):** divider lines and subtle gridlines (`--signal-24`, `rgba(75, 85, 101, .38)`).
 - **Faint (18%):** structural borders and inactive borders (`--signal-12`, `rgba(75, 85, 101, .18)`).
