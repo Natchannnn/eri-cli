@@ -1,0 +1,86 @@
+/* ==========================================================================
+   Footer Components
+   ========================================================================== */
+
+.site-foot {
+  display: grid;
+  grid-template-columns: 23fr 49fr 28fr;
+  gap: clamp(24px, 3.2vw, 62px);
+  align-items: end;
+  padding: 15vh var(--edge) max(26px, env(safe-area-inset-bottom));
+}
+
+.site-foot p {
+  margin: 0;
+}
+
+.site-foot .foot-home {
+  grid-column: 1;
+}
+
+.site-foot .foot-contact {
+  grid-column: 2;
+  font-family: var(--kyoto);
+  font-size: clamp(26px, 3.2vw, 54px);
+  line-height: .92;
+  text-decoration: none;
+  transition: color 140ms ease;
+}
+
+.site-foot .foot-contact:hover {
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+}
+
+.site-foot .foot-links {
+  grid-column: 3;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 22px;
+  justify-content: flex-end;
+  font-size: 13px;
+}
+
+.site-foot .foot-links a {
+  text-decoration: none;
+  transition: color 140ms ease;
+}
+
+.site-foot .foot-links a:hover {
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+}
+
+.about-foot {
+  margin-top: auto;
+  padding-top: 24px;
+  border-top: 1px solid var(--signal-12);
+}
+
+/* ==========================================================================
+   Footer Responsive Breakpoints
+   ========================================================================== */
+@media (min-width: 1920px) {
+  .site-foot {
+    max-width: 1800px;
+    margin-inline: auto;
+  }
+}
+
+@media (max-width: 820px) {
+  .site-foot {
+    display: block;
+  }
+
+  .site-foot > * {
+    margin-top: 28px;
+  }
+
+  .site-foot .foot-links {
+    justify-content: flex-start;
+  }
+
+  .about-foot {
+    margin-top: 48px;
+  }
+}

@@ -1,0 +1,132 @@
+/* ==========================================================================
+   Isometric SVG Lattice Components (Projects, About, Blog Reader)
+   ========================================================================== */
+
+.lattice-host {
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.lattice-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  shape-rendering: geometricPrecision;
+}
+
+.iso-column {
+  transition: opacity 180ms linear;
+}
+
+.pillar-face,
+.pillar-cap {
+  stroke: var(--signal);
+  stroke-width: .9;
+  stroke-linejoin: miter;
+}
+
+.pillar-left {
+  fill: rgba(10, 11, 14, calc(.18 + var(--height-strength) * .35));
+  stroke-opacity: calc(.15 + var(--height-strength) * .56);
+}
+
+.pillar-right {
+  fill: rgba(229, 231, 235, calc(.018 + var(--height-strength) * .045));
+  stroke-opacity: calc(.10 + var(--height-strength) * .43);
+}
+
+.pillar-cap {
+  fill: rgba(0, 47, 167, calc(.04 + var(--height-strength) * .32));
+  stroke: var(--signal);
+  stroke: color-mix(in srgb, var(--signal), var(--accent) calc(var(--height-strength) * 85%));
+  stroke-opacity: calc(.28 + var(--height-strength) * .72);
+}
+
+/* Projects Lattice Container */
+.project-lattice {
+  position: absolute;
+  z-index: -1;
+  top: clamp(130px, 18vw, 250px);
+  left: calc(var(--edge) * -1);
+  width: 100vw;
+  height: clamp(460px, 53vw, 760px);
+  opacity: .78;
+}
+
+.project-lattice .lattice-svg {
+  width: max(1080px, 100vw);
+  max-width: none;
+  transform: translateX(calc((100vw - max(1080px, 100vw)) / 2));
+}
+
+/* About Lattice Tier */
+.about-lattice-tier {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: clamp(220px, 28vh, 360px);
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.about-lattice-tier::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  background:
+    linear-gradient(to bottom, var(--ink) 0%, rgba(8, 9, 12, 0) 25%, rgba(8, 9, 12, 0) 75%, var(--ink) 100%),
+    linear-gradient(to right, var(--ink) 0%, rgba(8, 9, 12, 0) 15%, rgba(8, 9, 12, 0) 85%, var(--ink) 100%);
+}
+
+.about-lattice {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: .82;
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 60%, #000 25%, rgba(0, 0, 0, 0.85) 55%, rgba(0, 0, 0, 0.15) 85%, transparent 100%);
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 60%, #000 25%, rgba(0, 0, 0, 0.85) 55%, rgba(0, 0, 0, 0.15) 85%, transparent 100%);
+  filter: drop-shadow(0 0 24px rgba(0, 47, 167, 0.16));
+}
+
+.about-lattice .lattice-svg {
+  width: max(1200px, 100vw);
+  height: 640px;
+  margin: 0 auto;
+  transform: translateY(-20%);
+}
+
+/* Blog Reader Cut */
+.reader-cut {
+  position: relative;
+  display: none;
+  height: clamp(180px, 24vh, 290px);
+  margin: 0 calc(var(--edge) * -1) clamp(36px, 5vh, 64px);
+  overflow: hidden;
+}
+
+.reader-cut.is-rendered {
+  display: block;
+}
+
+.reader-cut::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  background:
+    linear-gradient(to bottom, var(--ink) 0%, rgba(8, 9, 12, 0) 24%, rgba(8, 9, 12, 0) 76%, var(--ink) 100%),
+    linear-gradient(to right, var(--ink) 0%, rgba(8, 9, 12, 0) 18%, rgba(8, 9, 12, 0) 82%, var(--ink) 100%);
+}
+
+.reader-lattice {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}

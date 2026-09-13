@@ -1,0 +1,99 @@
+/* ==========================================================================
+   Design Tokens & Typography Registrations
+   ========================================================================== */
+
+@font-face {
+  font-family: "PP Kyoto";
+  src: url("../fonts/pp-kyoto/PPKyoto-Medium.otf") format("opentype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "PP Kyoto";
+  src: url("../fonts/pp-kyoto/PPKyoto-Extrabold.otf") format("opentype");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "PP Kyoto";
+  src: url("../fonts/pp-kyoto/PPKyoto-MediumItalic.otf") format("opentype");
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "AUTHENTIC Sans";
+  src: url("../fonts/authentic-sans/authentic-sans-90.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "AUTHENTIC Sans";
+  src: url("../fonts/authentic-sans/authentic-sans-130.otf") format("opentype");
+  font-weight: 650;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Pitch Sans Test";
+  src: url("../fonts/pitch-sans-test/TestPitchSans-Regular.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Pitch Sans Test";
+  src: url("../fonts/pitch-sans-test/TestPitchSans-Medium.otf") format("opentype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Pitch Sans Test";
+  src: url("../fonts/pitch-sans-test/TestPitchSans-Bold.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* Brand Color Palette */
+  --color-black: #08090C;
+  --color-white: #E5E7EB;
+  --color-slate: #4B5565;
+  --color-klein: #002FA7;
+
+  /* Semantic tokens */
+  --ink: var(--color-black);
+  --structure: #0a0b0e;
+  --signal: var(--color-white);
+
+  /* Calibrated contrast tokens (tuned for WCAG AAA against --ink) */
+  --signal-high: rgba(229, 231, 235, .82);
+  --signal-72: var(--signal-high); /* legacy alias retained for compatibility */
+  --signal-48: #8892a0;
+  --signal-24: rgba(75, 85, 101, .38);
+  --signal-12: rgba(75, 85, 101, .18);
+  --signal-10: rgba(75, 85, 101, .18);
+  --accent: var(--color-klein);
+
+  /* Typography primitives */
+  --kyoto: "PP Kyoto", Georgia, serif;
+  --authentic: "AUTHENTIC Sans", Arial, sans-serif;
+  --pitch: "Pitch Sans Test", "Cascadia Mono", monospace;
+
+  /* Responsive spatial tokens */
+  --edge: clamp(20px, 2.15vw, 42px);
+  --head-space: clamp(132px, 15vh, 176px);
+  --page-x: clamp(18px, 3vw, 58px);
+}

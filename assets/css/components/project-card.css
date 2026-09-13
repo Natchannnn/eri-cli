@@ -1,0 +1,109 @@
+/* ==========================================================================
+   Project Selector, Cards & Telemetry Facts
+   ========================================================================== */
+
+.project-list {
+  list-style: none;
+  margin: 18px 0 0;
+  padding: 0;
+}
+
+.project-list li {
+  border-top: 1px solid var(--signal-24);
+}
+
+.project-list li:last-child {
+  border-bottom: 1px solid var(--signal-24);
+}
+
+.project-list a,
+.project-list button {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  width: 100%;
+  padding: 11px 0;
+  background: none;
+  border: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  text-decoration: none;
+  opacity: .42;
+  cursor: pointer;
+  transition: transform 160ms ease-out, opacity 160ms ease-out;
+}
+
+.project-list a:hover,
+.project-list a:focus-visible,
+.project-list a[aria-current="true"],
+.project-list button:hover,
+.project-list button:focus-visible,
+.project-list button[aria-pressed="true"] {
+  opacity: 1;
+  transform: translateX(5px);
+}
+
+.project-list b {
+  font-family: var(--authentic);
+  font-size: clamp(17px, 1.45vw, 24px);
+  font-weight: 650;
+  line-height: 1;
+}
+
+.project-list span {
+  font-family: var(--pitch);
+  font-size: 9px;
+  color: var(--signal-48);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Selected Project Detail Card */
+.selected-project h2 {
+  margin: 8px 0 20px;
+  font-family: var(--kyoto);
+  font-size: clamp(61px, 7vw, 120px);
+  font-weight: 500;
+  font-style: normal;
+  line-height: .78;
+  letter-spacing: -.055em;
+  text-wrap: balance;
+}
+
+.selected-project .body-copy {
+  max-width: 47ch;
+  font-size: clamp(15px, 1.05vw, 18px);
+}
+
+/* Project Proof / Facts */
+.project-proof dl {
+  margin: 17px 0 0;
+}
+
+.project-proof div {
+  padding: 9px 0;
+  border-top: 1px solid var(--signal-24);
+}
+
+.project-proof div:last-child {
+  border-bottom: 1px solid var(--signal-24);
+}
+
+.project-proof dt {
+  font-family: var(--pitch);
+  font-size: 9px;
+  color: var(--signal-48);
+  text-transform: uppercase;
+}
+
+.project-proof dd {
+  margin: 3px 0 0;
+  font-size: 15px;
+}
+
+.project-proof .all-projects {
+  display: inline-block;
+  margin-top: 20px;
+}

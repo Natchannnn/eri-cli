@@ -1,0 +1,145 @@
+/* ==========================================================================
+   Header & Navigation Components
+   ========================================================================== */
+
+.site-head {
+  position: absolute;
+  z-index: 30;
+  inset: 0 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 32px;
+  padding: max(18px, env(safe-area-inset-top)) var(--edge) 0;
+}
+
+.site-head-fixed {
+  position: fixed;
+  z-index: 30;
+  inset: 0 0 auto;
+  pointer-events: none;
+}
+
+.site-head-fixed a {
+  pointer-events: auto;
+}
+
+.brand {
+  display: block;
+}
+
+.brand img {
+  display: block;
+  width: clamp(100px, 7.6vw, 128px);
+  height: auto;
+  filter: brightness(0) invert(92%);
+  transition: filter 180ms ease;
+}
+
+.brand:hover img,
+.brand img:hover {
+  filter: brightness(0) invert(92%) drop-shadow(0 0 10px rgba(0, 47, 167, 0.65));
+}
+
+.site-nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px clamp(16px, 2vw, 32px);
+  padding-top: 4px;
+  font-size: 14px;
+}
+
+.site-nav a {
+  text-decoration: none;
+  text-underline-offset: 4px;
+  transition: color 140ms ease;
+}
+
+.site-nav a:hover,
+.site-nav a[aria-current="page"] {
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+}
+
+/* Fixed Overlay Header (Homepage Variant) */
+.site-header {
+  position: fixed;
+  z-index: 100;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: max(16px, env(safe-area-inset-top)) var(--page-x) 20px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 34px;
+  pointer-events: none;
+  background: linear-gradient(to bottom, var(--ink) 0%, rgba(8, 9, 12, 0.88) 60%, transparent 100%);
+}
+
+.site-header a {
+  pointer-events: auto;
+}
+
+.site-header .logo {
+  display: block;
+  width: clamp(102px, 7.6vw, 126px);
+  height: auto;
+  filter: brightness(0) invert(92%);
+  transition: filter 180ms ease;
+}
+
+.site-header .logo:hover {
+  filter: brightness(0) invert(92%) drop-shadow(0 0 10px rgba(0, 47, 167, 0.65));
+}
+
+/* ==========================================================================
+   Header Responsive Breakpoints
+   ========================================================================== */
+@media (min-width: 1920px) {
+  .site-head {
+    max-width: 1800px;
+    margin-inline: auto;
+    left: 0;
+    right: 0;
+  }
+}
+
+@media (max-width: 820px) {
+  .site-head {
+    display: grid;
+    grid-template-columns: 82px minmax(0, 1fr);
+    gap: 18px;
+  }
+
+  .brand img {
+    width: 82px;
+  }
+
+  .site-nav {
+    display: grid;
+    grid-template-columns: repeat(2, max-content);
+    max-width: none;
+    gap: 7px 15px;
+    justify-content: end;
+    font-size: 12px;
+  }
+
+  .site-header {
+    position: absolute;
+    padding: max(16px, env(safe-area-inset-top)) 18px 0;
+  }
+
+  .site-header .logo {
+    width: 96px;
+  }
+
+  .site-header .site-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    font-size: 13px;
+    justify-content: flex-end;
+  }
+}

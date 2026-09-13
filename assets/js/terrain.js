@@ -790,10 +790,18 @@
 
   function updateCamera() {
     const aspect = width / Math.max(height, 1);
-    camera.left = -config.cameraSize * aspect;
-    camera.right = config.cameraSize * aspect;
-    camera.top = config.cameraSize;
-    camera.bottom = -config.cameraSize;
+    if (aspect > 1.82) {
+      const horizSpan = config.cameraSize * 1.80;
+      camera.left = -horizSpan;
+      camera.right = horizSpan;
+      camera.top = horizSpan / aspect;
+      camera.bottom = -horizSpan / aspect;
+    } else {
+      camera.left = -config.cameraSize * aspect;
+      camera.right = config.cameraSize * aspect;
+      camera.top = config.cameraSize;
+      camera.bottom = -config.cameraSize;
+    }
     const yaw = config.yaw * Math.PI / 180;
     const pitch = config.pitch * Math.PI / 180;
     const distance = 58;

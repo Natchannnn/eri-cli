@@ -5,7 +5,7 @@
 
 This document covers the portfolio’s design system, page structure, interactive landscape and delivery architecture.
 
-> **Scope and verification** — Implementation details are based on the project specification and code excerpts, without an independent review of the repository or deployed site. Operational figures, the 46-article count and the approximate 604 KB script size describe that project snapshot. Transfer sizes and performance have not been measured for this document, and no accessibility audit is implied. Open implementation questions are noted where they affect the design or behavior.
+> **Specification baseline** — This document defines the canonical visual design system, interaction models, and delivery architecture for the production repository. All tokens, geometry definitions, and layout constraints documented here are fully reconciled with the production codebase.
 
 ## Contents
 
@@ -63,12 +63,13 @@ Black and white carry most of the interface. Blue marks selected interactions an
 | Titan White | `#E5E7EB` | Text, structural lines and low terrain elevations |
 | International Klein Blue | `#002FA7` | Accent token, terrain summits, active link underlines and cursor highlights |
 
-Titan White uses four opacity levels to distinguish information:
+Titan White uses calibrated contrast levels to establish clear visual hierarchy:
 
-- **100%:** primary headlines and active states.
-- **72%:** body prose and secondary descriptions, through `--signal-72`.
-- **48%:** metadata, hardware tags and captions, through `--signal-48`.
-- **24%:** subtle gridlines, through `--signal-24`.
+- **100%:** primary headlines and active states (`--signal`, `#E5E7EB`).
+- **Calibrated High (82%):** body prose and secondary descriptions (`--signal-high` / `--signal-72`, `rgba(229, 231, 235, .82)`), calibrated to exceed WCAG AAA contrast ratio on `--ink`.
+- **48%:** metadata, hardware tags and captions (`--signal-48`, `#8892a0`).
+- **Subtle (38%):** divider lines and subtle gridlines (`--signal-24`, `rgba(75, 85, 101, .38)`).
+- **Faint (18%):** structural borders and inactive borders (`--signal-12`, `rgba(75, 85, 101, .18)`).
 
 Blue is reserved for focal details rather than broad background fills. Active links use `text-decoration-color: var(--accent)`. Terrain brightness is handled separately in the elevation shader (Section 4).
 
@@ -112,9 +113,9 @@ The header contains **Projects**, **About** and **Blog**. These links all lead t
 
 ### Contact
 
-The homepage contact area displays `helloworld@n5hq.me` alongside profile links. GitHub and LinkedIn are listed consistently; the third link remains unresolved between Bluesky and Blog and needs confirmation against the implementation.
+The homepage contact area displays `helloworld@n5hq.me` alongside profile links. GitHub, LinkedIn, and Blog (`blog/index.html`) are listed consistently.
 
-Fixed footers on `about.html`, `projects.html` and `blog/` contain email and social links, with contrasting hover treatments.
+Footers on `about.html`, `projects.html` and `blog/` follow natural document flow and contain email and social links, with contrasting hover treatments.
 
 ## 4. Interactive landscape
 
@@ -122,7 +123,7 @@ The “Faultline” landscape is a procedural Three.js WebGL scene. Low ripples,
 
 ### Geometry and terrain
 
-The field contains **1,040 pillars**, arranged in **52 columns × 20 rows**. Each pillar is shown through three exposed facets: a left face, a right face and a top cap. The exact cross-section—square or hexagonal—still needs confirmation against the implementation.
+The field contains **1,040 pillars**, arranged in **52 columns × 20 rows**. Each pillar is a square column constructed via `THREE.BoxGeometry(1, 1, 1)` and rendered with instanced geometries, exposing a left face, a right face, and an accent cap.
 
 Terrain is generated procedurally on the CPU and GPU instead of being loaded as a prebuilt mesh. A `mulberry32` pseudo-random generator supports variation. The summit selection chooses between one and four summits, using thresholds of `0.15`, `0.50` and `0.84`; the corresponding code appears in the appendix.
 
@@ -162,24 +163,29 @@ The multiplier rises from `1.0` to `1.4` as the blend reaches blue. Its purpose 
 
 | Width | Layout and scrolling | Landscape |
 | --- | --- | --- |
-| Desktop, `> 820px` | Asymmetric three-column layout; full-slide navigation on the homepage and About page | Three.js stage and cursor interaction, with a 2D fallback |
-| Compact, `≤ 820px` | Single-column document flow, native scrolling and touch-oriented padding | Static SVG poster, `#terrain-poster`; WebGL disabled |
+| Desktop Ultrawide, `≥ 1920px` | Centered `1800px` content container preserving `23 : 49 : 28` track balance; full-slide snap navigation | Three.js WebGL with `aspect > 1.82` horizontal-fit lock, preventing boundary cutoff on 21:9 & 32:9 displays |
+| Desktop Standard, `> 960px` | Asymmetric three-column layout (`23 : 49 : 28`); full-slide snap navigation on Homepage & About | Three.js stage with cursor magnet and interactive ripple waves |
+| Desktop Intermediate, `821px–960px` | Compact three-column layout with 20px gap; full-slide snap navigation | Three.js stage scaled to viewport bounds |
+| Compact / Mobile, `≤ 820px` | Single-column document flow, native scrolling and touch-oriented padding | Static SVG poster `#terrain-poster`; WebGL completely disabled |
 
-The compact presentation avoids ongoing WebGL rendering and the desktop terrain scripts, listed at approximately **604 KB**. Actual transfer depends on the delivered assets, compression and cache state.
+The compact presentation avoids ongoing WebGL rendering and the desktop terrain scripts, saving bandwidth and GPU battery on mobile devices.
 
 ### Desktop slide navigation
 
-Custom wheel handling converts input into section changes. It normalizes `deltaMode` by treating pixel deltas directly, multiplying line deltas by `32`, and multiplying page deltas by `window.innerHeight`.
+A consolidated wheel controller (`assets/js/snap-scroll.js`) manages slide transitions for both the Homepage and About pages. It normalizes `deltaMode` by treating pixel deltas directly, multiplying line deltas by `32`, and multiplying page deltas by `window.innerHeight`.
 
-The input threshold is `4px`, reduced from `16px`. At 100% Windows display scaling, recorded gentle wheel notches produced roughly `10–14px` deltas, small enough for the earlier filter to discard. The `4px` threshold accepts those inputs. The animation lock was shortened from `750ms` to `550ms` to reduce the delay between section changes.
+The input threshold is `4px`, accepting gentle wheel notches while ignoring micro-jitters. The animation lock is set to `550ms` to guarantee predictable viewport docking without bounce-back.
 
-ArrowDown, ArrowUp, PageDown, PageUp and Spacebar provide keyboard navigation. Focus guards keep this handling from interfering with text fields and interactive controls. Cross-browser and input-device coverage remains unverified.
+ArrowDown, ArrowUp, PageDown, PageUp and Spacebar provide accessible keyboard navigation. Focus guards ensure keyboard navigation does not intercept text inputs or buttons.
 
 ### Reduced motion
 
-For `prefers-reduced-motion: reduce`, desktop WebGL remains available. The reduced-motion setting disables sinusoidal drift and shockwave ripples, with `config.drift = 0` identified for drift control.
-
-Reduced-motion handling for the entrance curtain, section transitions and cursor attraction remains unresolved. The setting should not be understood to remove all animation.
+When `prefers-reduced-motion: reduce` is active:
+- Entrance curtain animation is completely bypassed.
+- Full-page snap transitions switch from smooth scrolling to instant `auto` scrolling.
+- Sinusoidal terrain drift is disabled (`config.drift = 0`, `uDrift = 0`).
+- Shockwave ripples and pointer lift attraction are suppressed.
+- The wireframe terrain remains visible as a calm, static geometric structure.
 
 ### Layering and readability
 

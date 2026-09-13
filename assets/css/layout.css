@@ -1,0 +1,63 @@
+/* ==========================================================================
+   Grid System, Layout Scaffolding & Responsive Containers
+   ========================================================================== */
+
+.page-main {
+  position: relative;
+  min-height: 100svh;
+  padding: var(--head-space) var(--edge) 12vh;
+}
+
+/* Core Three-Column Grid: 23 / 49 / 28 */
+.three-grid {
+  display: grid;
+  grid-template-columns: minmax(150px, 23fr) minmax(300px, 49fr) minmax(220px, 28fr);
+  column-gap: clamp(24px, 3.2vw, 62px);
+}
+
+/* ==========================================================================
+   Ultrawide Display Optimization (21:9 & 32:9 displays >= 1920px)
+   ========================================================================== */
+@media (min-width: 1920px) {
+  .page-main,
+  .three-grid,
+  .projects-intro,
+  .about-story-grid,
+  .roadmap-groups,
+  .reader-head,
+  .reader-body {
+    max-width: 1800px;
+    margin-inline: auto;
+  }
+}
+
+/* ==========================================================================
+   Intermediate Tablet Breakpoint (821px - 960px)
+   ========================================================================== */
+@media (min-width: 821px) and (max-width: 960px) {
+  .three-grid {
+    column-gap: 20px;
+  }
+}
+
+/* ==========================================================================
+   Mobile Layout Breakpoint (<= 820px)
+   ========================================================================== */
+@media (max-width: 820px) {
+  :root {
+    --edge: 18px;
+    --head-space: 118px;
+  }
+
+  .three-grid {
+    display: block;
+  }
+
+  .page-main {
+    padding-bottom: 8vh;
+  }
+
+  .page-note {
+    margin-top: 28px;
+  }
+}
