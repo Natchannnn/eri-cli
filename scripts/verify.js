@@ -3,6 +3,9 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
+const vm = require('node:vm');
+const { generateBundle } = require('./build-css');
+
 const root = path.resolve(__dirname, '..');
 let errorCount = 0;
 
@@ -50,6 +53,20 @@ if (fs.existsSync(styleCssPath)) {
   report(!hasImports, `Production style.css is bundled (zero @import waterfalls)`);
   const hasLegacyToken = /--signal-72\b/.test(content);
   report(!hasLegacyToken, `Zero legacy '--signal-72' tokens (canonical '--signal-high' enforced)`);
+
+  // Detect out-of-sync edits: compare current style.css with freshly generated bundle
+  try {
+    const expectedBundle = generateBundle();
+    const cleanActual = content.replace(/\r\n/g, '\n').trim();
+    const cleanExpected = expectedBundle.replace(/\r\n/g, '\n').trim();
+    const isSynced = cleanActual === cleanExpected;
+    report(isSynced, isSynced
+      ? `Production style.css is fully synchronized with CSS source modules`
+      : `Production style.css is OUT OF SYNC with source modules. Run 'npm run build:css' to update.`
+    );
+  } catch (err) {
+    report(false, `Error validating bundle freshness: ${err.message}`);
+  }
 } else {
   report(false, `Production style.css exists`);
 }
@@ -87,14 +104,24 @@ htmlDocs.forEach(doc => {
 });
 report(allLinksValid, `All internal HTML links verified against filesystem`);
 
-// 5. JavaScript & Blog Verification
-console.log('\n5. Verifying JS Subsystems & Blog Engine:');
+// 5. JavaScript Syntax & Blog Verification
+console.log('\n5. Verifying JS Syntax & Blog Engine:');
 const jsFiles = ['snap-scroll.js', 'home.js', 'pages.js', 'terrain.js', 'three.min.js'];
 jsFiles.forEach(file => {
   const p = path.join(root, 'assets', 'js', file);
   const exists = fs.existsSync(p);
   const size = exists ? fs.statSync(p).size : 0;
   report(exists && size > 0, `Script '${file}' (${size} bytes)`);
+
+  if (exists) {
+    try {
+      const code = fs.readFileSync(p, 'utf8');
+      new vm.Script(code, { filename: file });
+      report(true, `Syntax valid: ${file}`);
+    } catch (err) {
+      report(false, `Syntax error in ${file}: ${err.message}`);
+    }
+  }
 });
 
 const blogIndex = path.join(root, 'blog', 'index.html');
