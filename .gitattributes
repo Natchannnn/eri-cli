@@ -1,3 +1,4 @@
+assets/fonts/** linguist-vendored=true
 assets/js/three.min.js linguist-vendored=true
 assets/css/style.css linguist-generated=true
 blog/** linguist-generated=true
