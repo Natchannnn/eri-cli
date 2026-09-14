@@ -274,7 +274,7 @@ Tokens in `assets/css/style.css`:
   --ink: #08090c;
   --ink-mass: #0a0b0e;
   --signal: #e5e7eb;
-  --signal-72: rgba(229, 231, 235, 0.72);
+  --signal-high: rgba(229, 231, 235, .82);
   --signal-48: rgba(229, 231, 235, 0.48);
   --signal-24: rgba(229, 231, 235, 0.24);
   --accent: #002fa7;

@@ -71,8 +71,8 @@ if (fs.existsSync(styleCssPath)) {
   report(false, `Production style.css exists`);
 }
 
-// 3. Tablet 900px Clipping Math Validator
-console.log('\n3. Verifying Tablet Viewport Geometry (900px Safety):');
+// 3. Viewport Geometry & Responsive Safety (Width & Height)
+console.log('\n3. Verifying Viewport Geometry & Responsive Safety:');
 const homeCss = fs.readFileSync(path.join(cssDir, 'pages', 'home.css'), 'utf8');
 const tabletMatch = homeCss.match(/@media\s*\(\s*min-width:\s*821px\s*\)\s*and\s*\(\s*max-width:\s*960px\s*\)[\s\S]*?grid-template-columns:\s*minmax\((\d+)px[^)]+\)\s*minmax\((\d+)px[^)]+\)\s*minmax\((\d+)px[^)]+\)/);
 if (tabletMatch) {
@@ -84,6 +84,13 @@ if (tabletMatch) {
 } else {
   report(false, `Tablet breakpoint (821px-960px) defined in home.css`);
 }
+
+const aboutCss = fs.readFileSync(path.join(cssDir, 'pages', 'about.css'), 'utf8');
+const shortHeightMatch = /@media\s*\(\s*max-height:\s*640px\s*\)[\s\S]*?overflow:\s*visible/.test(aboutCss);
+report(shortHeightMatch, `Short viewport handling (height <= 640px) enabled in about.css (prevents vertical clipping at 900x400)`);
+
+const specContent = fs.readFileSync(path.join(root, 'DESIGN-SPECIFICATION.md'), 'utf8');
+report(!/--signal-72\b/.test(specContent), `Zero legacy '--signal-72' tokens in DESIGN-SPECIFICATION.md`);
 
 // 4. Internal Link Integrity
 console.log('\n4. Verifying Internal Navigation Links:');
