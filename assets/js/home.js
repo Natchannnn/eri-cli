@@ -2,131 +2,143 @@
   'use strict';
 
   const isStatic = matchMedia('(max-width: 820px)').matches;
-  const canvas = document.querySelector('#terrain');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return;
 
-  const points = [0, .07, .13, .19, .27, .34, .41, .49, .57, .64, .72, .79, .86, .93, 1];
-  const heights = [.18, .28, .22, .48, .34, .63, .39, .82, .43, .70, .36, .56, .25, .43, .31];
-  let running = false;
-  let frameId = 0;
-  let dpr = 1;
-  let width = 0;
-  let height = 0;
-  let easedScroll = scrollY;
-  let targetScroll = scrollY;
-  let pointerX = .5;
-  let pointerForce = 0;
+  window.stopFallbackTerrain = () => {};
+  window.startFallbackTerrain = () => {};
 
-  const mix = (a, b, t) => a + (b - a) * t;
-  const ease = value => value * value * (3 - 2 * value);
+  function initFallbackCanvas() {
+    const canvas = document.querySelector('#terrain');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
-  function resize() {
-    dpr = Math.min(devicePixelRatio || 1, 1.5);
-    width = innerWidth;
-    height = innerHeight;
-    canvas.width = Math.round(width * dpr);
-    canvas.height = Math.round(height * dpr);
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  }
+    const points = [0, .07, .13, .19, .27, .34, .41, .49, .57, .64, .72, .79, .86, .93, 1];
+    const heights = [.18, .28, .22, .48, .34, .63, .39, .82, .43, .70, .36, .56, .25, .43, .31];
+    let running = false;
+    let frameId = 0;
+    let dpr = 1;
+    let width = 0;
+    let height = 0;
+    let easedScroll = scrollY;
+    let targetScroll = scrollY;
+    let pointerX = .5;
+    let pointerForce = 0;
 
-  function terrainPoints(state) {
-    return points.map((x, index) => {
-      const local = Math.max(0, 1 - Math.abs(x - pointerX) * 7) * pointerForce;
-      const floorY = height - heights[index] * height * .43 - local * 42;
-      const ceilingY = heights[index] * height * .34 + local * 34;
-      if (state <= 1) return [x * width, mix(floorY, ceilingY, ease(state))];
-      const t = ease(state - 1);
-      const specimenX = width * (.43 + x * .57);
-      const specimenY = height * (.05 + heights[index] * .31) + local * 18;
-      return [mix(x * width, specimenX, t), mix(ceilingY, specimenY, t)];
-    });
-  }
+    const mix = (a, b, t) => a + (b - a) * t;
+    const ease = value => value * value * (3 - 2 * value);
 
-  function renderFrame() {
-    easedScroll += (targetScroll - easedScroll) * .085;
-    pointerForce *= .94;
-    const state = Math.max(0, Math.min(2, easedScroll / Math.max(height, 1)));
-    const terrain = terrainPoints(state);
-    ctx.clearRect(0, 0, width, height);
-    ctx.beginPath();
-    terrain.forEach(([x, y], index) => index ? ctx.lineTo(x, y) : ctx.moveTo(x, y));
-    if (state < .5) {
-      ctx.lineTo(width, height);
-      ctx.lineTo(0, height);
-    } else {
-      ctx.lineTo(terrain[terrain.length - 1][0], 0);
-      ctx.lineTo(terrain[0][0], 0);
+    function resize() {
+      dpr = Math.min(devicePixelRatio || 1, 1.5);
+      width = innerWidth;
+      height = innerHeight;
+      canvas.width = Math.round(width * dpr);
+      canvas.height = Math.round(height * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
-    ctx.closePath();
-    ctx.fillStyle = '#0a0b0e';
-    ctx.fill();
-    ctx.beginPath();
-    terrain.forEach(([x, y], index) => index ? ctx.lineTo(x, y) : ctx.moveTo(x, y));
-    ctx.strokeStyle = '#E5E7EB';
-    ctx.lineWidth = 1.3;
-    ctx.stroke();
-    ctx.save();
-    ctx.globalAlpha = .25;
-    ctx.setLineDash([2, 8]);
-    [2, 5, 7, 10, 13].forEach(index => {
-      const [x, y] = terrain[index];
+
+    function terrainPoints(state) {
+      return points.map((x, index) => {
+        const local = Math.max(0, 1 - Math.abs(x - pointerX) * 7) * pointerForce;
+        const floorY = height - heights[index] * height * .43 - local * 42;
+        const ceilingY = heights[index] * height * .34 + local * 34;
+        if (state <= 1) return [x * width, mix(floorY, ceilingY, ease(state))];
+        const t = ease(state - 1);
+        const specimenX = width * (.43 + x * .57);
+        const specimenY = height * (.05 + heights[index] * .31) + local * 18;
+        return [mix(x * width, specimenX, t), mix(ceilingY, specimenY, t)];
+      });
+    }
+
+    function renderFrame() {
+      easedScroll += (targetScroll - easedScroll) * .085;
+      pointerForce *= .94;
+      const state = Math.max(0, Math.min(2, easedScroll / Math.max(height, 1)));
+      const terrain = terrainPoints(state);
+      ctx.clearRect(0, 0, width, height);
       ctx.beginPath();
-      ctx.moveTo(x, y);
-      ctx.lineTo(x, state < .5 ? height : 0);
-      ctx.stroke();
-    });
-    ctx.restore();
-  }
-
-  function draw() {
-    if (!running) return;
-    renderFrame();
-    frameId = requestAnimationFrame(draw);
-  }
-
-  window.stopFallbackTerrain = () => {
-    running = false;
-    if (frameId) {
-      cancelAnimationFrame(frameId);
-      frameId = 0;
-    }
-  };
-
-  window.startFallbackTerrain = () => {
-    canvas.hidden = false;
-    resize();
-    if (isStatic) {
-      renderFrame();
-    } else {
-      if (!running) {
-        running = true;
-        frameId = requestAnimationFrame(draw);
+      terrain.forEach(([x, y], index) => index ? ctx.lineTo(x, y) : ctx.moveTo(x, y));
+      if (state < .5) {
+        ctx.lineTo(width, height);
+        ctx.lineTo(0, height);
+      } else {
+        ctx.lineTo(terrain[terrain.length - 1][0], 0);
+        ctx.lineTo(terrain[0][0], 0);
       }
+      ctx.closePath();
+      ctx.fillStyle = '#0a0b0e';
+      ctx.fill();
+      ctx.beginPath();
+      terrain.forEach(([x, y], index) => index ? ctx.lineTo(x, y) : ctx.moveTo(x, y));
+      ctx.strokeStyle = '#E5E7EB';
+      ctx.lineWidth = 1.3;
+      ctx.stroke();
+      ctx.save();
+      ctx.globalAlpha = .25;
+      ctx.setLineDash([2, 8]);
+      [2, 5, 7, 10, 13].forEach(index => {
+        const [x, y] = terrain[index];
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x, state < .5 ? height : 0);
+        ctx.stroke();
+      });
+      ctx.restore();
     }
-  };
 
-  addEventListener('resize', () => {
-    resize();
-    if (isStatic || !running) renderFrame();
-  });
-  addEventListener('scroll', () => {
-    targetScroll = scrollY;
-    if (isStatic || !running) renderFrame();
-  }, { passive: true });
-  addEventListener('pointermove', event => {
-    pointerX = event.clientX / Math.max(width, 1);
-    pointerForce = .7;
-  }, { passive: true });
+    function draw() {
+      if (!running) return;
+      renderFrame();
+      frameId = requestAnimationFrame(draw);
+    }
 
-  const isPendingCurtain = document.documentElement.classList.contains('curtain-pending');
-  if (isStatic || isPendingCurtain) {
-    canvas.hidden = true;
-  } else {
-    resize();
-    running = true;
-    frameId = requestAnimationFrame(draw);
+    window.stopFallbackTerrain = () => {
+      running = false;
+      if (frameId) {
+        cancelAnimationFrame(frameId);
+        frameId = 0;
+      }
+    };
+
+    window.startFallbackTerrain = () => {
+      canvas.hidden = false;
+      resize();
+      if (isStatic) {
+        renderFrame();
+      } else {
+        if (!running) {
+          running = true;
+          frameId = requestAnimationFrame(draw);
+        }
+      }
+    };
+
+    addEventListener('resize', () => {
+      resize();
+      if (isStatic || !running) renderFrame();
+    });
+    addEventListener('scroll', () => {
+      targetScroll = scrollY;
+      if (isStatic || !running) renderFrame();
+    }, { passive: true });
+    addEventListener('pointermove', event => {
+      pointerX = event.clientX / Math.max(width, 1);
+      pointerForce = .7;
+    }, { passive: true });
+
+    const isPendingCurtain = document.documentElement.classList.contains('curtain-pending');
+    if (isStatic || isPendingCurtain) {
+      canvas.hidden = true;
+    } else {
+      resize();
+      running = true;
+      frameId = requestAnimationFrame(draw);
+    }
+  }
+
+  try {
+    initFallbackCanvas();
+  } catch (err) {
+    console.warn('Canvas fallback initialization skipped:', err);
   }
 
   const projectData = [

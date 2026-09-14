@@ -189,3 +189,32 @@ html.about-snap-html {
     margin-bottom: 40px;
   }
 }
+
+/* ==========================================================================
+   Short Viewport Handling (height <= 640px)
+   Prevents text clipping when vertical height is constrained
+   ========================================================================== */
+@media (max-height: 640px) {
+  html.about-snap-html {
+    scroll-snap-type: none;
+  }
+
+  .about-snap-page {
+    height: auto;
+    min-height: 100svh;
+    overflow: visible;
+    padding-top: max(74px, var(--head-space));
+    padding-bottom: 32px;
+    justify-content: flex-start;
+  }
+
+  .about-intro,
+  .about-story-grid {
+    margin: 0 0 32px;
+  }
+
+  .about-lattice-tier {
+    margin-top: 16px;
+  }
+}
+
