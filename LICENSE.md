@@ -1,4 +1,4 @@
-# Copyright Notice
+﻿# Copyright Notice
 
 Copyright (c) 2026 Eric Li. All rights reserved.
 

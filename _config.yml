@@ -1,0 +1,16 @@
+# Disable Jekyll parsing on raw content and documentation
+include:
+  - .nojekyll
+
+exclude:
+  - content
+  - scripts
+  - templates
+  - package.json
+  - package-lock.json
+  - README.md
+  - LICENSE.md
+  - THIRD_PARTY_NOTICES.md
+  - DESIGN-SPECIFICATION.md
+  - '*.mp4'
+  - '*.pdf'
