@@ -55,6 +55,8 @@ npm test
 ├── index.html              # Homepage (hero, proof metrics, featured projects, contact)
 ├── projects.html           # Full project ledger and technical stack details
 ├── about.html              # Background, homelab infrastructure, and roadmap
+├── LICENSE.md              # Proprietary copyright notice (All Rights Reserved)
+├── THIRD_PARTY_NOTICES.md  # Attributions for fonts and third-party libraries
 ├── package.json            # Build scripts, project metadata, private license
 ├── .gitattributes          # GitHub Linguist rules for vendored and generated files
 ├── assets/
@@ -134,3 +136,8 @@ Contact links and email (`helloworld@n5hq.me`) are defined in the footers of:
 - `projects.html`
 - `templates/blog-index.html`
 - `templates/blog-post.html`
+
+## License and copyright
+
+Copyright (c) 2026 Eric Li. All rights reserved.
+See [LICENSE.md](LICENSE.md) for proprietary ownership terms and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for third-party typography and library licenses.

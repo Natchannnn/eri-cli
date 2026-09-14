@@ -22,7 +22,7 @@ console.log('--- ERI / CLI Comprehensive Verification Suite ---');
 
 // 1. Core Document Presence
 console.log('\n1. Verifying Core Documents:');
-const coreFiles = ['index.html', 'about.html', 'projects.html', 'README.md', 'DESIGN-SPECIFICATION.md', 'package.json'];
+const coreFiles = ['index.html', 'about.html', 'projects.html', 'README.md', 'DESIGN-SPECIFICATION.md', 'package.json', 'LICENSE.md', 'THIRD_PARTY_NOTICES.md'];
 coreFiles.forEach(file => {
   const exists = fs.existsSync(path.join(root, file));
   report(exists, `Core file '${file}' present`);
