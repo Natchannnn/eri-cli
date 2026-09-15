@@ -1,4 +1,4 @@
-﻿# Third-Party Notices and Acknowledgements
+# Third-Party Notices and Acknowledgements
 
 This project uses the following third-party software and typography assets:
 
@@ -18,12 +18,12 @@ This project uses the following third-party software and typography assets:
 
 ### AUTHENTIC Sans
 - **Copyright**: (c) Christina Janus & Desmond Wong / AUTHENTIC.
-- **License**: AUTHENTIC Type License (see ssets/fonts/authentic-sans/LICENSE.txt).
+- **License**: WTFPL v2 (see assets/fonts/authentic-sans/LICENSE.txt).
 - **Website**: https://authentic.website
 
 ## Software Libraries
 
 ### Three.js (r128)
-- **Copyright**: (c) 2010-2026 Three.js Authors (Ricardo Cabello / mrdoob).
+- **Copyright**: (c) 2010-2021 Three.js Authors (Ricardo Cabello / mrdoob).
 - **License**: MIT License.
 - **Website**: https://threejs.org

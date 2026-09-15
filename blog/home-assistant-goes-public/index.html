@@ -4,9 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark">
-  <meta name="description" content="Exposing Home Assistant remotely using a Cloudflare Tunnel without open firewall ports, debugging container DNS resolution, and correcting proxy headers.">
+  <meta name="description" content="Exposing Home Assistant remotely using a Cloudflare Tunnel without open firewall ports, debugging container DNS resolution, and correcting reverse proxy headers.">
   <link rel="icon" href="../../assets/img/logo.png">
-  <title>Home Assistant Remote Access via Cloudflare Tunnel — ERI / CLI</title>
+  <title>The 502 Was Just a Typo in Trusted Proxies — ERI / CLI</title>
   <link rel="stylesheet" href="../../assets/css/style.css?v=1.1.0">
   <script defer src="../../assets/js/pages.js"></script>
 </head>
@@ -25,7 +25,7 @@
     <article>
       <header class="reader-head three-grid">
         <p class="reader-meta meta">Homelab<br><time datetime="2026-06-07">07 Jun 2026</time><br>2 min read</p>
-        <h1 class="page-title">Home Assistant Remote Access via Cloudflare Tunnel</h1>
+        <h1 class="page-title">The 502 Was Just a Typo in Trusted Proxies</h1>
       </header>
 
       <div class="reader-cut" aria-hidden="true">
@@ -34,16 +34,18 @@
 
       <div class="reader-body three-grid" id="article-body">
         <div class="reader-prose">
-          <p class="reader-lede">Exposing Home Assistant for secure external access without forwarding router ports led to deploying <code>cloudflared</code> alongside Home Assistant in Docker, routing <code>ha.n5hq.me</code> to the local web interface.</p>
-          <h2>The 502 Bad Gateway</h2>
-          <p>The initial deployment returned a 502 Bad Gateway. In the Cloudflare Zero Trust tunnel configuration, the service URL was set to <code>http://homeassistant:8123</code> using the Docker container name. Because both containers ran with <code>network_mode: host</code>, Docker&#39;s internal bridge DNS was not active, preventing container name resolution. Updating the tunnel target to <code>http://localhost:8123</code> and restarting the tunnel resolved transport to the host.</p>
-          <p>However, requests continued to fail with 502 while <code>cloudflared</code> produced no access logs. Restarting the tunnel daemon with <code>--protocol http2 --loglevel debug</code> revealed that incoming requests were reaching the host, but Home Assistant was actively returning HTTP 400 Bad Request.</p>
-          <h2>Resolving Reverse Proxy Configuration</h2>
-          <p>Three separate configuration issues inside Home Assistant were rejecting the proxied requests:</p>
-          <ol><li><code>trusted_proxies</code> in <code>configuration.yaml</code> was set to <code>x.x.0.3</code>, an obsolete Docker bridge IP from an earlier installation.</li><li>When attempting to correct the IP address, a typographical error (<code>172.0.0.1</code> instead of <code>127.0.0.1</code>) kept the reverse proxy untrusted after a restart.</li><li><code>external_url</code> was unconfigured, causing Home Assistant&#39;s HTTP integration to drop requests where the incoming <code>Host</code> header (<code>ha.n5hq.me</code>) did not match any permitted domain.</li></ol>
-          <p>Correcting <code>trusted_proxies</code> to include <code>127.0.0.1</code> and <code>::1</code>, setting <code>use_x_forwarded_for: true</code>, defining <code>external_url: &quot;https://ha.n5hq.me&quot;</code>, and restarting Home Assistant cleared all 400 errors. External requests through the Cloudflare Tunnel established clean connections immediately.</p>
-          <h2>Next Steps</h2>
-          <p>With external transport established, subsequent work involves configuring Cloudflare Access policies for multi-factor authentication in front of the tunnel and exposing Immich using the same <code>cloudflared</code> instance.</p>
+          <p class="reader-lede">I wanted remote access to my Home Assistant instance without punching holes in my router&#39;s firewall.</p>
+          <p>The standard plan was running <code>cloudflared</code> alongside Home Assistant in Docker, routing <code>ha.n5hq.me</code> directly to the local web interface.</p>
+          <p>Naturally, the first thing I ran into was a 502 Bad Gateway.</p>
+          <h2>The 502 and Docker Host Networking</h2>
+          <p>In the Cloudflare Zero Trust tunnel configuration, I had pointed the tunnel target at <code>http://homeassistant:8123</code> using the container name. But both <code>cloudflared</code> and Home Assistant were running with <code>network_mode: host</code>. On host networking, Docker&#39;s internal embedded DNS bridge does not intercept container names, so <code>cloudflared</code> could never resolve <code>homeassistant</code>.</p>
+          <p>Switching the tunnel target to <code>http://localhost:8123</code> solved the transport issue, but requests immediately began failing with HTTP 400 Bad Request while <code>cloudflared</code> remained silent in access logs.</p>
+          <p>Running the tunnel daemon with <code>--protocol http2 --loglevel debug</code> confirmed that traffic was reaching the host, but Home Assistant core was explicitly dropping every incoming request.</p>
+          <h2>Fixing the Reverse Proxy Headers</h2>
+          <p>Checking <code>home-assistant.log</code> revealed the real culprit: Home Assistant was logging <em>&quot;A request from a reverse proxy was received from 127.0.0.1, but your HTTP integration is not set-up for reverse proxies.&quot;</em></p>
+          <p>Two separate configuration mistakes were blocking the tunnel:</p>
+          <ol><li><code>use_x_forwarded_for: true</code> was missing from the <code>http:</code> section in <code>configuration.yaml</code>, telling Home Assistant to reject any forwarded client traffic.</li><li>In my <code>trusted_proxies</code> list, I had made a dumb typo: <code>172.0.0.1</code> instead of <code>127.0.0.1</code>, alongside an old Docker bridge IP leftover from months ago.</li></ol>
+          <p>Once I set <code>use_x_forwarded_for: true</code>, added both <code>127.0.0.1</code> and <code>::1</code> under <code>trusted_proxies</code>, and restarted the container, all 400 errors disappeared. External requests through the Cloudflare Tunnel connected immediately without port forwarding.</p>
         </div>
       </div>
     </article>

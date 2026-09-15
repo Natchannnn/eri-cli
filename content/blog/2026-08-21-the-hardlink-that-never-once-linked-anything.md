@@ -1,39 +1,51 @@
 ---
-title: "Cross-Protocol Hardlink Limitations and Monitoring Migration Planning"
+title: "The Hardlink That Never Once Linked Anything"
 date: 2026-08-21
 category: Homelab
-summary: "Diagnosing 229 GB of silent file duplication across SSHFS mounts, pinning Maintainerr versions, and backing up Grafana, Prometheus, and Loki volumes ahead of node migration."
+summary: "Diagnosing 229 GB of silent file duplication across ZFS dataset boundaries, pinning Maintainerr versions, and backing up monitoring volumes ahead of node migration."
 ---
-Homelab maintenance on August 21 addressed two primary tracks: diagnosing silent file duplication across media services, and planning the migration of the monitoring stack off the primary host.
+I was preparing to deploy Maintainerr to automate disk cleanup across my media libraries when a routine storage check caught my eye. Radarr and Sonarr had `copyUsingHardlinks: true` enabled from day one, so completed downloads in staging and organized files in the library were supposed to point to identical filesystem inodes.
 
-## Diagnosing hardlink failures across SSHFS mounts
+## The stat check and 229 GB of duplicate data
 
-Research into automating disk maintenance with Maintainerr prompted an audit of existing library storage utilization. Both Radarr and Sonarr were configured with `copyUsingHardlinks: true` under the expectation that completed downloads and library entries shared identical filesystem inodes.
+Curious about how much space hardlinking was actually saving, I ran `stat` across a batch of library items:
 
-Inspecting files via `stat` disproved this assumption: library files and completed download files showed a link count of `Links: 1` rather than `Links: 2`, indicating two distinct copies of identical data.
+```bash
+stat -c "%n - Inode: %i - Links: %h" /data/media/movies/*
+```
 
-The failure stems from underlying transport limitations: the path connecting download directories to the library is mounted via `sshfs` over SFTP. Because the SFTP protocol lacks remote hardlink primitives, requests to create hardlinks fall back silently to full file copies without logging errors. Consequently, removing items from media managers freed only the library copy while leaving the download copy intact, resulting in 229 GB of unmanaged duplicate storage across both libraries.
+Every single file returned `Links: 1`. Not `2`.
 
-This finding altered the disk maintenance plan: running cleanup automation before resolving underlying filesystem duplication would have addressed only half the consumed storage.
+The downloads and the library weren't sharing storage at all. They were two separate, distinct files on disk. Removing a movie from Radarr only freed the library file, leaving the initial download sitting untouched in the staging directory. That silent fallback had quietly eaten 229 GB of unmanaged duplicate storage across movies and TV seasons.
 
-## Version pinning rationale for Maintainerr
+## Cross-dataset boundaries, not protocol limits
 
-Evaluating Maintainerr deployment required establishing version pinning practices. The service was configured with `ghcr.io/jorenn92/maintainerr:v3.24.0` rather than `:latest`.
+My first instinct was to blame transport layers. Parts of my remote ingest workflow touch SSHFS mounts over SFTP, and it's easy to assume SFTP lacks remote link primitives. But modern OpenSSH servers support the `hardlink@openssh.com` protocol extension, and manual tests with `ln` worked fine within the same remote directory.
 
-This pinning decision was driven by upstream architecture: the v3.0.0 release introduced structural schema migrations, and subsequent minor releases in the v3.x series included breaking changes relative to v2.x. While legacy services in the stack (Radarr, Sonarr, Tautulli, Bazarr) historically operated on `:latest`, Maintainerr deployment manifests explicitly pinned the tested release tag to prevent unintended container updates from executing unreviewed database migrations.
+The actual culprit was much more mundane: storage architecture.
 
-## Pre-migration audit of monitoring containers
+In my ZFS pool, downloads lived on `tank/downloads` while the library sat on `tank/media`. Because they were provisioned as two distinct ZFS datasets, Linux treats them as entirely separate filesystems. Attempting to create a hardlink across dataset boundaries returns `EXDEV: Invalid cross-device link`.
 
-Planning the migration of nine monitoring containers from the primary host to a guest on the second node surfaced two operational dependencies during architectural review:
+Inside Docker, the containers had separate volume mounts for `/downloads` and `/media`. When Radarr and Sonarr hit `EXDEV`, they don't crash or throw a visible alert; they silently catch the error and fall back to an atomic full file copy.
 
-1. **Entity ID coupling in Home Assistant**: Approximately 66 Home Assistant automation entities were bound to numeric Uptime Kuma monitor IDs rather than hostnames or URLs. Deleting and recreating monitors would generate new IDs, causing automations to fail silently. The migration procedure was updated to require in-place configuration edits rather than recreation.
-2. **Unexported Grafana dashboards**: Approximately 15 operational dashboards existed solely inside the Grafana container data volume, without Git repository backups or automated JSON exports. A volume removal during container recreation would result in unrecoverable dashboard loss.
+The fix was consolidating storage under a single ZFS dataset (`tank/data`) with subdirectories for downloads and media, then mounting that single root into Docker. Once both paths shared an identical filesystem boundary, hardlinking worked instantly, dropping link creation from several seconds of disk I/O to sub-millisecond inode references.
 
-## Verifying monitoring volume snapshots
+## Pinning Maintainerr versions
 
-Ahead of container migration, root-owned data volumes for the monitoring stack were backed up to external storage using a privileged helper container:
+While fixing the storage layout, I set up Maintainerr. Unlike legacy containers in my stack that historically floated on `:latest`, I explicitly pinned `ghcr.io/jorenn92/maintainerr:v3.24.0`.
+
+Maintainerr's v3 release introduced significant database schema migrations and breaking architectural changes compared to v2. Floating on `:latest` in an unattended environment invites background database migrations that can corrupt state or break rules during automated image pulls. Pinning to a known-good release tag keeps updates intentional.
+
+## Pre-migration backups for monitoring
+
+The second half of the maintenance window went toward preparing nine monitoring containers for migration to a guest VM on my secondary node:
+
+1. **Home Assistant entity coupling**: About 66 automations and dashboard cards in Home Assistant were mapped directly to numeric Uptime Kuma monitor IDs. Deleting and recreating monitors on the new host would assign fresh IDs and break those automations silently. The migration had to preserve the existing database state in-place.
+2. **Unexported Grafana dashboards**: Around 15 custom dashboards existed exclusively inside the Grafana SQLite database volume, without Git repository backups or automated JSON exports. Rebuilding the container without preserving the volume would mean losing months of dashboard tuning.
+
+Before touching the primary host, I used a helper container to create snapshot archives of the root-owned volumes:
 - **Prometheus TSDB**: 2.85 GB
 - **Grafana**: 95 MB
-- **Loki**: 194 MB
+- **Loki**: 194 MB (22,139 chunk files)
 
-SHA256 checksums on source and destination archives matched exactly, and archive structures were verified: Prometheus contained valid ULID blocks, Grafana preserved its SQLite database file, and Loki retained 22,139 chunk files. A corrupted test archive confirmed the checksum validation script properly threw verification errors. With data volumes securely captured, migration of the monitoring containers to the secondary node was staged for the following maintenance window.
+I verified all SHA256 checksums, confirmed Prometheus ULID blocks and the Grafana SQLite database were intact, and staged the migration for the next window.

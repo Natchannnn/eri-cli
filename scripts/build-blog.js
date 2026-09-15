@@ -40,13 +40,48 @@ function inlineMarkdown(value) {
   return output;
 }
 
+function buildListTree(rawItems) {
+  const root = { indent: -1, children: [] };
+  const stack = [root];
+  for (const item of rawItems) {
+    while (stack.length > 1 && stack[stack.length - 1].indent >= item.indent) {
+      stack.pop();
+    }
+    const parent = stack[stack.length - 1];
+    parent.children.push(item);
+    stack.push(item);
+  }
+  return root.children;
+}
+
+function renderListItems(items) {
+  if (!items || items.length === 0) return '';
+  let html = '';
+  let i = 0;
+  while (i < items.length) {
+    const currentTag = items[i].tag;
+    html += `<${currentTag}>`;
+    while (i < items.length && items[i].tag === currentTag) {
+      const item = items[i];
+      let itemHtml = inlineMarkdown(item.text);
+      if (item.children && item.children.length > 0) {
+        itemHtml += renderListItems(item.children);
+      }
+      html += `<li>${itemHtml}</li>`;
+      i++;
+    }
+    html += `</${currentTag}>`;
+  }
+  return html;
+}
+
 function markdownToHtml(markdown) {
   const lines = markdown.replace(/\r/g, '').split('\n');
   const blocks = [];
   let index = 0;
   let paragraphCount = 0;
 
-  const beginsBlock = (line) => /^(#{2,3}\s|[-*+]\s|\d+\.\s|>\s|```|---+(\s*)$)/.test(line);
+  const beginsBlock = (line) => /^(\s*#{2,3}\s|\s*[-*+]\s|\s*\d+\.\s|>\s|```|---+(\s*)$)/.test(line);
 
   while (index < lines.length) {
     const line = lines[index];
@@ -78,23 +113,48 @@ function markdownToHtml(markdown) {
       continue;
     }
 
-    if (/^[-*+]\s/.test(line)) {
-      const items = [];
-      while (index < lines.length && /^[-*+]\s/.test(lines[index])) {
-        items.push(`<li>${inlineMarkdown(lines[index].replace(/^[-*+]\s+/, ''))}</li>`);
-        index += 1;
-      }
-      blocks.push(`<ul>${items.join('')}</ul>`);
-      continue;
-    }
+    const listMatch = /^(\s*)([-*+]|\d+\.)\s+(.*)$/.exec(line);
+    if (listMatch) {
+      const rawItems = [];
+      const baseIndent = listMatch[1].length;
 
-    if (/^\d+\.\s/.test(line)) {
-      const items = [];
-      while (index < lines.length && /^\d+\.\s/.test(lines[index])) {
-        items.push(`<li>${inlineMarkdown(lines[index].replace(/^\d+\.\s+/, ''))}</li>`);
-        index += 1;
+      while (index < lines.length) {
+        const curLine = lines[index];
+        if (!curLine.trim()) {
+          let nextNonEmpty = index + 1;
+          while (nextNonEmpty < lines.length && !lines[nextNonEmpty].trim()) {
+            nextNonEmpty++;
+          }
+          if (nextNonEmpty < lines.length) {
+            const nextMatch = /^(\s*)([-*+]|\d+\.)\s+(.*)$/.exec(lines[nextNonEmpty]);
+            if (nextMatch && nextMatch[1].length >= baseIndent) {
+              index = nextNonEmpty;
+              continue;
+            }
+          }
+          break;
+        }
+
+        const itemMatch = /^(\s*)([-*+]|\d+\.)\s+(.*)$/.exec(curLine);
+        if (itemMatch) {
+          if (itemMatch[1].length < baseIndent) break;
+          rawItems.push({
+            indent: itemMatch[1].length,
+            tag: /\d+\./.test(itemMatch[2]) ? 'ol' : 'ul',
+            text: itemMatch[3],
+            children: []
+          });
+          index++;
+        } else if (rawItems.length > 0 && curLine.search(/\S/) > baseIndent && !beginsBlock(curLine)) {
+          rawItems[rawItems.length - 1].text += ' ' + curLine.trim();
+          index++;
+        } else {
+          break;
+        }
       }
-      blocks.push(`<ol>${items.join('')}</ol>`);
+
+      const tree = buildListTree(rawItems);
+      blocks.push(renderListItems(tree));
       continue;
     }
 
@@ -255,10 +315,9 @@ if (fs.existsSync(outputDir)) {
 }
 fs.renameSync(tempDir, outputDir);
 
-// Sync to dist destinations
+// Sync to dist destination
 const distTargets = [
-  path.join(root, 'dist', 'blog'),
-  path.resolve('c:/Users/Natch/Desktop/dist/blog')
+  path.join(root, 'dist', 'blog')
 ];
 for (const target of distTargets) {
   if (fs.existsSync(path.dirname(target))) {

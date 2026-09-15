@@ -59,7 +59,7 @@ Black and white carry most of the interface. Blue marks selected interactions an
 | Color | Value | Use |
 | --- | --- | --- |
 | Void Black | `#08090C` | Main background, `--ink` |
-| Dark background variant | `#0A0B0E` | Supporting background tone, `--ink-mass` |
+| Dark background variant | `#0A0B0E` | Supporting background tone, `--structure` |
 | Titan White | `#E5E7EB` | Text, structural lines and low terrain elevations |
 | International Klein Blue | `#002FA7` | Accent token, terrain summits, active link underlines and cursor highlights |
 
@@ -266,33 +266,38 @@ Articles are delivered as crawlable static HTML, with no client-side hydration f
 
 ### Design tokens
 
-Tokens in `assets/css/style.css`:
+Tokens defined in `assets/css/tokens.css` (and bundled into `assets/css/style.css`):
 
 ```css
 :root {
-  /* Color */
-  --ink: #08090c;
-  --ink-mass: #0a0b0e;
-  --signal: #e5e7eb;
+  /* Brand Color Palette */
+  --color-black: #08090C;
+  --color-white: #E5E7EB;
+  --color-slate: #4B5565;
+  --color-klein: #002FA7;
+
+  /* Semantic tokens */
+  --ink: var(--color-black);
+  --structure: #0a0b0e;
+  --signal: var(--color-white);
+
+  /* Calibrated contrast tokens (tuned for WCAG AAA against --ink) */
   --signal-high: rgba(229, 231, 235, .82);
-  --signal-48: rgba(229, 231, 235, 0.48);
-  --signal-24: rgba(229, 231, 235, 0.24);
-  --accent: #002fa7;
+  --signal-48: #8892a0;
+  --signal-24: rgba(75, 85, 101, .38);
+  --signal-12: rgba(75, 85, 101, .18);
+  --signal-10: rgba(75, 85, 101, .18);
+  --accent: var(--color-klein);
 
-  /* Typography */
-  --kyoto: 'PP Kyoto', Georgia, serif;
-  --authentic: 'AUTHENTIC Sans', system-ui, sans-serif;
-  --pitch: 'Pitch Sans', monospace;
+  /* Typography primitives */
+  --kyoto: "PP Kyoto", Georgia, serif;
+  --authentic: "AUTHENTIC Sans", Arial, sans-serif;
+  --pitch: "Pitch Sans", "Cascadia Mono", monospace;
 
-  /* Spacing */
-  --page-x: clamp(24px, 3.8vw, 68px);
-  --edge: clamp(20px, 3.4vw, 56px);
-  --head-space: clamp(96px, 12vh, 140px);
-
-  /* Motion */
-  --transition-fast: 140ms ease;
-  --transition-normal: 180ms ease-out;
-  --transition-snap: 550ms cubic-bezier(0.25, 1, 0.5, 1);
+  /* Responsive spatial tokens */
+  --edge: clamp(20px, 2.15vw, 42px);
+  --head-space: clamp(132px, 15vh, 176px);
+  --page-x: clamp(18px, 3vw, 58px);
 }
 ```
 
