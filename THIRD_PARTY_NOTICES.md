@@ -11,6 +11,7 @@ The project license does not cover the fonts or vendored library listed here.
 
 ### Pitch Sans
 - **Copyright**: (c) 2017 Klim Type Foundry. All rights reserved.
+- **Format**: WOFF2 / WOFF (Web Font Licence).
 - **Usage**: Licensed privately for this portfolio's web deployment.
 - **Website**: https://klim.co.nz
 

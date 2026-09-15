@@ -45,7 +45,8 @@
 
 @font-face {
   font-family: "Pitch Sans";
-  src: url("../fonts/pitch-sans/pitch-sans-medium.otf") format("opentype");
+  src: url("../fonts/pitch-sans/pitch-sans-medium.woff2") format("woff2"),
+       url("../fonts/pitch-sans/pitch-sans-medium.woff") format("woff");
   font-weight: 400 700;
   font-style: normal;
   font-display: swap;
