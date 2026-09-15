@@ -325,4 +325,23 @@ for (const target of distTargets) {
   }
 }
 
+// Sync featured blog post metadata and title on index.html
+const indexHtmlPath = path.join(root, 'index.html');
+if (fs.existsSync(indexHtmlPath)) {
+  let indexContent = fs.readFileSync(indexHtmlPath, 'utf8');
+  const featureRegex = /(<article class="region blog-feature" id="blog">[\s\S]*?<p class="meta">)([\s\S]*?)(<\/p>[\s\S]*?<h3><a href="blog\/([^"/]+)\/index\.html">)([\s\S]*?)(<\/a><\/h3>[\s\S]*?<\/article>)/;
+  const match = featureRegex.exec(indexContent);
+  if (match) {
+    const slug = match[4];
+    const post = posts.find((p) => p.slug === slug);
+    if (post) {
+      const metaContent = `Blog · Selected post<br>${post.date} · ${post.readingTime} min read`;
+      const titleContent = escapeHtml(post.title);
+      indexContent = indexContent.replace(featureRegex, `$1${metaContent}$3${titleContent}$6`);
+      fs.writeFileSync(indexHtmlPath, indexContent, 'utf8');
+      console.log(`Synchronized featured post on index.html: "${post.title}" (${post.date}, ${post.readingTime} min read).`);
+    }
+  }
+}
+
 console.log(`Built blog/index.html and ${posts.length} article routes.`);

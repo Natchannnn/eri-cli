@@ -139,6 +139,28 @@ const articles = fs.existsSync(path.join(root, 'content', 'blog'))
   : [];
 report(articles.length === 46, `All 46 Markdown blog posts verified`);
 
+const indexContent = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+const featureMatch = indexContent.match(/<article class="region blog-feature" id="blog">[\s\S]*?<h3><a href="blog\/([^"/]+)\/index\.html">([\s\S]*?)<\/a><\/h3>/);
+if (featureMatch) {
+  const selectedSlug = featureMatch[1];
+  const selectedTitle = featureMatch[2].replace(/&#39;/g, "'").replace(/&amp;/g, '&').trim();
+  const targetPostFile = articles.find(f => f.includes(selectedSlug));
+  if (targetPostFile) {
+    const postContent = fs.readFileSync(path.join(root, 'content', 'blog', targetPostFile), 'utf8');
+    const titleMatch = postContent.match(/^title:\s*["']?(.*?)["']?$/m);
+    const expectedTitle = titleMatch ? titleMatch[1].trim() : '';
+    const isMatched = selectedTitle === expectedTitle;
+    report(isMatched, isMatched
+      ? `Homepage featured blog post title matches '${targetPostFile}' exactly`
+      : `Homepage featured post title MISMATCH: expected '${expectedTitle}', found '${selectedTitle}'. Run 'npm run build:blog' to sync.`
+    );
+  } else {
+    report(false, `Homepage featured post slug '${selectedSlug}' not found in content/blog/`);
+  }
+} else {
+  report(false, `Homepage blog-feature section found in index.html`);
+}
+
 console.log('\n--------------------------------------------------');
 if (errorCount === 0) {
   console.log('All verification checks passed with zero errors.');
