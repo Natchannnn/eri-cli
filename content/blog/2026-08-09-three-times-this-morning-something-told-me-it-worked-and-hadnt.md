@@ -1,41 +1,37 @@
 ---
-title: "Hardening Command Execution and Resolving Deployment Pipeline Blocks"
+title: "Three Times This Morning Something Told Me It Worked and Hadn't"
 date: 2026-08-09
 category: Homelab
 summary: "Closing remote code execution risks in n5-board, configuring host sandboxing, resolving GitHub push-mirror workflow scopes, and deploying hardware corrections."
 ---
-Engineering work this morning spanned four related operational areas: closing a command injection risk in the board executor, configuring an unprivileged worker account with systemd socket isolation, fixing GitHub push-mirror authentication scopes, and clearing a blocked production deployment.
+Four tracks this morning: a command-injection hole in the board executor, an unprivileged worker identity, the GitHub mirror scope saga, and a stuck prod deploy. Three of the four reported success while nothing had changed. Pattern by now.
 
-## Hardening evidence_cmd execution in n5-board
+## evidence_cmd Was an RCE Primitive
 
-The primary task was resolving C1, an architectural security vulnerability in the board tool: backlog cards could specify an `evidence_cmd` executed to verify completion. If evaluated directly by a shell, this creates an arbitrary command execution primitive within the ledger. Closing this required strict input handling and verified provenance.
+n5-board cards can carry `evidence_cmd` — shell out to verify completion. Evaluated naively, that's arbitrary execution from card text. Call it C1.
 
-First, execution mechanics were constrained: commands are parsed strictly as argv lists without shell evaluation, resolving binaries via absolute paths against an explicit argument allowlist, enforced by a 120-second execution timeout and dedicated exit codes. Mutation testing caught an initial defect: toggling `shell=False` to `True` hung the test runner because stdin had not been redirected, leaving child processes waiting indefinitely on inherited terminal input. This was resolved by explicitly setting `stdin=DEVNULL`.
+Locked it down two ways. Mechanics: strict argv parsing, no shell, absolute-path binaries against an explicit arg allowlist, 120s timeout, dedicated exit codes. Mutation testing flipped `shell=False` to `True` and hung the runner — children inherited the terminal stdin and waited forever. Fix: `stdin=DEVNULL` explicitly.
 
-During testing, a background mutation job completed its cycle by restoring the executor script from a pre-test backup, inadvertently reverting the stdin patch. Because the job exited cleanly, the reversal was caught only by inspecting the final restoration logs. Stale backup files were purged and the fix reapplied.
+Then a background mutation job restored the executor from its pre-test backup on completion — reverting my stdin fix — and exited clean. Caught it only in the restoration logs. Purged stale backups, reapplied.
 
-Second, provenance was enforced: the `check` subcommand was restricted to reading `evidence_cmd` values exclusively from the committed backlog file, ignoring descriptions, comments, and labels. Adversarial testing verified that injecting hostile payloads into card metadata did not execute, as the tool read exclusively from the ledger. A structural regression test was added to enforce read-only semantics against the backlog file in code rather than documentation.
+Provenance: `check` reads `evidence_cmd` solely from the committed backlog file. Not descriptions, not comments, not labels. Adversarial payloads in card metadata don't execute because the tool never looks there. Added a structural regression test enforcing read-only backlog semantics in code, not docs.
 
-## Sandboxed worker identity and systemd socket isolation
+## Worker Identity vs systemd Semantics
 
-Next, an unprivileged worker identity was configured on the primary host. The setup created a dedicated service account without membership in `sudo`, `docker`, `lxd`, or `adm`, set restrictive vault filesystem ACLs, marked the worker binary immutable, and established OAuth credentials.
+New unprivileged worker on the primary host: no `sudo`/`docker`/`lxd`/`adm`, tight vault ACLs, immutable worker binary, fresh OAuth creds. Sudoers audit corrected my own assumption — the automation account *does* hold passwordless reboot without TTY. I'd logged the opposite. Fixed the record.
 
-Auditing `/etc/sudoers` clarified that the automation account held passwordless reboot privileges without a required TTY, correcting an inaccurate operational assumption that the account lacked sudo access entirely.
+Socket isolation fought me: probe script died under `DynamicUser=yes` because that implies `PrivateTmp=yes` — my `/tmp` probes were invisible. Read-only bind showed the deeper issue: restricting single socket paths fails, processes keep access via parent dirs. Denied the whole runtime dir instead, updated the unit.
 
-Configuring socket isolation required debugging `systemd` isolation semantics. An initial socket probe script failed to run because `DynamicUser=yes` implies `PrivateTmp=yes`, hiding temporary test probes from `/tmp`. Resolving this with a read-only bind revealed that attempting to restrict individual socket paths failed empirically: processes retained access through parent directories. The configuration was updated to deny access to the entire runtime directory rather than individual paths, and the systemd unit file was updated accordingly.
+## The Mirror That Said Synced and Was Empty
 
-## Resolving GitHub push-mirror workflow scopes
+C1 port to `plankamd`: 302 tests green, version bump, tag. Forgejo push fine. Forgejo UI showed GitHub mirror sync successful with a fresh `last_update`. Ran `git ls-remote` on GitHub: zero branches, zero tags. Empty.
 
-Porting the C1 command-hardening fix to `plankamd` completed with 302 passing tests, a version bump, and release tagging.
+GitHub API logs: pushes containing `.github/workflows/ci.yml` rejected — PAT lacks `workflow` scope. Same scope as yesterday. Granted it, next sync pushed all three refs clean. Installed the tag fresh from GitHub to prove it.
 
-Pushing to Forgejo succeeded, and Forgejo's web UI reported the GitHub push-mirror sync as successful, showing an updated `last_update` timestamp. However, executing `git ls-remote` against GitHub revealed an empty repository with zero branches or tags. Inspecting GitHub API error logs exposed the underlying failure: GitHub rejected push updates containing `.github/workflows/ci.yml` because the Personal Access Token lacked the `workflow` scope. Granting `workflow` permissions to the token resolved the block, allowing all three refs to synchronize cleanly on the subsequent attempt. The release was verified by installing the tag into a fresh environment directly from GitHub.
+## Prod Deploy Blocked on Visibility
 
-## Production deployment visibility workarounds
+Last job: hardware spec corrections on the public site (memory figures, host models, four pages, retired DNS-filtering refs). Pushes green on every remote. Builds stuck `BLOCKED`. Host metadata: repo flipped to private, automation blocked it (`githubRepoVisibility: "private"`). Without publishing dirty workspace state, I exported the target commit to a clean dir and deployed via explicit project link. Curled both live domains' HTML to verify. Flipped the repo public again at 07:56.
 
-The final task addressed hardware specification corrections on the public website, updating memory figures and host model names across four pages and retiring references to decommissioned DNS filtering infrastructure.
+Executor restores, mirror syncs, static builds — all said done while artifacts sat unchanged. `git ls-remote`, deploy env, file hashes. Check the thing, not the status.
 
-While git pushes succeeded across all remotes without errors, production builds remained halted in a `BLOCKED` state. Inspecting hosting metadata revealed the repository had been switched to private, triggering an automated build block (`githubRepoVisibility: "private"`). To restore service without publishing uncommitted workspace state, the target commit was exported into an isolated clean directory and deployed via an explicit project link. Verification was conducted by curling the production HTML directly on both live domains. The repository was restored to public visibility at 07:56.
-
-Across each track—executor test restoration, git mirror synchronization, and static hosting builds—status indicators frequently reported completion while the target artifacts were unchanged. Verifying output state directly on GitHub, in the deployment environment, and across file hashes prevented silent rollbacks.
-
-Finally, reconciling transcript logs highlighted the eight-hour difference between UTC server timestamps and local time, ensuring maintenance log timestamps were accurately recorded across subsequent entries.
+Oh, and transcript timestamps: eight hours UTC-vs-local skew. Reconciled so maintenance logs read right going forward.

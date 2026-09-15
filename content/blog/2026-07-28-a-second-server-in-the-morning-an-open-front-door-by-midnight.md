@@ -1,83 +1,45 @@
 ---
-title: "Proxmox Secondary Node Provisioning, Network Bonding, and Security Audit"
+title: "A Second Server in the Morning, an Open Front Door by Midnight"
 date: 2026-07-28
 category: Homelab
 summary: "Provisioning a second Proxmox node with active-backup network bonding, migrating Home Assistant to a dedicated HAOS VM, and conducting a security audit that identified an unauthenticated webhook endpoint."
 ---
-An extensive infrastructure expansion focused on eliminating single points of failure across my homelab. The work encompassed provisioning a Dell OptiPlex 3070 Micro as a secondary Proxmox VE hypervisor, establishing active-backup network interface bonding, migrating Home Assistant from a container to a dedicated Home Assistant OS (HAOS) virtual machine, and performing a rigorous security and network configuration audit.
+Big day: killed single points of failure. New Dell OptiPlex 3070 Micro (i5-9500T, 16 GB, 256 GB NVMe) as second Proxmox VE 9.2.5 host at `x.x.0.20`, bonded networking, Home Assistant out of Docker into its own HAOS VM. Ended the night finding an open front door I didn't know I had.
 
-## Node provisioning and active-backup interface bonding
+## The Bond That Saved Me From a Loose USB Plug
 
-To distribute core workloads away from the primary server—which previously concentrated thirty-two containerized services and home automation on a single physical host—I deployed a Dell OptiPlex 3070 Micro (Intel Core i5-9500T, 16 GB RAM, 256 GB NVMe) running Proxmox VE 9.2.5 at static IP `x.x.0.20`.
+`vmbr0` wouldn't bind on first boot. Opened it up — the USB 2.5GbE NIC wasn't seated. Pushed it in, link came up.
 
-During initial network initialization, the Proxmox bridge interface `vmbr0` failed to bind to its designated physical adapter. Physical inspection isolated the failure to an unseated USB 2.5GbE NIC.
+That looseness is exactly why I bonded: `bond0` active-backup, Realtek USB 2.5GbE primary, onboard Intel I219-LM 1GbE standby. Killed the primary with `ip link set <dev> down` mid-ping — zero loss. Came back, bond re-promoted 2.5GbE automatically. `iperf3` held 2.35 Gbps both ways vs 944 Mbps on gigabit alone.
 
-To prevent physical connector or cable disconnections from dropping the hypervisor offline, I configured an active-backup Linux network bond (`bond0`):
-- **Primary Interface**: Realtek USB 2.5GbE NIC.
-- **Standby Interface**: Integrated Intel I219-LM 1GbE NIC.
-- **Failover Verification**: Manually disabling the primary interface (`ip link set <dev> down`) yielded zero packet loss during continuous ICMP streams. When the link re-established, the bond restored the 2.5GbE adapter as primary automatically. Throughput testing via `iperf3` sustained 2.35 Gbps bidirectional transfer rates, compared to 944 Mbps across the standalone gigabit interface.
+## Then I Broke the Primary Server the Same Way
 
-## Diagnosing asymmetric routing and DHCP default metric conflicts
+Got confident, tried bonding the primary too. Plugged its onboard gigabit into the switch. Cross-VLAN died instantly. Management VLAN + SSH fine, but Home/IoT/Camera all gone — HA lost plugs, Hue bridge at `x.x.1.182`, cameras, everything.
 
-Following the successful bond deployment on `pve02`, I initiated the same network bonding architecture on the primary server. After physically connecting the server's onboard gigabit NIC to an available switch port, cross-VLAN communication halted abruptly:
+Routing table showed it: the onboard NIC still had legacy DHCP. It grabbed `x.x.0.201` on carrier, installed a default route at metric 100, stomping the static 2.5GbE default at 1024. Outbound inter-VLAN packets left with source `x.x.0.201`, UniFi dropped them on default inter-VLAN rules.
 
-- Intra-subnet traffic on the management VLAN and local SSH sessions remained fully responsive.
-- Inter-VLAN traffic to the Home, IoT, and Camera subnets dropped completely, severing Home Assistant's connectivity to smart plugs, the Philips Hue bridge (`x.x.1.182`), and local cameras.
+Two more self-inflicted wounds on top: my 120-second rollback watchdog (reverts net config unless I touch a confirm file) expired at 08:09 before I committed — reboot at 08:14 loaded the old unbonded config. And editing net files in `nano` padded every line with trailing whitespace, 551 bytes → 808 bytes. In whitespace-sensitive configs that's asking for silent parse failures. Switched to staging in scratch + `install -m 644`. Rebooted 08:45 with a MAC pin on the bond, single default route on `x.x.0.5`. Cross-VLAN came back.
 
-Inspecting the host routing table revealed the root cause: the onboard gigabit NIC still held a legacy dynamic DHCP configuration. Upon detecting physical carrier, it acquired a DHCP lease (`x.x.0.201`) and installed a default gateway route with metric 100, overriding the static 2.5GbE interface's default route at metric 1024. Because outbound inter-VLAN packets routed using the unexpected `x.x.0.201` source address, the UniFi gateway firewall dropped the packets against default inter-VLAN drop rules.
+## HAOS Move Took Ten Minutes, DAD Took Longer
 
-## Automated rollback timers and YAML indentation pitfalls
+Migrated HA from Docker to a dedicated HAOS VM on `pve02` — supervisor, add-ons, USB passthrough. Cutover 11:25:05 to 11:35:26, ten minutes. Old container stopped, kept cold.
 
-Resolving the routing failure surfaced two procedural configuration issues:
-
-1. **Rollback Watchdog Timeout**: To prevent permanent lockouts during remote network configuration, I maintain a safety script that schedules a 120-second rollback watchdog unless a local confirmation file is updated. Due to a delay in committing the bond changes, the timer expired before the confirmation timestamp (logged at 08:09), quietly reverting the bond definition. When the host was rebooted at 08:14, it reloaded the legacy unbonded interface state.
-2. **Editor Formatting Corruption**: Editing network configuration files interactively in `nano` introduced trailing whitespace characters across all lines, expanding file size from 551 bytes to 808 bytes. In whitespace-sensitive configurations, these invisible characters can cause silent parsing failures. Standardizing on staging configurations in a scratch directory and moving them via `install -m 644` eliminated editor formatting artifacts.
-
-Rebooting at 08:45 with an explicit MAC address pin on the bond interface bound the host to its static reservation `x.x.0.5` under a single default route, restoring cross-VLAN routing.
-
-## Migrating Home Assistant to HAOS and resolving duplicate address detection
-
-With network stability verified, Home Assistant was migrated from a Docker container on the primary server to a dedicated HAOS virtual machine on `pve02`, providing native supervisor management, automated add-on lifecycle control, and dedicated USB passthrough.
-
-The migration completed within a ten-minute cutover window (11:25:05 to 11:35:26). The preexisting container was stopped and retained as a cold standby.
-
-During guest network assignment, the VM's static IP configuration repeatedly timed out, dropping the interface into an unassigned link-down state. Reviewing internal system logs within the guest isolated the failure to NetworkManager's Duplicate Address Detection (DAD):
+Guest kept dropping its static IP to link-down. Logs inside:
 
 ```text
 NetworkManager: ipv4: duplicate address detected for x.x.0.x on interface eth0
 ```
 
-The selected static IP had collided with an access point. Because UniFi access points are categorized as network infrastructure rather than DHCP clients, they did not appear in standard active client lease tables. Conducting a full ARP ping sweep across the subnet identified active leases and resolved the collision. Once assigned a verified free address, the guest completed an initial 2.25 GB system backup in 49 seconds.
+I'd picked an IP already owned by an AP. APs don't show in DHCP lease tables (infra, not clients), so I missed it. Full ARP ping sweep, found a free one, assigned. First 2.25 GB backup finished in 49 seconds.
 
-## Unplanned power-off failsafe validation
+At 15:37 I yanked power by accident doing rack work. Primary host cold-dropped. Reboot 15:40:23 actually validated everything for real: net watchdog clean, NAS mounts up before Docker (photo server didn't bind empty dirs), 31 of 32 containers back, all tunnel endpoints green. Best test is the one you don't plan.
 
-An accidental power interruption at 15:37 caused an unplanned cold shutdown of the primary host during rack hardware maintenance. 
+## The Webhook With No Lock
 
-Upon host reboot at 15:40:23, systemd dependencies and storage mounts were validated under true failure conditions:
-- The static network watchdog script executed cleanly, validating gateway reachability without triggering emergency fallbacks.
-- Network storage mounts to the NAS initialized before the Docker daemon spawned containers, preventing the photo server from binding empty directories.
-- Thirty-one of thirty-two containers resumed operational status, and all external reverse proxy endpoints validated.
+Afternoon read-only audit found it: my package-triage approval webhook. It takes human callbacks before running upgrades/reboots. URL had an internal token, but it was publicly exposed through the proxy with no identity check. Any crawler could've hit it and triggered host restarts.
 
-## Security audit: Gating unauthenticated webhook endpoints
+Moved it behind Cloudflare Access immediately — 24-hour sessions, verified identities only, internal API path unchanged.
 
-Later that afternoon, a thorough read-only audit across homelab exposure points identified an unauthenticated operational webhook.
+Evening noise: 35 Wi-Fi clients dropped for 2 seconds, gateway load spiked to 38.72. Kuma recorded 1,761 clean ICMP heartbeats across thirty targets, zero loss, wired hosts untouched. Controller reporting daemon stalled, forwarding plane never blinked. Gateway mem 90–95% looks scary but it's active + page cache; six-day drift 0.29%, no leak. Declined to put RC firmware on my edge router. Stable stays.
 
-The automated package triage system utilized an HTTP webhook URL to receive human approval callbacks before executing package upgrades or system reboots. While the URL included an internal token identifier, the endpoint was publicly exposed via the reverse proxy without upstream identity authentication, creating a vulnerability where automated crawlers or unauthorized actors could trigger host restarts.
-
-The endpoint was immediately migrated behind a Cloudflare Access zero-trust identity gate enforcing short-lived 24-hour authentication sessions, restricting webhook invocation to verified identities while preserving internal API reachability.
-
-## UniFi control plane telemetry and memory baseline review
-
-Investigating an alert where 35 wireless clients disconnected concurrently over a 2-second window revealed critical characteristics of the UniFi gateway:
-
-- **Load Spikes vs Metric Collection**: The gateway reported a brief load average surge to 38.72. However, concurrent external Uptime Kuma monitors recorded 1,761 uninterrupted ICMP heartbeats with zero packet loss across thirty targets. Furthermore, wired hypervisor and storage connections experienced zero interruption. The discrepancy indicated a temporary stall in the UniFi controller's local reporting daemon rather than a failure of the underlying Linux network packet-forwarding plane.
-- **Kernel Memory Accounting**: Analysis of gateway memory utilization fluctuating between 90% and 95% confirmed that the reporting metric reflected combined active and page-cache allocations. A six-day telemetry review showed a negligible memory drift of 0.29%, confirming absence of a memory leak. A proposal to deploy a candidate Release Candidate firmware build was rejected in favor of maintaining official stable releases on edge routing infrastructure.
-
-## Multi-reviewer consensus audit on UniFi configuration
-
-A collaborative audit evaluating thirty-seven proposed UniFi configuration recommendations against live network state resulted in ten unanimous approvals:
-
-- **Withdrawn Recommendations**: Several plausible proposals were rejected upon inspecting empirical telemetry. A recommendation to enable IGMP snooping was withdrawn after airtime analysis demonstrated multicast traffic represented under 6% of channel capacity. Similarly, unverified minimum data rate changes were dismissed due to lack of vendor documentation support.
-- **Snapshot Limitations**: The audit revealed the limitation of evaluating static snapshots without historical operational context. A recommendation claiming the `RadioChannelLockedByIot` constraint did not exist was disproven by historical logs showing the flag had been intentionally cleared earlier that morning to restore manual channel allocation.
-- **Search Flag Parsing**: An automated search attempting to verify transcript entries failed to return results because directory names beginning with leading hyphens (`-`) were interpreted by `grep` as command-line flags. Passing explicit double-hyphen delimiters (`--`) resolved 185 matching entries, preventing false-negative escalation.
-- **Controller API Verification**: Attempting to disable mDNS reflection on specific subnets via the API reported success while leaving stored database values unchanged. The setting was updated and verified directly in the web UI, followed by disabling obsolete VPN services and unused protocol helper modules.
+Reviewed 37 proposed UniFi tweaks with reviewers — approved 10, killed the rest. IGMP snooping died when airtime showed multicast under 6%. A claim that `RadioChannelLockedByIot` never existed died against my own morning logs where I cleared it. And a transcript search returning nothing turned out to be dirnames starting with `-` eaten by `grep` as flags — `--` separator brought back 185 matches. Verified mDNS changes in the UI after the API lied `success` while leaving DB values untouched, killed dead VPN services and unused helpers. Called it at midnight.

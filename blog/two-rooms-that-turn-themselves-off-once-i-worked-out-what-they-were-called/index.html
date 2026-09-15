@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="dark">
   <meta name="description" content="Implementing presence-based lighting automations in Home Assistant, auditing gateway firewall rules for ISP migration readiness, and refactoring portfolio styles without headless visual feedback.">
   <link rel="icon" href="../../assets/img/logo.png">
-  <title>Home Assistant Occupancy Automation, Gateway Ingress Audit, and Blind CSS Refactoring — ERI / CLI</title>
+  <title>Two Rooms That Turn Themselves Off Once I Worked Out What They Were Called — ERI / CLI</title>
   <link rel="stylesheet" href="../../assets/css/style.css?v=1.1.0">
   <script defer src="../../assets/js/pages.js"></script>
 </head>
@@ -24,8 +24,8 @@
   <main class="page-main reader-page" id="article">
     <article>
       <header class="reader-head three-grid">
-        <p class="reader-meta meta">Homelab<br><time datetime="2026-07-12">12 Jul 2026</time><br>4 min read</p>
-        <h1 class="page-title">Home Assistant Occupancy Automation, Gateway Ingress Audit, and Blind CSS Refactoring</h1>
+        <p class="reader-meta meta">Homelab<br><time datetime="2026-07-12">12 Jul 2026</time><br>3 min read</p>
+        <h1 class="page-title">Two Rooms That Turn Themselves Off Once I Worked Out What They Were Called</h1>
       </header>
 
       <div class="reader-cut" aria-hidden="true">
@@ -34,34 +34,29 @@
 
       <div class="reader-body three-grid" id="article-body">
         <div class="reader-prose">
-          <p class="reader-lede">A Sunday afternoon engineering session covered three distinct operational domains: tuning Home Assistant room occupancy automations based on event recorder history, auditing gateway egress rules in anticipation of an ISP migration, and refactoring portfolio styles where automated contrast audits contrasted with the absence of visual verification tooling.</p>
-          <h2>Tuning occupancy timeouts from recorder event history</h2>
-          <p>The initial objective was creating automated turn-off routines for the theatre room (controlling two downlights and two accent light strips) and the office. Rather than adopting an arbitrary timeout, I queried the Home Assistant SQLite recorder database to analyze the mmWave presence sensor&#39;s raw event history across prior sessions.</p>
-          <p>The logs revealed:</p>
-          <ul><li>Transient false-negative dropouts lasting up to two minutes while an occupant was stationary.</li><li>Genuine room vacancies spanning twenty-five minutes or more.</li></ul>
-          <p>Setting the automation vacancy timeout to five minutes provided a sufficient buffer above the two-minute sensor noise floor while preventing lights from remaining active during extended absences. Accounting for the physical sensor&#39;s onboard hardware cooldown period, the effective elapsed time before state execution is the hardware delay plus five minutes.</p>
-          <h2>Reconciling device registry IDs and entity naming</h2>
-          <p>Configuring the office automation required mapping four target entities: two ceiling downlights, a desk lamp, and an air purifier. Identifying the correct entities exposed discrepancies in Home Assistant&#39;s underlying entity registry:</p>
-          <ul><li>The air purifiers registered under two separate domains (a <code>fan</code> entity and a <code>switch</code> entity) identified solely by OEM hardware identifiers and ambiguous labels (<code>big</code> and <code>small</code>). The only unambiguous attribute was the physical area mapping (<code>area_id: office</code> vs <code>area_id: lounge</code>).</li><li>The theatre room presence sensor possessed a device-tracker entity historically mislabeled with an adjacent room name, requiring a join between the device registry and area registry to resolve the correct entity ID.</li></ul>
-          <p>To prevent invalid automation syntax from crashing the daemon, the configuration workflow followed a strict verification pipeline:</p>
-          <ol><li>Created a timestamped snapshot of <code>automations.yaml</code>.</li><li>Appended the validated YAML automation blocks.</li><li>Executed <code>ha core check_config</code> via the CLI container.</li><li>Restarted the Home Assistant container and queried the SQLite database directly to verify <code>automation.theatre_lights_off</code> and <code>automation.office_lights_off</code> reported active status.</li></ol>
-          <h2>ISP migration audit and outbound tunnel architecture</h2>
-          <p>In preparation for a potential residential ISP transition with dynamic IP assignments, I conducted an infrastructure audit to map all external dependencies. Resolving public DNS records and reviewing service connections confirmed that the homelab maintains zero direct inbound bindings:</p>
-          <ul><li><strong>Public Web Ingress</strong>: Reverse proxy domains (<code>n5hq.me</code>) route through Cloudflare Tunnels (<code>cloudflared</code>), which establish outbound persistent TLS tunnels on port 443.</li><li><strong>Node Interconnects</strong>: Cross-node and administrative traffic routes via Tailscale overlay tunnels.</li><li><strong>Offsite Seedbox Mounts</strong>: Storage shares mount via outbound SSH tunnels (<code>sshfs</code>).</li><li><strong>Static Portfolio</strong>: Assets deploy to external edge CDNs.</li></ul>
-          <p>Because no public DNS A/AAAA records point directly to the residential gateway WAN address, changing ISPs—even onto connections governed by Carrier-Grade NAT (CGNAT)—requires no DNS propagation adjustments or dynamic DNS updaters. The gateway cutover is isolated to updating WAN authentication credentials (PPPoE/VLAN tags) on the primary interface.</p>
-          <h2>Gateway ingress rule audit</h2>
-          <p>While reviewing the UniFi gateway configuration, an audit of the IPv4 firewall table revealed an obsolete port forwarding rule left over from a legacy service deployed prior to adopting Cloudflare tunnels. The rule forwarded inbound traffic from a high WAN port to an internal host that had since been repurposed. Because the service was defunct, the rule served no operational purpose and was removed from the active firewall policy.</p>
-          <h2>CSS accessibility refactoring and headless verification limits</h2>
-          <p>Later that evening, I ran an automated styling audit against the portfolio codebase served on local port 3003 (isolated via a git worktree). The automated audit flagged several accessibility and semantic issues:</p>
-          <ul><li>Text contrast on small secondary metadata sat at 3.82:1 against the dark background, failing WCAG AA (4.5:1). Adjusting the hsl lightness values elevated the lowest contrast ratio to 4.77:1.</li><li>Missing canonical URLs and OpenGraph metadata across all seventeen template pages.</li><li>CSS reveal classes initialized page elements at <code>opacity: 0</code> via inline styles, rendering the entire document below the hero invisible if JavaScript failed to execute. This was addressed by introducing <code>&lt;noscript&gt;</code> visibility overrides.</li></ul>
-          <p>While automated linters confirmed passing contrast ratios, valid HTML trees, and HTTP 200 response codes, the development server lacked a headless Chromium or Playwright installation. Consequently, extensive CSS restyling—replacing high-saturation glow treatments with desaturated inset highlights—was conducted without visual inspection tools, demonstrating the operational risk of refactoring presentation layers solely through static code parsers.</p>
+          <p class="reader-lede">Sunday afternoon, three unrelated jobs: occupancy automations in HA, an ISP-migration audit on the gateway, and portfolio CSS I couldn&#39;t actually look at.</p>
+          <h2>How Long Is Empty?</h2>
+          <p>Wanted auto-off for the theatre (two downlights + two strips) and the office. Didn&#39;t want to guess the timeout, so I queried HA&#39;s SQLite recorder for the mmWave sensor&#39;s raw history.</p>
+          <p>Pattern was clear: false-negative dropouts up to two minutes when someone sits still, real vacancies twenty-five minutes plus. Set vacancy timeout to five minutes — safely above the two-minute noise floor, won&#39;t leave lights burning for an hour. Real-world delay is that plus the sensor&#39;s own hardware cooldown.</p>
+          <h2>HA Didn&#39;t Know What Anything Was Named</h2>
+          <p>Office auto-off needs four entities: two downlights, desk lamp, air purifier. Finding them was stupid.</p>
+          <p>The purifiers show up under two domains — a <code>fan</code> entity and a <code>switch</code> entity — labeled only <code>big</code> and <code>small</code> with OEM IDs. Only way to tell them apart was <code>area_id: office</code> vs <code>area_id: lounge</code>. The theatre presence sensor had a device-tracker still named after the next room over. Had to join device registry to area registry to find the right ID.</p>
+          <p>Did it carefully because bad YAML crashes the daemon: snapshot <code>automations.yaml</code> with a timestamp, append the blocks, run <code>ha core check_config</code> in the CLI container, restart HA, query SQLite to confirm <code>automation.theatre_lights_off</code> and <code>automation.office_lights_off</code> are live.</p>
+          <h2>I Can Switch ISPs Without Touching DNS</h2>
+          <p>Audited every external dependency in case I move ISPs onto dynamic IPs or CGNAT. Turns out I have zero inbound bindings:</p>
+          <ul><li>public web in via Cloudflare Tunnels (<code>cloudflared</code>, outbound TLS on 443)</li><li>node/admin traffic over Tailscale</li><li>seedbox mounts over outbound <code>sshfs</code></li><li>portfolio on external CDN</li></ul>
+          <p>No A/AAAA records point at my WAN. Switching ISPs is just new PPPoE/VLAN tags on the WAN port. No DNS changes, no DDNS updater. Nice surprise.</p>
+          <p>Found one dead port-forward from before the tunnel days — high WAN port to a host that&#39;s been repurposed since. Deleted it.</p>
+          <h2>CSS I Couldn&#39;t See</h2>
+          <p>Evening: styling audit on the portfolio worktree serving port 3003. Linter complaints were legit — small metadata text at 3.82:1 on dark bg, fails AA&#39;s 4.5:1. Bumped hsl lightness, worst case now 4.77:1. Missing canonicals + OpenGraph on all seventeen templates. And reveal classes setting <code>opacity: 0</code> inline, so with JS off everything below the hero is invisible — added <code>&lt;noscript&gt;</code> overrides.</p>
+          <p>Problem: no headless Chromium or Playwright on that box. So I replaced the high-saturation glows with desaturated inset highlights and never actually saw them. Linters pass, HTML valid, 200s everywhere. Whether it looks good is unverified. Refactoring presentation through static parsers alone feels wrong, but that&#39;s where I left it.</p>
         </div>
       </div>
     </article>
 
     <nav class="reader-nav three-grid" aria-label="Article navigation">
       <a href="../../blog/index.html">Back to Blog</a>
-      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/i-sat-down-to-add-one-button-and-rebuilt-half-my-smart-home/index.html"><span class="meta">Older</span>Home Assistant Integration Alignment: Matter Server, Meross LAN, and Cross-VLAN Discovery</a><a class="adjacent-post newer-post" href="../../blog/i-gave-the-ai-a-browser-and-we-shipped-the-redesign/index.html"><span class="meta">Newer</span>Automating Frontend Visual Verification with Headless Chromium</a></div>
+      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/i-sat-down-to-add-one-button-and-rebuilt-half-my-smart-home/index.html"><span class="meta">Older</span>I Sat Down to Add One Button and Rebuilt Half My Smart Home</a><a class="adjacent-post newer-post" href="../../blog/i-gave-the-ai-a-browser-and-we-shipped-the-redesign/index.html"><span class="meta">Newer</span>I Gave the AI a Browser and We Shipped the Redesign</a></div>
     </nav>
   </main>
 

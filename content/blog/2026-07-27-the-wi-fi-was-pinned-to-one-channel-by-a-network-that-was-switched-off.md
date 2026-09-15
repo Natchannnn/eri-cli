@@ -1,73 +1,40 @@
 ---
-title: "UniFi RF Optimization: RadioChannelLockedByIot, Regulatory Power Caps, and Staged Node Firewall Rules"
+title: "The Wi-Fi Was Pinned to One Channel by a Network That Was Switched Off"
 date: 2026-07-27
 category: Homelab
 summary: "Resolving site-wide 2.4 GHz channel locking in UniFi, tuning 5 GHz EIRP against regional regulatory limits, optimizing AP channel reuse via floor plans, and staging firewall rules for a secondary Proxmox host."
 ---
-A comprehensive RF restructuring of my wireless network began with an investigation into why all four access points were statically pinned to 2.4 GHz Channel 6. The debugging process uncovered a site-wide constraint enforced by a disabled SSID, measured substantial EIRP disparities across Australian regulatory domains, and established a phased firewall plan for an incoming secondary Proxmox node.
+All four of my APs were stuck on 2.4 GHz Channel 6. Tried spreading them across 1/6/11 in the UniFi UI. Every attempt died with `This action could not be completed`. No reason given.
 
-## Isolating the hidden RadioChannelLockedByIot constraint
-
-Attempting to distribute 2.4 GHz channels across non-overlapping channels (1, 6, and 11) repeatedly failed in the UniFi Network web interface with a generic error: `This action could not be completed`.
-
-Submitting the configuration update directly through the UniFi Network controller REST API exposed the underlying error key:
+Hit the controller REST API directly. There it was:
 
 ```text
 api.err.RadioChannelLockedByIot
 ```
 
-UniFi includes an "IoT Channel Optimization" setting intended to lock all access points to a single 2.4 GHz channel to prevent legacy smart plugs from scanning and disconnecting. This setting had been enabled inside a secondary IoT SSID that was currently set to disabled. Even when disabled and not actively broadcasting beacons, the controller continued to enforce the global channel lock site-wide, silently overriding manual channel assignments.
+UniFi has an "IoT Channel Optimization" toggle that pins every AP to one 2.4 channel so legacy plugs don't roam and drop. It was enabled inside a secondary IoT SSID — one that was currently disabled. Not broadcasting, no beacons, still enforcing a site-wide lock and silently overriding my channel picks. Turned the toggle off inside the dormant SSID definition. Lock released. Channels finally stuck.
 
-Disabling the setting within the dormant SSID definition released the lock, permitting independent channel configurations across all four access points.
+## Australia Caps Your 5 GHz and Won't Tell You Loudly
 
-## Regional regulatory domains and 5 GHz EIRP disparities
+With the lock gone I dropped 5 GHz widths from 160 MHz to 80 for better SNR. Then noticed my lounge ceiling Pro Max had zero 5 GHz clients — everyone clinging to distant in-wall APs. Both set to `High` power. Telemetry:
 
-With channel locks removed, I reduced 5 GHz channel widths from 160 MHz to 80 MHz to improve signal-to-noise ratios and lessen interference. However, client telemetry showed the central ceiling-mounted UniFi Pro Max in the lounge carried zero 5 GHz clients, with clients associating instead with distant in-wall access points.
+- Lounge (ch 36): 17 dBm.
+- Office (ch 149): 24 dBm.
 
-Both access points were configured to `High` transmit power. Yet telemetry showed:
-- **Lounge AP (Channel 36)**: 17 dBm radiated power.
-- **Office AP (Channel 149)**: 24 dBm radiated power.
+That's the AU regulatory domain. Lower UNII-1 (36–48) is capped hard to protect satellite/weather; upper bands get way more EIRP. Swapped to prove it: lounge to 149 jumped to 29 dBm, office to 132 gave 22 dBm vs 15 on 36. Standardized everything upstairs on upper channels. Roaming bias gone, no hardware moved.
 
-This 7–12 dB disparity (representing a fourfold to sixteen-fold difference in effective isotropic radiated power, or EIRP) is enforced by the Australian (AU) regulatory domain. In Australia, the UNII-1 lower 5 GHz band (channels 36–48) is restricted to lower maximum EIRP limits to protect satellite and meteorological services, whereas upper UNII-2C and UNII-3 channels permit significantly higher transmit power.
+## I Paired the Wrong APs on the Same Channel
 
-Swapping channels confirmed the regulatory behavior:
-- Relocating the Lounge AP to Channel 149 immediately elevated its output to 29 dBm.
-- Shifting the Office AP to Channel 132 yielded 22 dBm, compared to 15 dBm on Channel 36.
+Four APs, three channels — one pair has to share. I first paired Theatre + Garage on 11. They're on the same side of the house. Garage 2.4 utilization spiked to 75%. Dumb pairing.
 
-Standardizing active 5 GHz channels on the upper UNII bands effectively resolved client roaming biases without altering physical hardware placements.
+Laid AP positions over the actual floor plan: Theatre and Office are diagonal opposite corners. Moved the shared 11 there. Contention cleared. Also dodged outside noise I'd mapped — dashcam at −56 dBm near the garage, printer Wi-Fi Direct at −51 dBm, both polluting 6.
 
-## RF channel reuse and architectural floor plan alignment
+## Kicking Legacy Rates Off the Air
 
-Covering four access points across three non-overlapping 2.4 GHz channels (1, 6, 11) requires one pair of access points to share a channel. 
+Bumped minimum 2.4 rates to reclaim airtime. API said `success: true` and changed nothing — still 1 Mbps. Because rate mode was `auto`, the controller ignores explicit rate keys until you flip the mode. Gotcha noted.
 
-Initial assignment paired the Theatre and Garage access points on Channel 11. However, reviewing the architectural layout showed both rooms occupy the same structural elevation of the residence, resulting in an immediate surge in co-channel contention (Garage AP 2.4 GHz channel utilization peaked at 75%).
+Final: primary net floor 6 Mbps (kills 802.11b CCK + CTS-to-self overhead outright), IoT net 5.5 Mbps so ancient microcontrollers stay associated. 33 clients observed, all 29 IoT stayed connected. Office AP airtime 40% → 17%, retransmits 16.7% → 3.0%. Same client count.
 
-Overlaying access point coordinates onto the true architectural floor plan identified the Theatre and Office as the diagonal opposing corners of the single-story building. Reassigning Channel 11 to the Theatre and Office APs eliminated direct co-channel interference. Furthermore, the revised plan isolated external RF noise, avoiding Channel 6 interference caused by an onboard vehicle dashcam (−56 dBm near the garage) and a printer's Wi-Fi Direct beacon (−51 dBm).
+Cameras blinked during the window — checked: PoE switch steady at 15.6W of 60W, zero link drops. HA logs showed the Protect daemon restarting with 502s at the proxy, ICMP untouched. Same daemon-crash pattern as yesterday. Also found a dead `Allow Cameras to Gateway` rule matching camera MACs against the `Internal` zone — cameras live in isolated `Untrusted`, so it never fires. Cleaned that up.
 
-## Minimum data rates and airtime reclamation
-
-To reduce management frame overhead and force fast client handoffs, I adjusted the minimum 2.4 GHz data rate:
-
-1. **API Automation Quirk**: Updating the rate via the API returned `success: true` while leaving the underlying rate unchanged at 1000 kbps (1 Mbps). Because the network's rate selection mode was set to `auto`, the controller silently ignored explicit rate keys until the mode was explicitly adjusted in the controller settings.
-2. **Rate Floors**:
-   - **Primary Network**: Set to 6 Mbps. A 6 Mbps floor disables legacy 802.11b CCK modulation entirely, eliminating 802.11b CTS-to-self protection frames and freeing substantial airtime.
-   - **IoT Network**: Set to 5.5 Mbps to maintain backward compatibility with legacy 2.4 GHz microcontrollers.
-
-Over an observation window with 33 connected clients, all 29 IoT endpoints retained stable associations. Airtime utilization on the Office AP dropped from 40% to 17% while client count remained steady, and frame retransmission rates declined from 16.7% to 3.0%.
-
-## Camera Protect telemetry boundaries
-
-During the wireless maintenance window, UniFi Protect cameras exhibited brief offline events. Network telemetry confirmed that the physical infrastructure was fully nominal: the dedicated PoE switch delivered a stable 15.6W out of a 60W power budget with zero port link drops.
-
-Correlating this with Home Assistant recorder logs confirmed that the gateway's Protect application daemon had been restarting in the background, emitting HTTP 502 Bad Gateway responses at the reverse proxy layer while ICMP connectivity remained continuous. An audit of the firewall table also identified an obsolete rule titled `Allow Cameras to Gateway` that matched camera MACs against the `Internal` zone, failing to execute because the camera interfaces reside strictly within the isolated `Untrusted` camera VLAN.
-
-## Staging firewall architecture for a secondary Proxmox node
-
-To introduce hypervisor redundancy and isolate development workloads, I acquired a secondary OptiPlex 3070 Micro to deploy as an auxiliary Proxmox host (`pve02`). 
-
-An audit of existing firewall rules revealed a major architectural coupling: the static IP `x.x.0.5` was hardcoded across eight distinct firewall policies. In five rules, it represented Home Assistant; in others, it represented the physical Docker host. Migrating Home Assistant into an independent VM on `pve02` would break these automations unless IP assignments and firewall policies were cleanly decoupled prior to host provisioning.
-
-To manage the migration cleanly:
-- Pre-allocated static MAC addresses for incoming virtual machines and staging containers, registering them in DHCP reservation tables.
-- Staged inter-VLAN firewall rules permitting administrative and IoT traffic to both the current and pending Home Assistant IPs concurrently.
-- Validated all staged firewall rule changes in preview mode without committing writes until physical deployment begins.
+Bought a second OptiPlex 3070 Micro for `pve02` (Proxmox aux). Pre-work discovery: `x.x.0.5` is hardcoded in eight firewall policies — five mean Home Assistant, others mean the Docker host itself. Moving HA to its own VM breaks that unless I decouple first. Pre-allocated MACs, registered DHCP reservations, staged rules allowing both current and future HA IPs, validated everything in preview mode. Hardware arrives before I commit.

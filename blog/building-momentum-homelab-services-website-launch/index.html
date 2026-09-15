@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="dark">
   <meta name="description" content="Setting up Prometheus, Grafana, Loki, and UnPoller on an OptiPlex host, exposing Immich via Cloudflare Tunnel, and creating a static portfolio generator from Obsidian markdown notes.">
   <link rel="icon" href="../../assets/img/logo.png">
-  <title>Deploying the Homelab Observability Stack and Initial Portfolio Site — ERI / CLI</title>
+  <title>My Monitoring Stack Lies About WAN Uptime and My Site Builds From Obsidian — ERI / CLI</title>
   <link rel="stylesheet" href="../../assets/css/style.css?v=1.1.0">
   <script defer src="../../assets/js/pages.js"></script>
 </head>
@@ -25,7 +25,7 @@
     <article>
       <header class="reader-head three-grid">
         <p class="reader-meta meta">Projects<br><time datetime="2026-06-08">08 Jun 2026</time><br>2 min read</p>
-        <h1 class="page-title">Deploying the Homelab Observability Stack and Initial Portfolio Site</h1>
+        <h1 class="page-title">My Monitoring Stack Lies About WAN Uptime and My Site Builds From Obsidian</h1>
       </header>
 
       <div class="reader-cut" aria-hidden="true">
@@ -34,26 +34,24 @@
 
       <div class="reader-body three-grid" id="article-body">
         <div class="reader-prose">
-          <p class="reader-lede">Deploying a complete observability stack on the OptiPlex host brought Prometheus, Grafana, Loki, Promtail, Node Exporter, cAdvisor, and UnPoller online as a unified Docker Compose stack, routing operational metrics to a custom dashboard at <code>status.n5hq.me</code>.</p>
-          <h2>The Monitoring Stack</h2>
-          <p>The monitoring deployment focused on capturing system metrics across host hardware and networking components. Using the Grafana Python API, I built a custom Homelab Overview dashboard tracking WAN uptime, connected device counts, container lifecycle states, CPU and memory utilization, disk I/O, network throughput, and UniFi PoE power draw.</p>
-          <p>Several operational quirks required immediate adjustments:</p>
-          <ul><li>Dashboard template imports contained mismatched metric prefixes and unexpanded variables, requiring custom Python patch scripts to normalize datasources.</li><li>Under cgroup v2, cAdvisor failed to expose Docker container names by default, displaying raw hash cgroup paths instead of readable labels.</li><li>The WAN uptime query intermittently dragged down average availability metrics because the inactive failover WAN interface returned a <code>-1</code> state. A temporary filter (<code>wan_networkgroup=&quot;WAN&quot;</code>) was staged to isolate the primary interface.</li></ul>
-          <h2>Exposing Immich via Cloudflare Tunnel</h2>
-          <p>With the monitoring services running, Immich photo storage was configured for remote access at <code>photo.n5hq.me</code>. Rather than deploying a separate tunnel daemon, I added an ingress rule to the existing <code>cloudflared</code> instance already routing Home Assistant traffic. Because internal traffic stayed within the host network, no additional port forwarding or router exposure was required.</p>
-          <h2>Building the Static Site Pipeline</h2>
-          <p>The remainder of the day was spent developing the initial portfolio website and publishing workflow.</p>
-          <p>The frontend was structured as a mobile-first responsive layout with dedicated sections for homelab infrastructure, active projects, and contact routing via FormSubmit.co.</p>
-          <p>To eliminate friction in publishing homelab notes, I wrote a Node.js build script to interface directly with markdown journal notes in Obsidian. The script parses frontmatter metadata, synchronizes source files to <code>blog/posts/</code>, and compiles a structured <code>posts.json</code> manifest for the client-side archive. Initial edge cases—such as duplicate sidebar references and incorrect relative paths in the markdown reader—were resolved during local testing.</p>
-          <h2>Pending Verification</h2>
-          <ul><li>Apply the <code>wan_networkgroup=&quot;WAN&quot;</code> query filter to the Grafana uptime dashboard.</li><li>Evaluate Cloudflare Access policies to add an extra authentication layer in front of the Immich tunnel.</li><li>Update Cloudflare DNS records to point <code>n5hq.me</code> apex and <code>www</code> CNAMEs to the static hosting target.</li></ul>
+          <p class="reader-lede">Spent most of today getting Prometheus, Grafana, Loki, Promtail, Node Exporter, cAdvisor, and UnPoller all up on my OptiPlex as one Docker Compose stack.</p>
+          <p>Metrics are landing on a dashboard I built at <code>status.n5hq.me</code>.</p>
+          <p>I used the Grafana Python API to put together a Homelab Overview board — WAN uptime, device count, container states, CPU and memory, disk I/O, network throughput, UniFi PoE draw. The stuff I actually check when something feels off.</p>
+          <p>Nothing imported cleanly.</p>
+          <ul><li>Dashboard templates I grabbed had wrong metric prefixes and variables that never expanded, so I wrote little Python patch scripts just to normalize datasources.</li><li>Under cgroup v2, cAdvisor refused to show Docker container names, just raw hash cgroup paths.</li><li>My WAN uptime average looked terrible for an hour before I realized the dead failover WAN reports <code>-1</code> and drags everything down. Slapped a <code>wan_networkgroup=&quot;WAN&quot;</code> filter on it for now. Still need to make that permanent.</li></ul>
+          <h2>Immich Went Remote Without a Second Tunnel</h2>
+          <p>With that running I pointed <code>photo.n5hq.me</code> at my Immich. Didn&#39;t spin up another <code>cloudflared</code> — just added an ingress rule to the one already routing Home Assistant. Internal traffic never leaves the host anyway, so no new firewall holes.</p>
+          <h2>The Portfolio Site</h2>
+          <p>Rest of the day was the portfolio. Mobile-first layout, sections for my homelab, projects, contact going out through FormSubmit.co. Nothing fancy.</p>
+          <p>The part I actually care about: I wrote a Node.js build script that reads my markdown notes straight out of Obsidian, parses frontmatter, syncs everything into <code>blog/posts/</code>, and rebuilds a <code>posts.json</code> manifest for the archive page. Beats running it by hand every time.</p>
+          <p>It tripped over duplicate sidebar references and bad relative paths on the first few runs. Fixed during testing. DNS for the apex and <code>www</code> still needs pointing at the static host, and I want Cloudflare Access in front of Immich eventually. Called it there for tonight.</p>
         </div>
       </div>
     </article>
 
     <nav class="reader-nav three-grid" aria-label="Article navigation">
       <a href="../../blog/index.html">Back to Blog</a>
-      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/home-assistant-goes-public/index.html"><span class="meta">Older</span>The 502 Was Just a Typo in Trusted Proxies</a><a class="adjacent-post newer-post" href="../../blog/automating-the-blog-and-cleaning-up-the-portfolio/index.html"><span class="meta">Newer</span>Automating the Blog Publishing Pipeline and Cleaning Portfolio Placeholders</a></div>
+      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/home-assistant-goes-public/index.html"><span class="meta">Older</span>The 502 Was Just a Typo in Trusted Proxies</a><a class="adjacent-post newer-post" href="../../blog/automating-the-blog-and-cleaning-up-the-portfolio/index.html"><span class="meta">Newer</span>GitHub Actions Committed Before I Could Push</a></div>
     </nav>
   </main>
 

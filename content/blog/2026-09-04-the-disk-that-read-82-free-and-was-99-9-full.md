@@ -1,25 +1,19 @@
 ---
-title: "Seedbox Storage: When statfs Disagreed with Account Quotas"
+title: "The Disk That Read 82% Free and Was 99.9% Full"
 date: 2026-09-04
 category: Homelab
 summary: "A read-only audit of homelab services identified storage quota blind spots, silent retention job failures, and stalled automation workflows."
 ---
-A read-only audit of the homelab examined services, dashboards, and system logs to identify discrepancies between health-check status and actual task execution. Rather than applying immediate patches, each failure state was documented directly from the running environment.
+Read-only audit day. No patches, just documenting what the dashboards claim versus what's actually running. Biggest gap was storage, and it wasn't close.
 
-## Storage Quotas vs. Filesystem Free Space
+`df`, node exporter, app APIs: 4.6 TB free on the seedbox volume. `quota -s`: account 99.9% full, ~20 GiB left. `statfs` asks the shared block device; quotas live in the kernel per-account. Every green monitor tracked the wrong layer. Downloader logged `Disk quota exceeded` at 06:08, library service stalled behind it. Burn rate had been ~61 GB/day for two weeks — exhaustion marching in straight-line predictable, invisible to everything I monitored. Quota-aware checks going in this week.
 
-The most significant discrepancy appeared in seedbox storage monitoring. Standard filesystem tools (`df`, Prometheus node exporter, and application APIs) reported 4.6 TB of available storage on the volume. However, running `quota -s` revealed that the hosting provider account was 99.9% full with approximately 20 GiB remaining.
+## Three Silent Stalls
 
-Because filesystem `statfs` calls query the shared block device rather than user-level quota limits enforced by the kernel, standard disk space monitors remained green while the account approached exhaustion. The download client logged `Disk quota exceeded` at 06:08, causing the downstream library service to halt shortly after. Based on a burn rate of roughly 61 GB per day over the previous two weeks, storage exhaustion had progressed predictably without triggering alerts, because monitoring was tracking filesystem capacity rather than the quota limit.
+Retention container: alive 13 days, zero restarts, schedules green. Rules engine: `handledMediaAmount: 0` on all six collections. Five frozen on an unreleased default grace period (~1.01 TB held), sixth dead on a stale API key (401). Alerts only fire on exceptions — nothing threw, so nobody knew.
 
-## Retention and Automation Pipeline Audits
+Workflow scheduler: four workflows active, container up seven days. DB shows zero runs since 2026-08-28. A brief read-only remount of its volume had frozen the SQLite scheduler with the process still breathing.
 
-The audit identified silent failures across other automation services:
+Cluster backups: nightly jobs throwing filesystem + GC errors on the nodes. Needs hands-on remediation.
 
-1. **Media retention tool**: The container maintained active status for 13 days with zero restarts and successful scheduled runs. However, an API query against the rules engine showed `handledMediaAmount: 0` across all six collections. Five collections were suspended by an unreleased default grace period holding approximately 1.01 TB, while the sixth failed due to an outdated API key returning HTTP 401. Because error alerts were configured only on explicit exception reporting, the failure went unnoticed.
-2. **Workflow automation scheduler**: The automation platform reported all four workflows active and container uptime of seven days. However, database inspection showed zero execution runs since 2026-08-28. This coincided with a brief read-only remount of the container's storage volume, stalling the SQLite-backed scheduler without terminating the container process.
-3. **Cluster backups**: Nightly backup routines on the cluster nodes reported intermittent file system and garbage collection errors requiring remediation.
-
-## Verification
-
-Routine infrastructure checks held steady: planned host reboots completed cleanly, and Proxmox cluster quorum remained healthy at 3 of 3 votes. The audit underscored the necessity of augmenting process liveness checks with end-to-end task completion verification and quota-aware monitoring.
+Hosts themselves were fine — reboots clean, Proxmox 3/3 quorum steady. Lesson for the week: liveness isn't completion. Process up + port 200 means the box is on. Whether it did its job needs end-to-end proof and quota-aware monitors.

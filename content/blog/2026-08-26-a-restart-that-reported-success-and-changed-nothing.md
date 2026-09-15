@@ -1,40 +1,27 @@
 ---
-title: "Model Proxy Architecture, Prompt Cache Thresholds, and Container Lifecycle Traps"
+title: "A Restart That Reported Success and Changed Nothing"
 date: 2026-08-26
 category: Homelab
 summary: "Deploying a multi-tier model gateway proxy backed by PostgreSQL, debugging systemd container restart failures, benchmarking prompt caching thresholds, and isolating migration breakages."
 ---
-Engineering work on August 26 centered on deploying a multi-tier model proxy gateway with database-backed cost accounting, benchmarking prompt caching characteristics, and migrating workloads across cluster nodes.
+Stood up a model routing proxy on the primary node — four tiers, two on subscription endpoints, two metered with hard caps ($20 and $10 per rolling 30 days), Postgres backend for logs + transactional spend enforcement.
 
-## Deploying the model proxy and isolating systemd container restart failures
+Validation: 21 live requests through the capped tiers. Every single one logged $0.00.
 
-A multi-tier model routing proxy was provisioned on the primary node to enforce hard spend limits across upstream providers. The gateway defined four operational tiers: two routed to subscription-backed model endpoints and two connected to metered third-party providers with hard spending caps ($20 and $10 per 30-day rolling window). The proxy was deployed with a PostgreSQL database backend to persist request logs and enforce spend limits transactionally.
+Config syntax checked out. Tier maps fine. Pricing definitions fine. Stared at those for a while. Then looked at the process: `systemctl restart` on the wrapper unit returned 0, but container uptime showed it never died. The unit restarted. The workload inside didn't. New config mounts never loaded. Exit code 0, nothing changed.
 
-During initial validation, 21 live requests passed through the capped tiers, but every request logged a cost of $0.00.
+Killed and recreated the container by hand. Costs started accumulating in Postgres immediately.
 
-Configuration syntax, tier mapping tables, and pricing definitions were verified as correct. Investigating the running environment revealed a discrepancy in process management: executing `systemctl restart` against the proxy wrapper unit returned exit code 0, yet the underlying container process was never terminated. Container uptime metrics confirmed the process had run continuously without picking up modified configuration mounts. The service manager reported successful execution of the wrapper unit while the underlying workload remained unchanged.
+## The 10.7k Cache Floor
 
-Terminating and recreating the container explicitly resolved the issue, after which request costs accumulated accurately in PostgreSQL.
+Chased whether my ~4,000-token prompt prefix was actually caching. Didn't trust proxy summaries — benchmarked three placements at matched intervals: prefix in system block, prefix in first user turn, explicit cache-control headers.
 
-## Empirical benchmarking of prompt caching thresholds
+Caching works. It just doesn't start until ~10,700 tokens of prefix. Below that, zero benefit. Past it: 91% of input tokens cached, 3.6× effective cost cut against provider billing. My 4k prefix never stood a chance. Documented the floor so I stop guessing at prompt shapes.
 
-Investigating model token economics addressed an assumption that a ~4,000-token prompt prefix was failing to leverage prompt caching.
+## Migrations Broke the Hardcoded Stuff
 
-Rather than relying on proxy summary statistics, caching mechanics were benchmarked across three configurations at matched intervals:
-1. Prefix placed in the system message block.
-2. Prefix placed in the initial user turn.
-3. Explicit caching control headers applied.
+Made room for the proxy by moving three containers off primary, 40–120s each. Dropped a storage snapshot for the volume move, regenerated right after to keep rollback. Both hostnames 200 externally after.
 
-The tests demonstrated that caching was operational but constrained by upstream architecture: input prompt caching required a minimum prefix length of approximately 10,700 tokens before activation. Once crossing the 10.7k-token threshold, caching efficiency reached 91% of input tokens, yielding an effective 3.6× cost reduction verified against upstream provider billing telemetry. Documenting the 10.7k minimum threshold codified clear parameters for prompt structuring.
+Four update-rehearsal scripts died on hardcoded legacy node hostnames in their paths. Fixed three on the spot, fourth failed in the next batch run. New policy, written down this time: no physical hostnames in filenames. Abstract service refs only. Docs drift every migration otherwise.
 
-## Workload migrations and hardcoded hostname dependencies
-
-To accommodate the model proxy deployment, three containers were migrated off the primary node, incurring between 40 and 120 seconds of scheduled maintenance per guest. A storage snapshot was temporarily removed to permit volume migration and regenerated immediately post-cutover to preserve rollback capability. Public ingress was validated through external health checks (HTTP 200) on both primary hostnames.
-
-The migration exposed brittle operational dependencies: four update-rehearsal scripts failed because legacy node hostnames were hardcoded into execution paths. Three scripts were updated immediately, while a fourth failed during subsequent batch runs. This prompted a policy change across operational documentation: removing physical hostnames from file names in favor of abstract service references to prevent documentation drift during future migrations.
-
-## Current operational status
-
-Two items concluded the day with distinct statuses:
-- **Key Rotation (Closed)**: A provider API key exposed in an agent session transcript during benchmark testing was revoked immediately, with invalidation verified via upstream HTTP 401 responses, and replaced with a newly minted secret.
-- **Client Routing Mapping (Open)**: A client-side routing alias mismatch—where a front-end client passes an unmapped display name unhandled by the gateway proxy—remains unresolved in the project backlog pending client configuration updates.
+Day closed with two items: a provider key leaked into a benchmark transcript — revoked, 401-verified, replaced, closed. And a client routing alias the gateway doesn't map — frontend sends a display name the proxy never learned. Still open, backlog, needs client-side config.

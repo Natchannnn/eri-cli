@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="dark">
   <meta name="description" content="Deploying the Planka-backed n5-board system, separating CLI code from infrastructure units, auditing false-positive leak alarms, and scoping a public client package.">
   <link rel="icon" href="../../assets/img/logo.png">
-  <title>Packaging the n5-board CLI and Production Deployment Manifests — ERI / CLI</title>
+  <title>A Repo Containing the CLI but Not the Deployment Is Half of It — ERI / CLI</title>
   <link rel="stylesheet" href="../../assets/css/style.css?v=1.1.0">
   <script defer src="../../assets/js/pages.js"></script>
 </head>
@@ -24,8 +24,8 @@
   <main class="page-main reader-page" id="article">
     <article>
       <header class="reader-head three-grid">
-        <p class="reader-meta meta">Homelab<br><time datetime="2026-08-07">07 Aug 2026</time><br>4 min read</p>
-        <h1 class="page-title">Packaging the n5-board CLI and Production Deployment Manifests</h1>
+        <p class="reader-meta meta">Homelab<br><time datetime="2026-08-07">07 Aug 2026</time><br>3 min read</p>
+        <h1 class="page-title">A Repo Containing the CLI but Not the Deployment Is Half of It</h1>
       </header>
 
       <div class="reader-cut" aria-hidden="true">
@@ -34,39 +34,32 @@
 
       <div class="reader-body three-grid" id="article-body">
         <div class="reader-prose">
-          <p class="reader-lede">Resuming work on the n5-board Kanban automation stack began by reconciling session state after a week of stable operations.</p>
-          <p>The nightly automations had executed without failure, providing a solid baseline to close the initial research spike and transition n5-board from experimental scripts into production infrastructure.</p>
-          <h2>Phase 0 validation wrap-up</h2>
-          <p>Two validation checks remained from the July 31 spike: verifying API key longevity after generation, and confirming whether shared OAuth token background refreshes survive concurrent session execution.</p>
-          <p>The API key longevity check had been delayed because its timer container had been stopped. Starting the container and executing the test suite manually yielded a clean pass: 33 mixed API requests succeeded with zero authorization failures eight days post-generation, validating Planka as the permanent board backend over fallback alternatives.</p>
-          <p>The concurrent token-refresh soak yielded an inconclusive result. The background soak ran 66 calls across six and a half hours, reporting telemetry to Discord and the vault, but did not capture a natural refresh cycle before quota exhaustion. Rather than assuming resilience, concurrent token refreshing remains categorized as indeterminate pending further empirical observation.</p>
-          <h2>Production board deployment</h2>
-          <p>With backend selection settled, Phase 1 focused on production provisioning across container infrastructure and local tooling.</p>
-          <p>The backend was deployed inside an unprivileged container on the second Proxmox node, running Ubuntu 26.04 and Planka 2.1.1 backed by PostgreSQL. The deployment corrected an upstream image tag omission in the initial plan and bound the web listener strictly to its private container IP. A DOCKER-USER firewall allowlist was configured to restrict network access to two specific host IPs.</p>
-          <p>The n5-board management CLI was installed at <code>~/n5-board/</code> within an isolated Python 3.14.4 virtual environment, bootstrapping pip via get-pip.py to accommodate non-root user permissions. Verification was strict: 125 test cards seeded across six lists, dry-run diffs verifying zero state drift, a full wipe-and-regeneration reproducing an identical board hash, and all doctor self-checks reporting healthy.</p>
-          <p>Monitoring was added via three Uptime Kuma HTTP health probes distributed across both nodes. To avoid false positives from failed API registrations, active probe attachments were verified directly against the underlying SQLite database records. External exposure through Cloudflare was kept parked pending manual review.</p>
-          <h2>False-positive leak alarm inspection</h2>
-          <p>During configuration, an internal security check halted execution, reporting an apparent API key leak in the vault runsheet. Direct inspection revealed a flaw in the verification script: piping grep into head caused the pipeline to exit with status zero regardless of whether matches occurred. Verifying the runsheet confirmed only an eight-character non-sensitive identifier prefix was present, clearing the alert as a check syntax defect rather than a credential exposure.</p>
-          <h2>Forgejo repository creation and architecture review</h2>
-          <p>Once the board and CLI were functional, the project was organized into a dedicated Forgejo Git repository. Two independent review passes evaluated the initial migration plan before committing.</p>
-          <p>The first review identified a significant scope omission: the repository plan included CLI source files but omitted the deployment manifests—Docker Compose configurations, systemd units, database backup scripts, and hypervisor firewall rules. A repository containing only the client CLI without its deployment definitions would leave the service unrepeatable. Both code and deployment automation were unified into the repository structure.</p>
-          <p>The second review caught two implementation defects:</p>
-          <ol><li>The documentation synchronization drift detector injected dynamic UTC timestamps into file headers on every execution, generating false diffs on unchanged content.</li><li>The credential pre-scan allowlist caused false positives on substring matches (such as <code>_PAT</code> within standard English nouns or <code>TOKEN</code> inside variable names).</li></ol>
-          <p>These issues were resolved prior to repository initialization, resulting in a private repository containing 44 tracked files (228 KB) with zero leaked credentials. A planned GitHub push-mirror was deferred, as the existing personal access token lacked permissions to create remote repositories.</p>
-          <h2>Off-network access via Tailscale and SNAT</h2>
-          <p>Accessing the board remotely over Tailscale revealed that manual credential retrieval was unnecessary. The primary gateway SNATs tailnet traffic to its internal LAN address, placing authenticated Tailscale clients inside the firewall allowlist automatically. This allowed seamless browser access while preserving restricted access rules.</p>
-          <h2>Scoping the public client repository</h2>
-          <p>Later in the day, planning began for a standalone public version of the tooling (<code>plankamd</code>), designed to allow third parties to run the board workflow against external environments.</p>
-          <p>The architectural pass established clear boundaries:</p>
-          <ul><li>Internal hosting on Forgejo cannot serve anonymous public clones due to site-wide authentication policies, requiring public distribution on GitHub.</li><li>Code analysis identified strong coupling in the backlog parser, where brittle markdown heading parsing could drop items silently if formatting differed slightly.</li><li>A proposed branding abstraction was designed to decouple internal lab paths from generic CLI commands, but review highlighted an architectural hurdle: the CLI parsed arguments before loading configuration, requiring a two-phase parser to support dynamic subcommands.</li></ul>
-          <p>Work closed with the isolated public build initialized at 23:34:01, maintaining a clean boundary from the live private repository while package renaming and argument parsing refactors remain pending.</p>
+          <p class="reader-lede">Back on n5-board after a week away.</p>
+          <p>Nightly automations ran clean the whole time, so I had a stable floor to promote it from scripts to real infra.</p>
+          <h2>Two Checks Left From the Spike</h2>
+          <p>API key longevity: its timer container had been stopped, so I&#39;d never run it. Started it, ran the suite by hand — 33 mixed API calls, zero auth failures, eight days after generation. Planka stays. No fallback needed.</p>
+          <p>Token-refresh soak: 66 calls over six and a half hours to Discord + vault, never caught a natural refresh before quota died. Still indeterminate. I&#39;m not assuming resilience; it stays on the unverified list.</p>
+          <h2>Prod Board</h2>
+          <p>Backend went into an unprivileged container on node two — Ubuntu 26.04, Planka 2.1.1, Postgres. Fixed an upstream image tag omission in my own plan (embarrassing), bound the listener to the container&#39;s private IP only. DOCKER-USER allowlist: two host IPs, nothing else.</p>
+          <p>CLI lives at <code>~/n5-board/</code> in its own Python 3.14.4 venv, pip bootstrapped via get-pip.py for non-root. Verified meanly: 125 test cards across six lists, dry-run diffs with zero drift, full wipe-and-regen reproducing an identical board hash, doctor checks all green.</p>
+          <p>Monitoring: three Kuma HTTP probes across both nodes. Learned to verify probe attachments against the SQLite rows directly — failed API registrations look attached in the UI when they aren&#39;t. Cloudflare exposure stays parked until I review it by hand.</p>
+          <h2>The Leak Alarm That Wasn&#39;t</h2>
+          <p>Security check halted, screaming API key leak in the vault runsheet. Looked myself: the check pipes grep into head, which exits 0 whether or not anything matched. Runsheet held an eight-char non-sensitive prefix. Check bug, not a leak.</p>
+          <h2>The Review That Saved the Repo</h2>
+          <p>Split the project into its Forgejo repo. Two review passes before committing, both earned their keep.</p>
+          <p>Review one: my plan tracked CLI source but forgot every deployment manifest — Compose files, systemd units, DB backup scripts, hypervisor firewall rules. CLI without its deployment is unrepeatable. Unified both into the repo.</p>
+          <p>Review two caught: doc-sync drift detector stamping dynamic UTC timestamps into headers every run (false diffs on untouched files), and the credential pre-scan allowlist firing on substrings (<code>_PAT</code> inside plain English nouns, <code>TOKEN</code> inside variable names).</p>
+          <p>Fixed both pre-init. Private repo: 44 files, 228 KB, zero real leaks. GitHub mirror deferred — my PAT can&#39;t create remote repos.</p>
+          <p>Remote access over Tailscale just worked, by the way. Gateway SNATs tailnet traffic to its LAN address, landing clients inside the allowlist automatically. Restricted rules intact, no manual creds shuffle.</p>
+          <p>Evening: started scoping the public client (<code>plankamd</code>) for third-party use. Boundaries so far: Forgejo can&#39;t do anonymous clones (site-wide auth), so public lives on GitHub. Backlog parser is coupled to brittle heading parsing — slight format drift drops items silently. Tried abstracting branding off lab paths, hit a wall: CLI parses args before loading config, needs a two-phase parser for dynamic subcommands.</p>
+          <p>Closed with the isolated public build initialized at 23:34:01, clean boundary from the live private repo. Renames and parser refactors pending.</p>
         </div>
       </div>
     </article>
 
     <nav class="reader-nav three-grid" aria-label="Article navigation">
       <a href="../../blog/index.html">Back to Blog</a>
-      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/the-night-i-learned-a-model-cant-be-trusted-to-report-on-itself/index.html"><span class="meta">Older</span>Testing Agent Harness Assumptions and Model Self-Reporting Boundaries</a><a class="adjacent-post newer-post" href="../../blog/the-checks-kept-passing-while-the-thing-under-them-was-broken-four-times-today/index.html"><span class="meta">Newer</span>Vault Reorganization and Iterating on Worker Egress Controls</a></div>
+      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/the-night-i-learned-a-model-cant-be-trusted-to-report-on-itself/index.html"><span class="meta">Older</span>The Night I Learned a Model Can&#39;t Be Trusted to Report on Itself</a><a class="adjacent-post newer-post" href="../../blog/the-checks-kept-passing-while-the-thing-under-them-was-broken-four-times-today/index.html"><span class="meta">Newer</span>The Checks Kept Passing While the Thing Under Them Was Broken, Four Times Today</a></div>
     </nav>
   </main>
 

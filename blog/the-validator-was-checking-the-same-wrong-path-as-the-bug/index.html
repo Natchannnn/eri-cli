@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="dark">
   <meta name="description" content="Resolving YAML indentation in model proxy spend caps, restructuring root instructions into tiered documentation, and evaluating secret store availability.">
   <link rel="icon" href="../../assets/img/logo.png">
-  <title>Configuring Model Proxy Spend Caps, Documentation Tiering, and Availability Trade-offs — ERI / CLI</title>
+  <title>The Validator Was Checking the Same Wrong Path as the Bug — ERI / CLI</title>
   <link rel="stylesheet" href="../../assets/css/style.css?v=1.1.0">
   <script defer src="../../assets/js/pages.js"></script>
 </head>
@@ -24,8 +24,8 @@
   <main class="page-main reader-page" id="article">
     <article>
       <header class="reader-head three-grid">
-        <p class="reader-meta meta">Homelab<br><time datetime="2026-08-27">27 Aug 2026</time><br>3 min read</p>
-        <h1 class="page-title">Configuring Model Proxy Spend Caps, Documentation Tiering, and Availability Trade-offs</h1>
+        <p class="reader-meta meta">Homelab<br><time datetime="2026-08-27">27 Aug 2026</time><br>2 min read</p>
+        <h1 class="page-title">The Validator Was Checking the Same Wrong Path as the Bug</h1>
       </header>
 
       <div class="reader-cut" aria-hidden="true">
@@ -34,31 +34,25 @@
 
       <div class="reader-body three-grid" id="article-body">
         <div class="reader-prose">
-          <p class="reader-lede">Engineering work on August 27 encompassed three distinct operational areas: correcting model proxy budget cap configurations, restructuring system instructions into tiered documentation, and evaluating availability dependencies during external secret store outages.</p>
-          <h2>Model proxy spend cap indentation and validator alignment</h2>
-          <p>While inspecting model gateway configurations, an indentation error was identified in the spend control block. In YAML configuration, <code>max_budget</code> was positioned as a sibling of the <code>parameters</code> block rather than nested under it. Because the parser expected <code>parameters.max_budget</code>, the proxy found no budget cap defined and initialized with unconstrained spend limits, generating no syntax errors or startup warnings.</p>
-          <p>A custom configuration validation script failed to flag the omission because it checked for the existence of <code>max_budget</code> at the incorrect sibling path, mirroring the defect in the configuration file itself.</p>
-          <p>Both the configuration and the validator were updated:</p>
-          <ul><li><code>max_budget</code> was nested under <code>parameters</code>.</li><li>The validator script was updated to assert the enforced schema path.</li><li>Querying the running proxy API confirmed the spend limits ($20 and $10) appeared in the runtime configuration for both budget tiers.</li></ul>
-          <p>While configuration ingestion was confirmed via API telemetry, active request rejection at the spending boundary remains untested in this window.</p>
-          <h2>Endpoint hardening and admin interface reachability</h2>
-          <p>To reduce attack surface, public documentation endpoints (<code>/docs</code> and <code>/schema</code>) were restricted. An initial attempt applied a broad API-disabling flag that inadvertently blocked the management interface used to monitor active keys, spend metrics, and cache hit rates.</p>
-          <p>The configuration was refined using granular flags: documentation and schema endpoints return HTTP 404, while the administrative management interface remains accessible with HTTP 200 responses.</p>
-          <h2>External secret store availability dependencies</h2>
-          <p>During startup testing, the external secret management service experienced a two-hour outage. Because the model proxy startup automation fetched upstream provider API keys directly from the vault on boot, the container could not start while the external vault API was unreachable.</p>
-          <p>This highlighted an operational availability dependency: migrating secrets out of static host files into centralized vaults reduces exposure risks while introducing runtime availability coupling to external networks. To mitigate boot dependency risks during network disruptions, an encrypted local secret store was configured as an offline fallback mechanism.</p>
-          <h2>Restructuring system instructions into tiered documentation</h2>
-          <p>Work proceeded on optimizing the repository root instruction file (<code>CLAUDE.md</code>), which had expanded to approximately 11,000 words. The objective was splitting the monolithic file into a fast-loading hot tier for routine sessions and a detailed cold tier for reference.</p>
-          <p>During condensing passes, paraphrasing status lines risked semantic drift: summarizing operational notes inadvertently introduced conflicting statuses (such as labeling active production services as untested). The review process established a strict rule: operational status markers and project states must be migrated verbatim rather than paraphrased.</p>
-          <h2>Hypervisor reboot and filesystem write integrity</h2>
-          <p>During container reconfiguration on the proxy virtual machine, executing an ungraceful reboot via <code>qm reboot</code> while Docker was actively committing container layer writes corrupted a local container image, requiring a clean rebuild. This reinforced operational procedures: VM reboot commands should be preceded by graceful service stops (<code>docker compose down</code>) to ensure container filesystems unmount cleanly.</p>
+          <p class="reader-lede">My model proxy was running with no spend cap and telling me everything was fine. <code>max_budget</code> sat as a sibling of <code>parameters</code> instead of nested under it.</p>
+          <p>Parser wanted <code>parameters.max_budget</code>, found nothing, initialized unconstrained — no syntax error, no startup warning. Silent unlimited spend.</p>
+          <p>My validator missed it too. It checked for <code>max_budget</code> at the same wrong sibling path. Same bug in both files, both agreeing with each other. Fixed the config (nested under <code>parameters</code>), fixed the validator to assert the enforced schema path, queried the live API — $20 and $10 tiers present in runtime config. Whether rejection actually fires at the boundary is still untested. Not pretending otherwise.</p>
+          <h2>Killed My Own Admin UI</h2>
+          <p>Hardening pass: restricted public <code>/docs</code> and <code>/schema</code>. Used the broad disable flag first — which also killed the management interface showing keys, spend, cache rates. The thing I need to watch the thing I just changed.</p>
+          <p>Redid it granular: docs + schema 404, admin UI 200. Attack surface down, visibility intact.</p>
+          <h2>The Vault Went Away for Two Hours</h2>
+          <p>External secret service died for two hours during boot testing. Proxy startup pulls provider keys from the vault at boot — vault unreachable, container can&#39;t start. That&#39;s the trade I made moving secrets out of host files: less exposure, hard runtime coupling to an external network.</p>
+          <p>Mitigation going in: encrypted local secret store as offline fallback for boot. Central vault stays primary. Booting doesn&#39;t depend on someone else&#39;s uptime anymore.</p>
+          <h2>CLAUDE.md Surgery</h2>
+          <p>Root instructions hit ~11,000 words. Splitting into a hot tier (fast load, routine sessions) and cold tier (reference). Nearly introduced lies doing it — paraphrasing status lines turned live production services into &quot;untested&quot; in my summaries. New rule: status markers and project states move verbatim. Never paraphrased.</p>
+          <p>Also corrupted a container image with <code>qm reboot</code> mid-layer-commit on the proxy VM. Ungraceful reboot + Docker writing layers = rebuild from clean. Procedure now: <code>docker compose down</code> before any VM reboot. Filesystems unmount, layers settle, then reboot.</p>
         </div>
       </div>
     </article>
 
     <nav class="reader-nav three-grid" aria-label="Article navigation">
       <a href="../../blog/index.html">Back to Blog</a>
-      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/a-restart-that-reported-success-and-changed-nothing/index.html"><span class="meta">Older</span>Model Proxy Architecture, Prompt Cache Thresholds, and Container Lifecycle Traps</a><a class="adjacent-post newer-post" href="../../blog/a-line-passing-through-a-switch-read-as-a-connection/index.html"><span class="meta">Newer</span>Local Storage Migration, Network Topology Corrections, and Documentation Mirroring</a></div>
+      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/a-restart-that-reported-success-and-changed-nothing/index.html"><span class="meta">Older</span>A Restart That Reported Success and Changed Nothing</a><a class="adjacent-post newer-post" href="../../blog/a-line-passing-through-a-switch-read-as-a-connection/index.html"><span class="meta">Newer</span>A Line Passing Through a Switch Read as a Connection</a></div>
     </nav>
   </main>
 

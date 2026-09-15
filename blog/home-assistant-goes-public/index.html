@@ -34,25 +34,24 @@
 
       <div class="reader-body three-grid" id="article-body">
         <div class="reader-prose">
-          <p class="reader-lede">I wanted remote access to my Home Assistant instance without punching holes in my router&#39;s firewall.</p>
-          <p>The standard plan was running <code>cloudflared</code> alongside Home Assistant in Docker, routing <code>ha.n5hq.me</code> directly to the local web interface.</p>
-          <p>Naturally, the first thing I ran into was a 502 Bad Gateway.</p>
+          <p class="reader-lede">I wanted remote access to my Home Assistant dashboard without punching holes in my router&#39;s firewall.</p>
+          <p>The obvious move was spinning up a Cloudflare Tunnel alongside it in Docker, routing <code>ha.n5hq.me</code> straight at the local web UI.</p>
+          <p>Naturally, the first thing I got was a 502 Bad Gateway.</p>
           <h2>The 502 and Docker Host Networking</h2>
-          <p>In the Cloudflare Zero Trust tunnel configuration, I had pointed the tunnel target at <code>http://homeassistant:8123</code> using the container name. But both <code>cloudflared</code> and Home Assistant were running with <code>network_mode: host</code>. On host networking, Docker&#39;s internal embedded DNS bridge does not intercept container names, so <code>cloudflared</code> could never resolve <code>homeassistant</code>.</p>
-          <p>Switching the tunnel target to <code>http://localhost:8123</code> solved the transport issue, but requests immediately began failing with HTTP 400 Bad Request while <code>cloudflared</code> remained silent in access logs.</p>
-          <p>Running the tunnel daemon with <code>--protocol http2 --loglevel debug</code> confirmed that traffic was reaching the host, but Home Assistant core was explicitly dropping every incoming request.</p>
-          <h2>Fixing the Reverse Proxy Headers</h2>
-          <p>Checking <code>home-assistant.log</code> revealed the real culprit: Home Assistant was logging <em>&quot;A request from a reverse proxy was received from 127.0.0.1, but your HTTP integration is not set-up for reverse proxies.&quot;</em></p>
-          <p>Two separate configuration mistakes were blocking the tunnel:</p>
-          <ol><li><code>use_x_forwarded_for: true</code> was missing from the <code>http:</code> section in <code>configuration.yaml</code>, telling Home Assistant to reject any forwarded client traffic.</li><li>In my <code>trusted_proxies</code> list, I had made a dumb typo: <code>172.0.0.1</code> instead of <code>127.0.0.1</code>, alongside an old Docker bridge IP leftover from months ago.</li></ol>
-          <p>Once I set <code>use_x_forwarded_for: true</code>, added both <code>127.0.0.1</code> and <code>::1</code> under <code>trusted_proxies</code>, and restarted the container, all 400 errors disappeared. External requests through the Cloudflare Tunnel connected immediately without port forwarding.</p>
+          <p>I&#39;d pointed the tunnel at <code>http://homeassistant:8123</code>. Sounded right. Except both <code>cloudflared</code> and Home Assistant were on <code>network_mode: host</code>, so Docker&#39;s internal DNS wasn&#39;t resolving anything. Container names mean nothing on host networking. Took me longer than I&#39;d like to admit to remember that.</p>
+          <p>Switched the target to <code>http://localhost:8123</code>. Tunnel went green. And then every request started dying with HTTP 400.</p>
+          <p>I ran the tunnel with <code>--protocol http2 --loglevel debug</code> thinking Cloudflare was eating something. It wasn&#39;t. Traffic was hitting the box fine. Home Assistant was just dropping it all on the floor.</p>
+          <p><code>home-assistant.log</code> had the answer:</p>
+          <p><em>&quot;A request from a reverse proxy was received from 127.0.0.1, but your HTTP integration is not set-up for reverse proxies.&quot;</em></p>
+          <p>Two problems in my <code>configuration.yaml</code>. I&#39;d forgotten <code>use_x_forwarded_for: true</code> entirely. And my <code>trusted_proxies</code> list had a typo — <code>172.0.0.1</code> instead of <code>127.0.0.1</code> — plus some ancient Docker bridge IP I&#39;d left in there months ago and never cleaned out.</p>
+          <p>Fixed both, added <code>127.0.0.1</code> and <code>::1</code>, restarted the container. Tunnel connected immediately. No port forwards.</p>
         </div>
       </div>
     </article>
 
     <nav class="reader-nav three-grid" aria-label="Article navigation">
       <a href="../../blog/index.html">Back to Blog</a>
-      <div class="reader-adjacent"><a class="adjacent-post newer-post" href="../../blog/building-momentum-homelab-services-website-launch/index.html"><span class="meta">Newer</span>Deploying the Homelab Observability Stack and Initial Portfolio Site</a></div>
+      <div class="reader-adjacent"><a class="adjacent-post newer-post" href="../../blog/building-momentum-homelab-services-website-launch/index.html"><span class="meta">Newer</span>My Monitoring Stack Lies About WAN Uptime and My Site Builds From Obsidian</a></div>
     </nav>
   </main>
 

@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="dark">
   <meta name="description" content="Migrating VM storage off failing NAS disks to local NVMe, clarifying isolated switch topology in architecture diagrams, and building a 584-page offline documentation mirror.">
   <link rel="icon" href="../../assets/img/logo.png">
-  <title>Local Storage Migration, Network Topology Corrections, and Documentation Mirroring — ERI / CLI</title>
+  <title>A Line Passing Through a Switch Read as a Connection — ERI / CLI</title>
   <link rel="stylesheet" href="../../assets/css/style.css?v=1.1.0">
   <script defer src="../../assets/js/pages.js"></script>
 </head>
@@ -24,8 +24,8 @@
   <main class="page-main reader-page" id="article">
     <article>
       <header class="reader-head three-grid">
-        <p class="reader-meta meta">Homelab<br><time datetime="2026-08-28">28 Aug 2026</time><br>3 min read</p>
-        <h1 class="page-title">Local Storage Migration, Network Topology Corrections, and Documentation Mirroring</h1>
+        <p class="reader-meta meta">Homelab<br><time datetime="2026-08-28">28 Aug 2026</time><br>2 min read</p>
+        <h1 class="page-title">A Line Passing Through a Switch Read as a Connection</h1>
       </header>
 
       <div class="reader-cut" aria-hidden="true">
@@ -34,28 +34,22 @@
 
       <div class="reader-body three-grid" id="article-body">
         <div class="reader-prose">
-          <p class="reader-lede">Infrastructure work on August 28 covered three distinct operational tasks: migrating the primary VM&#39;s virtual disk from an unstable NAS pool to local NVMe storage, correcting topological ambiguities in cluster architecture diagrams, and mirroring upstream technical documentation into a local knowledge base.</p>
-          <h2>Migrating VM virtual disks off degraded NAS storage</h2>
-          <p>The primary VM disk image previously resided on an external NAS volume that was exhibiting intermittent read timeouts and failing to reclaim freed disk space.</p>
-          <p>To eliminate storage volatility, the 150 GiB virtual disk image was cloned to local NVMe storage on the hypervisor node. During the transfer, four sectors returned zero-filled read errors at offsets 30360, 30361, 53642, and 73119 MiB (a 0.0026% defect rate). Verifying the filesystem showed that all corrupted sectors fell into unallocated blocks. Upon initial boot from NVMe, the root filesystem mounted clean read-write with zero errors, and all containerized workloads initialized normally.</p>
-          <p>VM memory allocation was concurrently resized from 16 GB to 12 GB, reflecting actual memory footprint requirements once disk buffering pressure was removed. Deleting the source 150 GB image on the NAS confirmed that appliance space accounting remained un-reclaimed, validating the decision to relocate workloads to local physical disks.</p>
-          <h2>Clarifying un-uplinked switches in network topology diagrams</h2>
-          <p>Cluster documentation was updated with two architectural diagrams: an overall LAN topology (firewall gateway, core switch, hypervisor nodes, storage units, and overlay mesh) and a detailed cluster interconnect schematic (corosync rings, fencing mechanisms, and guest mappings) derived from automated hourly state queries.</p>
-          <p>During review of the cluster diagram, a routing ambiguity was identified: a dashed fallback path from one hypervisor node was drawn vertically, passing directly through the bounding box of an isolated secondary switch. Although the line was intended to represent logical routing to a downstream target, visual overlap created the false appearance of an active physical uplink to a switch that had no physical network connection.</p>
-          <p>The schematic was corrected:</p>
-          <ol><li>The fallback path was routed around the switch perimeter to eliminate visual intersection.</li><li>The isolated switch was explicitly annotated with an &quot;Isolated / No Direct Uplink&quot; badge, preventing readers from inferring connectivity from visual proximity.</li><li>The visual theme was adjusted to a high-contrast slate palette to improve hierarchy and icon legibility.</li></ol>
-          <h2>Offline documentation mirroring and knowledge routing</h2>
-          <p>The final track involved archiving upstream technical documentation into an offline Markdown knowledge base, capturing 584 pages across 6.8 MB:</p>
-          <ul><li><strong>Concepts</strong>: 187 files (50,093 lines)</li><li><strong>Tasks</strong>: 213 files (57,850 lines)</li><li><strong>Reference</strong>: 118 files</li><li><strong>Tutorials</strong>: 44 files</li><li><strong>Setup</strong>: 22 files</li></ul>
-          <p>Five parallel workers retrieved pages directly from the published sitemap, stripping navigation chrome while preserving headings, code syntax, tables, and command arguments verbatim.</p>
-          <p>A deliberate scope boundary was applied within the reference section: generated per-object API specification pages (spanning hundreds of repetitive entries) were excluded in favor of top-level indexing, with the rationale documented in provenance metadata. Because the mirror reflects a snapshot in time rather than an active upstream tracking branch, a lightweight query router was deployed to map CLI queries to relevant local files without requiring entire documentation sets to fit into active context windows.</p>
+          <p class="reader-lede">My primary VM lived on the NAS pool.</p>
+          <p>The pool started timing out reads and refusing to give back freed space. Moved the 150 GiB disk image to local NVMe on the hypervisor.</p>
+          <p>Transfer hit four zero-filled sectors at offsets 30360, 30361, 53642, 73119 MiB — 0.0026% of the image. Filesystem check: all four in unallocated blocks. Lucky. First NVMe boot mounted clean read-write, zero errors, every container came up. Dropped VM RAM 16 → 12 GB at the same time — without NAS buffering pressure the footprint didn&#39;t need it. Deleted the 150 GB source on the NAS afterward; appliance accounting never reclaimed the space. Which validated the whole move.</p>
+          <h2>The Diagram Lied</h2>
+          <p>Redrew cluster docs — full LAN topology plus a cluster interconnect schematic (corosync rings, fencing, guest maps) from the hourly state queries. Review caught it: a dashed fallback path from one node ran vertically straight through the bounding box of an isolated secondary switch. Meant as logical routing to something downstream. Reads as a physical uplink to a switch with no cables in it.</p>
+          <p>Fixed three ways: rerouted the path around the switch perimeter, badged the switch &quot;Isolated / No Direct Uplink&quot; so proximity can&#39;t imply connectivity, restyled the whole theme to high-contrast slate for legibility.</p>
+          <h2>584 Pages of Docs, Offline</h2>
+          <p>Mirrored upstream technical docs into a local Markdown base — 584 pages, 6.8 MB: Concepts 187 files (50,093 lines), Tasks 213 (57,850), Reference 118, Tutorials 44, Setup 22. Five workers pulled from the published sitemap, chrome stripped, headings/code/tables/args verbatim.</p>
+          <p>Drew one scope line: per-object generated API pages (hundreds of repetitive entries) excluded, top-level index kept, rationale in provenance metadata. Mirror is a snapshot, not a tracking branch — a small query router maps CLI questions to local files so nothing needs the whole set in context.</p>
         </div>
       </div>
     </article>
 
     <nav class="reader-nav three-grid" aria-label="Article navigation">
       <a href="../../blog/index.html">Back to Blog</a>
-      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/the-validator-was-checking-the-same-wrong-path-as-the-bug/index.html"><span class="meta">Older</span>Configuring Model Proxy Spend Caps, Documentation Tiering, and Availability Trade-offs</a><a class="adjacent-post newer-post" href="../../blog/the-disk-that-read-82-free-and-was-99-9-full/index.html"><span class="meta">Newer</span>Seedbox Storage: When statfs Disagreed with Account Quotas</a></div>
+      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/the-validator-was-checking-the-same-wrong-path-as-the-bug/index.html"><span class="meta">Older</span>The Validator Was Checking the Same Wrong Path as the Bug</a><a class="adjacent-post newer-post" href="../../blog/the-disk-that-read-82-free-and-was-99-9-full/index.html"><span class="meta">Newer</span>The Disk That Read 82% Free and Was 99.9% Full</a></div>
     </nav>
   </main>
 

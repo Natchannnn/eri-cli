@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="dark">
   <meta name="description" content="Setting up GitHub Actions for automated manifest generation, purging early placeholder posts, and simplifying homepage project tiles.">
   <link rel="icon" href="../../assets/img/logo.png">
-  <title>Automating the Blog Publishing Pipeline and Cleaning Portfolio Placeholders — ERI / CLI</title>
+  <title>GitHub Actions Committed Before I Could Push — ERI / CLI</title>
   <link rel="stylesheet" href="../../assets/css/style.css?v=1.1.0">
   <script defer src="../../assets/js/pages.js"></script>
 </head>
@@ -24,8 +24,8 @@
   <main class="page-main reader-page" id="article">
     <article>
       <header class="reader-head three-grid">
-        <p class="reader-meta meta">Projects<br><time datetime="2026-06-09">09 Jun 2026</time><br>2 min read</p>
-        <h1 class="page-title">Automating the Blog Publishing Pipeline and Cleaning Portfolio Placeholders</h1>
+        <p class="reader-meta meta">Projects<br><time datetime="2026-06-09">09 Jun 2026</time><br>1 min read</p>
+        <h1 class="page-title">GitHub Actions Committed Before I Could Push</h1>
       </header>
 
       <div class="reader-cut" aria-hidden="true">
@@ -34,25 +34,23 @@
 
       <div class="reader-body three-grid" id="article-body">
         <div class="reader-prose">
-          <p class="reader-lede">Automating the blog publishing workflow transitioned the site from manual script execution to continuous deployment via GitHub Actions.</p>
-          <h2>Automating Manifest Generation</h2>
-          <p>The initial workflow required running a local Node.js script to extract frontmatter and rebuild <code>posts.json</code> before committing changes. To streamline this, I established a GitHub Actions workflow (<code>.github/workflows/blog-publish.yml</code>). The job triggers on pushes containing <code>.md</code> files under <code>blog/posts/</code> on the main branch, executing <code>scripts/regenerate-manifest.js</code> to compile the manifest automatically.</p>
-          <p>Configuring the workflow surfaced two git permission and synchronization issues:</p>
-          <ol><li>The personal access token (PAT) lacked the <code>workflow</code> permission scope required to commit within <code>.github/workflows/</code>, rejecting the initial push.</li><li>After updating credentials, the remote repository advanced because the GitHub Action immediately committed an updated <code>posts.json</code> on the first push. Resolving this required a local stash, rebase against remote main, and re-pushing cleanly.</li></ol>
-          <h2>Purging Placeholder Articles</h2>
-          <p>Three test markdown files from initial frontend prototyping were still present in <code>blog/posts/</code>, appearing in the archive index. These unreferenced placeholder files were removed from the repository, ensuring the public archive displayed only genuine operational journal entries.</p>
-          <h2>Portfolio Interface Refinement</h2>
-          <p>The Portfolio Showcase on the homepage was audited for visual clarity and authentic utility. Three static, non-interactive tiles—Certifications, Experience, and Tech Stack—were removed because they functioned solely as decorative filler without linking to underlying projects or evidence.</p>
-          <p>The remaining active project categories (In Progress, Upcoming, Completed) were set permanently visible by default, eliminating an unnecessary toggling button. Additionally, the portfolio copy was refined to specify actual operational scope: designing and deploying managed network infrastructure for residential and commercial spaces up to 1,000m².</p>
-          <h2>Pending Verification</h2>
-          <ul><li>Update DNS CNAME records to point <code>n5hq.me</code> to Vercel production hosting.</li><li>Review access control rules for sensitive self-hosted endpoints.</li></ul>
+          <p class="reader-lede">I got tired of running my Node script by hand every time I wanted to publish, so I wired up a GitHub Actions workflow (<code>.github/workflows/blog-publish.yml</code>).</p>
+          <p>Push any <code>.md</code> under <code>blog/posts/</code> on main, it runs <code>scripts/regenerate-manifest.js</code> and rebuilds <code>posts.json</code> for me.</p>
+          <p>It bit me twice on day one.</p>
+          <p>First push got rejected. My PAT didn&#39;t have the <code>workflow</code> scope, so anything touching <code>.github/workflows/</code> just bounced. Fixed the token, pushed again — and then the remote had already moved, because the Action had committed a fresh <code>posts.json</code> the second my first push landed. Had to stash locally, rebase against main, push clean. Classic.</p>
+          <h2>Deleted the Test Posts</h2>
+          <p>Three leftover markdown files from early frontend prototyping were still sitting in <code>blog/posts/</code> and showing up in the archive. Deleted them. The archive only shows real journal entries now.</p>
+          <h2>Cleaned Up the Homepage</h2>
+          <p>My Portfolio Showcase had three dead tiles — Certifications, Experience, Tech Stack. They didn&#39;t link anywhere, just sat there looking decorative. Removed all three.</p>
+          <p>I also killed the toggle button for the project categories. In Progress, Upcoming, Completed are just always visible now. And I rewrote the copy to say what I actually do: designing and deploying managed network gear for homes and commercial spaces up to 1,000m².</p>
+          <p>DNS for <code>n5hq.me</code> to Vercel is still pending. Left it for tomorrow.</p>
         </div>
       </div>
     </article>
 
     <nav class="reader-nav three-grid" aria-label="Article navigation">
       <a href="../../blog/index.html">Back to Blog</a>
-      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/building-momentum-homelab-services-website-launch/index.html"><span class="meta">Older</span>Deploying the Homelab Observability Stack and Initial Portfolio Site</a><a class="adjacent-post newer-post" href="../../blog/network-fixes-tailscale-and-a-nic-upgrade/index.html"><span class="meta">Newer</span>UniFi VLAN Firewall Rules, Tailscale Consolidation, and 2.5GbE NIC Upgrade</a></div>
+      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/building-momentum-homelab-services-website-launch/index.html"><span class="meta">Older</span>My Monitoring Stack Lies About WAN Uptime and My Site Builds From Obsidian</a><a class="adjacent-post newer-post" href="../../blog/network-fixes-tailscale-and-a-nic-upgrade/index.html"><span class="meta">Newer</span>My Doorbell Was on the Wrong VLAN and My Printer Was on the Wrong Subnet</a></div>
     </nav>
   </main>
 

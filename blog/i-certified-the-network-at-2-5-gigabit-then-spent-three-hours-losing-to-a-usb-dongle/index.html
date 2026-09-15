@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="dark">
   <meta name="description" content="Benchmarking local LAN throughput across wired 2.5GbE and Wi-Fi 6 endpoints using iperf3, followed by a root-cause isolation pass on an asymmetric USB Ethernet adapter.">
   <link rel="icon" href="../../assets/img/logo.png">
-  <title>Benchmarking 2.5GbE Throughput with iperf3 and Isolating USB NIC Power Quirks — ERI / CLI</title>
+  <title>I Certified the Network at 2.5 Gigabit Then Lost Three Hours to a USB Dongle — ERI / CLI</title>
   <link rel="stylesheet" href="../../assets/css/style.css?v=1.1.0">
   <script defer src="../../assets/js/pages.js"></script>
 </head>
@@ -24,8 +24,8 @@
   <main class="page-main reader-page" id="article">
     <article>
       <header class="reader-head three-grid">
-        <p class="reader-meta meta">Homelab<br><time datetime="2026-07-16">16 Jul 2026</time><br>4 min read</p>
-        <h1 class="page-title">Benchmarking 2.5GbE Throughput with iperf3 and Isolating USB NIC Power Quirks</h1>
+        <p class="reader-meta meta">Homelab<br><time datetime="2026-07-16">16 Jul 2026</time><br>2 min read</p>
+        <h1 class="page-title">I Certified the Network at 2.5 Gigabit Then Lost Three Hours to a USB Dongle</h1>
       </header>
 
       <div class="reader-cut" aria-hidden="true">
@@ -34,29 +34,28 @@
 
       <div class="reader-body three-grid" id="article-body">
         <div class="reader-prose">
-          <p class="reader-lede">Rather than relying on internet speed tests bounded by external transit providers, I established an internal network performance baseline using <code>iperf3</code>.</p>
-          <p>Testing across wired 2.5GbE infrastructure and Wi-Fi 6 access points validated expected PHY line-rate boundaries, while attempting to onboard a new handheld device over a 2.5G USB Ethernet adapter revealed a complex Layer 1/Layer 2 power management failure mode.</p>
-          <h2>Replacing OpenSpeedTest with host-networked iperf3</h2>
-          <p>Initial testing began with OpenSpeedTest running as a containerized web service. While wrapping the HTTP payload generator in a CLI curl test demonstrated 22.6 Gbps across the local loopback interface, container bridge networking introduced measurable CPU scheduling and NAT translation overhead.</p>
-          <p>To eliminate virtualization artifacts, I replaced the HTTP container with standard <code>iperf3</code> bound directly to host networking (<code>--network host</code>). With the server operating a physical 2.5GbE NIC, the theoretical maximum TCP throughput sits at approximately 2.4 Gbps after standard TCP/IP packet framing and MTU 1500 overhead.</p>
-          <h2>Benchmarking wired 2.5GbE and Wi-Fi 6 clients</h2>
-          <p>Running bidirectional multi-stream tests (<code>iperf3 -c &lt;server_ip&gt; -P 8</code>) across endpoints produced consistent performance baselines:</p>
-          <ul><li><strong>Desktop Workstation (2.5GbE Wired)</strong>:<ul><li>Transmit: 2.38 Gbps</li><li>Receive: 2.37 Gbps</li><li>Both figures fall within two percent of theoretical physical saturation, confirming an unconstrained 2.5GbE line rate through the core switch without intermediate gigabit bottlenecks.</li></ul></li><li><strong>Mobile Client (Wi-Fi 6, 6 GHz Band)</strong>:<ul><li>An initial run of 1.05 Mbps reflected default iperf3 UDP bandwidth throttling (1 Mbit/s) rather than a network defect.</li><li>Repeating the test over TCP yielded 182 Mbps at −64 dBm signal strength through an interior partition wall, bounded by single-stream attenuation.</li></ul></li><li><strong>M1 MacBook Pro (Wi-Fi 6, 5 GHz Band)</strong>:<ul><li>Sustained 844 Mbps at −38 dBm connected to an in-wall access point.</li><li>The M1 radio is hardware-limited to an 80 MHz channel width and 2x2 spatial streams (1201 Mbps physical link rate). Achieving 844 Mbps represents approximately 70% channel efficiency, which corresponds to typical MAC layer protocol overhead in real-world 802.11ax conditions.</li></ul></li></ul>
-          <h2>Diagnosing asymmetric connectivity on a Realtek 2.5G USB NIC</h2>
-          <p>Connecting an MSI Claw 8 AI+ via an external 2.5G USB Ethernet dongle triggered an unexpected failure state: while the device negotiated a 2.5G link and acquired a DHCP lease on the Management VLAN, external routing and gateway access were completely non-functional.</p>
-          <p>Over several diagnostic passes, four hypotheses were tested against system telemetry:</p>
-          <ol><li><strong>Management VLAN Firewall Whitelist</strong>: The UniFi gateway enforces a default-deny policy for non-whitelisted MACs on the Management VLAN. Adding the dongle&#39;s MAC address to the allowlist did not restore connectivity.</li><li><strong>ARP and Gateway Resolution</strong>: Directly pinging the gateway IP returned <code>Destination host unreachable</code>, demonstrating that failures occurred at the link/ARP layer prior to firewall packet inspection.</li><li><strong>Realtek Checksum Offload Defects</strong>: The UniFi gateway recorded 284 active connection flows originating from the adapter&#39;s MAC address, yet client applications failed to establish TCP sockets. This symptom frequently aligns with hardware checksum offloading corruption, where outbound packets pass through intermediate switches but are silently dropped by target operating systems due to invalid TCP/UDP frame checksums. Direct IP socket tests confirmed that TCP handshakes failed to complete.</li><li><strong>Energy-Efficient Ethernet (EEE) and Power Sleep States</strong>: Testing port autonegotiation forced down to 1.0 Gbps temporarily passed traffic for several seconds before the interface locked up again. This asymmetric behavior points to aggressive power-saving timeouts in the USB host controller or Realtek NIC driver: Energy-Efficient Ethernet (EEE / 802.3az), Green Ethernet, and USB Selective Suspend dropping the interface into low-power idle states mid-session.</li></ol>
-          <p>Because disabling USB power management and driver-level EEE flags required extensive registry adjustments on the handheld console, the device was shifted to the Wi-Fi 6 network as an operational workaround while the hardware dongle remains isolated for bench analysis.</p>
-          <h2>Firewall rule ordering and storage housekeeping</h2>
-          <p>Finalizing the setup involved establishing necessary routing policies across VLAN boundaries:</p>
-          <ul><li><strong>UniFi Firewall Evaluation</strong>: Adding an inter-VLAN rule allowing the handheld device to reach the NAS on the Management subnet placed the rule at index 10010, appearing beneath default drop blocks (index 10007) in the controller UI. Testing confirmed that UniFi enforces zone-based matrices independently of sequential rule indices, allowing traffic to route with 3–14 ms latency.</li><li><strong>Hardware Boundary Checks</strong>: A proposal to migrate a dedicated simulator workstation from a 1 GbE Flex Mini switch directly to a 2.5GbE port was abandoned after hardware inspection confirmed the workstation motherboard&#39;s integrated NIC is physically capped at 1.0 Gbps.</li><li><strong>SMB Mapping Precision</strong>: Resolved Windows <code>System error 67</code> mounting errors by aligning client connection strings with the exact Samba share names rather than physical directory paths on the server.</li></ul>
+          <p class="reader-lede">Internet speed tests tell you about your ISP.</p>
+          <p>I wanted my LAN numbers, so I set up <code>iperf3</code> properly. Started with OpenSpeedTest in a container — cute, did 22.6 Gbps over loopback via curl, but bridge NAT + CPU scheduling pollutes the numbers. Threw it out, ran plain <code>iperf3</code> with <code>--network host</code>. My server has a real 2.5GbE NIC, so ceiling is ~2.4 Gbps after MTU 1500 framing.</p>
+          <p><code>iperf3 -c &lt;server_ip&gt; -P 8</code>, both directions:</p>
+          <p>Desktop on wired 2.5GbE: 2.38 up, 2.37 down. Within 2% of line rate. No gigabit bottleneck hiding in the core switch. Good.</p>
+          <p>Phone on Wi-Fi 6, 6 GHz: first run said 1.05 Mbps. I stared at that for a minute before remembering default iperf3 UDP throttles to 1 Mbit/s. Reran TCP — 182 Mbps at −64 dBm through a wall, single stream. That&#39;s just physics.</p>
+          <p>M1 MacBook on 5 GHz: 844 Mbps sustained at −38 dBm off an in-wall AP. M1 is capped at 80 MHz / 2x2 (1201 Mbps PHY), so 844 is ~70% efficiency. Normal 802.11ax overhead. Fine.</p>
+          <h2>The MSI Claw Dongle From Hell</h2>
+          <p>Plugged my MSI Claw 8 AI+ in via a 2.5G USB dongle. Link negotiated 2.5G, DHCP lease on Management VLAN. And then… nothing. No gateway, no routing.</p>
+          <p>Chased four theories:</p>
+          <p>MAC whitelist — Management VLAN is default-deny for unknown MACs. Added the dongle&#39;s MAC. No change.</p>
+          <p>ARP — pinging the gateway gave <code>Destination host unreachable</code>. Dies before the firewall even sees it. Link/ARP layer.</p>
+          <p>Checksum offload — gateway showed 284 flows from the dongle&#39;s MAC, but no TCP socket ever completed. Classic Realtek offload corruption: packets traverse switches, die on hosts with bad checksums. IP socket tests confirmed handshakes never finished.</p>
+          <p>Power saving — forced the port to 1.0 Gbps, traffic passed for a few seconds, then locked again. Smells like EEE / 802.3az + Green Ethernet + USB Selective Suspend putting the thing to sleep mid-session.</p>
+          <p>Fixing that properly means registry surgery on the handheld. Nope. Put the Claw on Wi-Fi 6 and shelved the dongle for bench analysis later.</p>
+          <p>Also cleaned up while I was in there: my inter-VLAN rule for the handheld landed at index 10010, below the default drops at 10007 in the UI. Panicked briefly — but UniFi&#39;s zone matrix doesn&#39;t care about display order. Routed fine at 3–14 ms. Tried moving my sim rig off the Flex Mini 1GbE to 2.5GbE, opened the case — motherboard NIC is 1.0 Gbps silicon. Abandoned. And fixed Windows <code>System error 67</code> mounts by using exact Samba share names instead of server directory paths. My typo, not Samba&#39;s.</p>
         </div>
       </div>
     </article>
 
     <nav class="reader-nav three-grid" aria-label="Article navigation">
       <a href="../../blog/index.html">Back to Blog</a>
-      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/discord-in-linux-isos-out/index.html"><span class="meta">Older</span>Automating Media Ingestion Routing and Open-Sourcing Disclaude Sesh</a><a class="adjacent-post newer-post" href="../../blog/i-asked-if-my-containers-were-up-to-date-and-ended-the-day-running-my-own-git-forge/index.html"><span class="meta">Newer</span>Automated Patch Auditing with n8n and Deploying a Self-Hosted Forgejo Git Forge</a></div>
+      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/discord-in-linux-isos-out/index.html"><span class="meta">Older</span>Discord In, Linux ISOs Out — Closing the Last Manual Gap</a><a class="adjacent-post newer-post" href="../../blog/i-asked-if-my-containers-were-up-to-date-and-ended-the-day-running-my-own-git-forge/index.html"><span class="meta">Newer</span>I Asked If My Containers Were Up to Date and Ended the Day Running My Own Git Forge</a></div>
     </nav>
   </main>
 

@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="dark">
   <meta name="description" content="Placing local pre-commit hooks into tracked repository source, establishing an isolated design repo, extracting inlined web assets, and deploying an automated /dev/v3 preview.">
   <link rel="icon" href="../../assets/img/logo.png">
-  <title>Version-Controlling Pre-Commit Hooks, Design Source Submodules, and Preview Generation — ERI / CLI</title>
+  <title>The Abort-on-Failure Hook Had One Failure Mode It Couldn&#39;t Catch — ERI / CLI</title>
   <link rel="stylesheet" href="../../assets/css/style.css?v=1.1.0">
   <script defer src="../../assets/js/pages.js"></script>
 </head>
@@ -25,7 +25,7 @@
     <article>
       <header class="reader-head three-grid">
         <p class="reader-meta meta">Web<br><time datetime="2026-09-08">08 Sept 2026</time><br>2 min read</p>
-        <h1 class="page-title">Version-Controlling Pre-Commit Hooks, Design Source Submodules, and Preview Generation</h1>
+        <h1 class="page-title">The Abort-on-Failure Hook Had One Failure Mode It Couldn&#39;t Catch</h1>
       </header>
 
       <div class="reader-cut" aria-hidden="true">
@@ -34,20 +34,20 @@
 
       <div class="reader-body three-grid" id="article-body">
         <div class="reader-prose">
-          <p class="reader-lede">The pre-commit hook that rewrites the site&#39;s hero stat tiles from live container counts is now tracked source instead of a file that only ever existed on one machine.</p>
-          <p>It lives at scripts/hooks/pre-commit (123 lines) with a README next to it, and .git/hooks/pre-commit is now a symlink into that tracked file rather than a separate copy, so there is one file to edit and diff instead of two that can drift apart. The hook still aborts the commit loudly if it can&#39;t reach the host or gets back a non-numeric or zero count, a behavior added earlier this year to replace an older version that failed silently. Putting the hook under version control closes the gap that fix left open: an abort-on-failure hook that exists nowhere but one machine&#39;s .git/hooks/ can vanish without a trace, and a missing hook aborts nothing.</p>
-          <p>The redesign&#39;s entire design source, 77 files of logo iterations and stylesheet revisions, got its own nested private git repository, scoped to just that one folder so the public site history stays untouched. It&#39;s the first time any of that work has had commit history, and the first push was confirmed by checking the ref on the server rather than trusting a clean exit code.</p>
-          <p>The redesign itself shipped as a preview at /dev/v3 on the lab host: a routing rewrite from the portfolio host, noindex on every page, and a robots.txt disallow on /dev/ so it stays out of search results while it&#39;s still changing daily. A 379-line Python generator builds the preview tree from the design source rather than a hand copy, and it checks its own output before calling a build good: every internal link gets rewritten for the /dev/v3 base path, the generator regex-scans the result for anything that wasn&#39;t, and the build fails on an unprefixed link. It also diffs two consecutive runs against each other rather than assuming the generator is idempotent by design.</p>
+          <p class="reader-lede">My hero-stat pre-commit hook — rewrites site tiles from live container counts — existed on exactly one machine, untracked, in <code>.git/hooks/</code>.</p>
+          <p>An abort-on-failure hook that vanishes with a disk wipe aborts nothing. It&#39;s tracked source now: <code>scripts/hooks/pre-commit</code> (123 lines) + README, <code>.git/hooks/pre-commit</code> symlinked to it. One file to edit and diff, not two drifting copies. The abort-loud behavior (no host reach / non-numeric / zero count) stays — added earlier this year to replace the version that failed silently. This closes the remaining hole: the guard itself is now versioned.</p>
+          <p>Design source — 77 files of logo iterations + stylesheet revisions — got its own nested private repo scoped to that folder, public site history untouched. First time that work has commit history. Verified the first push against the server ref, not the exit code. Old habits.</p>
+          <p>Redesign ships as a preview at <code>/dev/v3</code> on the lab host: routing rewrite off the portfolio host, noindex everywhere, <code>robots.txt</code> disallowing <code>/dev/</code> until it&#39;s stable. A 379-line Python generator builds the preview tree from design source — no hand copies — and validates itself: every internal link rewritten for the <code>/dev/v3</code> base, regex scan for stragglers, build fails on any unprefixed link. It diffs two consecutive runs against each other instead of assuming idempotence.</p>
           <h2>Also today</h2>
-          <p>The same pass pulled the wordmark and a display font out of the markup, where both had been base64-inlined into all six preview pages, about 93 KB repeated per page because inlining doesn&#39;t cache. Extracted to real files and cached once instead of shipped six times, the six pages&#39; combined HTML dropped from 916 KB to 127 KB.</p>
-          <p>Preview status: the preview lists all 34 blog posts, but only one has real body content. The rest render from metadata only until the blog generator learns the new template. Nine navigation tests passed against the deployed preview in a real browser, which covers the chrome, not the posts that aren&#39;t there yet.</p>
+          <p>Wordmark + display font were base64-inlined into all six preview pages — ~93 KB repeated per page, and inlined bytes don&#39;t cache. Extracted to real files, served once: six pages combined 916 KB → 127 KB.</p>
+          <p>Preview lists all 34 posts, but exactly one has body content. Rest render metadata-only until the blog generator learns the new template. Nine nav tests green in a real browser — covering chrome, not the posts that aren&#39;t there yet.</p>
         </div>
       </div>
     </article>
 
     <nav class="reader-nav three-grid" aria-label="Article navigation">
       <a href="../../blog/index.html">Back to Blog</a>
-      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/an-animation-you-cannot-pause-is-one-you-cannot-review/index.html"><span class="meta">Older</span>Animation Review Controls, Deterministic Frame Capture, and Multi-Critic Evaluation</a></div>
+      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/an-animation-you-cannot-pause-is-one-you-cannot-review/index.html"><span class="meta">Older</span>An Animation You Cannot Pause Is One You Cannot Review</a></div>
     </nav>
   </main>
 

@@ -1,30 +1,23 @@
 ---
-title: "Automating the Blog Publishing Pipeline and Cleaning Portfolio Placeholders"
+title: "GitHub Actions Committed Before I Could Push"
 date: 2026-06-09
 category: Projects
 summary: "Setting up GitHub Actions for automated manifest generation, purging early placeholder posts, and simplifying homepage project tiles."
 ---
-Automating the blog publishing workflow transitioned the site from manual script execution to continuous deployment via GitHub Actions.
+I got tired of running my Node script by hand every time I wanted to publish, so I wired up a GitHub Actions workflow (`.github/workflows/blog-publish.yml`). Push any `.md` under `blog/posts/` on main, it runs `scripts/regenerate-manifest.js` and rebuilds `posts.json` for me.
 
-## Automating Manifest Generation
+It bit me twice on day one.
 
-The initial workflow required running a local Node.js script to extract frontmatter and rebuild `posts.json` before committing changes. To streamline this, I established a GitHub Actions workflow (`.github/workflows/blog-publish.yml`). The job triggers on pushes containing `.md` files under `blog/posts/` on the main branch, executing `scripts/regenerate-manifest.js` to compile the manifest automatically.
+First push got rejected. My PAT didn't have the `workflow` scope, so anything touching `.github/workflows/` just bounced. Fixed the token, pushed again — and then the remote had already moved, because the Action had committed a fresh `posts.json` the second my first push landed. Had to stash locally, rebase against main, push clean. Classic.
 
-Configuring the workflow surfaced two git permission and synchronization issues:
-1. The personal access token (PAT) lacked the `workflow` permission scope required to commit within `.github/workflows/`, rejecting the initial push.
-2. After updating credentials, the remote repository advanced because the GitHub Action immediately committed an updated `posts.json` on the first push. Resolving this required a local stash, rebase against remote main, and re-pushing cleanly.
+## Deleted the Test Posts
 
-## Purging Placeholder Articles
+Three leftover markdown files from early frontend prototyping were still sitting in `blog/posts/` and showing up in the archive. Deleted them. The archive only shows real journal entries now.
 
-Three test markdown files from initial frontend prototyping were still present in `blog/posts/`, appearing in the archive index. These unreferenced placeholder files were removed from the repository, ensuring the public archive displayed only genuine operational journal entries.
+## Cleaned Up the Homepage
 
-## Portfolio Interface Refinement
+My Portfolio Showcase had three dead tiles — Certifications, Experience, Tech Stack. They didn't link anywhere, just sat there looking decorative. Removed all three.
 
-The Portfolio Showcase on the homepage was audited for visual clarity and authentic utility. Three static, non-interactive tiles—Certifications, Experience, and Tech Stack—were removed because they functioned solely as decorative filler without linking to underlying projects or evidence.
+I also killed the toggle button for the project categories. In Progress, Upcoming, Completed are just always visible now. And I rewrote the copy to say what I actually do: designing and deploying managed network gear for homes and commercial spaces up to 1,000m².
 
-The remaining active project categories (In Progress, Upcoming, Completed) were set permanently visible by default, eliminating an unnecessary toggling button. Additionally, the portfolio copy was refined to specify actual operational scope: designing and deploying managed network infrastructure for residential and commercial spaces up to 1,000m².
-
-## Pending Verification
-
-- Update DNS CNAME records to point `n5hq.me` to Vercel production hosting.
-- Review access control rules for sensitive self-hosted endpoints.
+DNS for `n5hq.me` to Vercel is still pending. Left it for tomorrow.

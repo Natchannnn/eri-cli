@@ -1,51 +1,43 @@
 ---
-title: "Home Assistant Integration Alignment: Matter Server, Meross LAN, and Cross-VLAN Discovery"
+title: "I Sat Down to Add One Button and Rebuilt Half My Smart Home"
 date: 2026-07-02
 category: Homelab
 summary: "Preparing Home Assistant for physical Stream Deck+ hardware control required deploying a standalone Matter Server container, enabling UniFi mDNS reflection, and migrating fifteen devices to meross_lan."
 ---
-Before binding smart home automations to rotary dials on an Elgato Stream Deck+, I conducted an audit of my Home Assistant environment. Because the instance runs as a containerized deployment rather than a full Home Assistant OS appliance, several integrations had remained unconfigured across network boundaries. Resolving these required deploying an external Matter server container, configuring cross-VLAN mDNS discovery on UniFi, and switching device integration strategies for local network reliability.
+All I wanted was to bind some Home Assistant actions to the dials on my Elgato Stream Deck+. Ended up auditing the whole smart home first, because my containerized HA (not HAOS) had a bunch of stuff half-configured across VLANs.
 
-## Standalone Matter Server container deployment
+## Matter Had Nowhere to Talk To
 
-Home Assistant runs as a vanilla Docker container in my environment rather than Home Assistant OS (HAOS). HAOS automatically orchestrates the official Matter add-on; containerized deployments require running `matter-server` (`ghcr.io/home-assistant-libs/python-matter-server`) as an independent container.
+HAOS ships the Matter add-on. Plain Docker HA doesn't. My Matter integration had just been logging websocket failures to an endpoint that didn't exist.
 
-Prior to this pass, the native Matter integration repeatedly logged connection failures attempting to reach a local websocket endpoint that did not exist. Deploying the standalone container and pointing the Home Assistant integration to `ws://matter-server:5580/ws` established the missing RPC interface, enabling Matter device commissioning pipelines.
+Spun up `matter-server` (`ghcr.io/home-assistant-libs/python-matter-server`) as its own container, pointed HA at `ws://matter-server:5580/ws`. Commissioning pipeline came alive.
 
-## Cross-VLAN discovery and UniFi mDNS reflection
+## mDNS Doesn't Cross VLANs, Obviously
 
-The homelab network enforces strict Layer 3 network isolation:
-- **Management VLAN**: Core server infrastructure, Docker hosts, and Home Assistant.
-- **Home VLAN**: User workstations, mobile devices, and Apple TV 4K / HomePods acting as Thread border routers.
-- **IoT VLAN**: Wi-Fi smart plugs, relays, and environmental sensors.
+My layout: Management holds servers, Docker, HA. Home holds workstations, phones, the Apple TV 4K and HomePods doing Thread border router duty. IoT holds plugs, relays, sensors. Strict L3 between them.
 
-Matter and Thread commissioning rely heavily on IPv6 link-local multicast and mDNS (Multicast DNS) advertising over UDP port 5353, which routers discard at subnet boundaries by default. Home Assistant was consequently unable to discover smart plugs and Thread devices residing in the IoT subnet.
+Matter/Thread lives on IPv6 link-local multicast + mDNS over UDP 5353. Routers drop that at boundaries by default, so HA couldn't see anything in IoT.
 
-Rather than collapsing the network architecture into a flat subnet, I applied two targeted changes within UniFi Network:
-1. Enabled the global **mDNS reflector** across the Management, Home, and IoT VLANs to proxy multicast discovery frames across interfaces.
-2. Created a firewall rule permitting outbound TCP/UDP traffic from Home Assistant's static management IP into the IoT VLAN subnet.
+I tried moving the Apple TV onto IoT. Broke every firewall rule tied to its static IP. Moved it back.
 
-An initial attempt to relocate the Apple TV directly onto the IoT subnet broke existing firewall rules bound to its static IP allocation; keeping devices on their designated subnets while bridging discovery via mDNS maintained both isolation and visibility.
+What actually worked, two changes in UniFi:
+- turned on the global mDNS reflector across Management, Home, IoT
+- added a rule letting HA's management IP talk TCP/UDP into the IoT subnet
 
-## Migrating fifteen devices to meross_lan
+Isolation intact, discovery works.
 
-Initial onboarding of Meross smart plugs utilized Matter sharing via Apple Home. In practice, this multi-hop commissioning chain suffered from frequent handshake timeouts and failed pairings, and excluded several older hardware revisions that lacked Matter firmware entirely.
+## Ditched Matter for meross_lan on Fifteen Devices
 
-To establish reliable local control, I bypassed the Matter/Apple Home bridge by deploying the custom `meross_lan` component. This integration communicates directly with the devices' onboard HTTP/MQTT daemons over local LAN sockets.
+My fifteen Meross plugs were onboarded via Matter-through-Apple-Home. Pairings timed out constantly, and the older hardware revisions don't even have Matter firmware.
 
-Migrating the entire fleet of fifteen devices—including smart plugs, ambient LED light strips, the garage door controller, and presence sensors—to `meross_lan` provided several functional benefits:
-- Eliminated external cloud and bridge dependencies.
-- Exposed detailed power monitoring telemetry (voltage, current, active wattage) that Matter endpoints omitted.
-- Bound all devices to reserved static DHCP leases, preventing control timeouts from lease renegotiations.
+Deployed the custom `meross_lan` component instead — talks straight to the onboard HTTP/MQTT daemons over LAN. Migrated all fifteen: plugs, LED strips, garage controller, presence sensors.
 
-## Diagnosing placeholder readings in HVAC zone telemetry
+Better in every way that matters to me. No cloud, no Apple bridge in the middle. And I finally get voltage / current / wattage telemetry that Matter never exposed. Pinned everything to static DHCP leases so renegotiations stop causing timeouts.
 
-The ducted air conditioning integration reported ambient zone temperatures exceeding 150°F. Tracing the underlying API payload revealed that the physical AC controller operates purely on zone damper percentage apertures rather than closed-loop thermostatic feedback in individual rooms.
+## My AC Reports 150°F Because Nobody Put Thermometers In
 
-The hardware controller transmits fixed placeholder byte values for zones lacking physical thermistors. What appeared to be a decoding defect was simply raw placeholder telemetry. Tracking true per-room temperatures will require deploying dedicated Zigbee or BLE temperature sensors linked to local hubs.
+Ducted AC integration was showing zone temps over 150°F. Thought my parsing was broken. Nope — the controller only knows damper percentages, not room temps. Zones without physical thermistors just get fixed placeholder bytes. Raw telemetry, not a decode bug.
 
-## Entity standardization and UniFi Protect account reset
+Real per-room temps mean Zigbee or BLE sensors on local hubs. Later problem.
 
-To finalize the integration pass, I resolved authentication errors against the UniFi Protect controller. The integration had locked its service account due to repeated automated retries against stale credentials. Provisioning a dedicated local read-only account within UniFi OS restored video stream proxies and motion detection entities.
-
-Finally, I standardized entity naming across forty active devices, adopting a strict `<room> <device>` schema (e.g., `sim_rig_plug`, `cinema_light_strips`) to ensure consistent mapping when generating Stream Deck+ dial layouts. Physical hardware dial mapping is now unblocked, while dedicated Thread lock integrations remain scheduled for subsequent radio hardware additions.
+Finished by fixing UniFi Protect auth — the integration had locked its account hammering stale creds, so I made a dedicated read-only local user and streams + motion entities came back. Then renamed forty devices to a strict `<room> <device>` scheme (`sim_rig_plug`, `cinema_light_strips`) so the Stream Deck+ dial mapping isn't guesswork. Dials are unblocked now. Thread locks wait on new radio hardware.

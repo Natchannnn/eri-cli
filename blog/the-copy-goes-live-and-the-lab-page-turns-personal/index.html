@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="dark">
   <meta name="description" content="Deploying the revised portfolio copy, removing marketing embellishments from the Lab page, and creating a lightweight public service launcher restricted to tunnel-routed services.">
   <link rel="icon" href="../../assets/img/logo.png">
-  <title>Restructuring the Homelab Page as a Service Launcher — ERI / CLI</title>
+  <title>My Lab Page Was Leaking Internal IPs So I Gutted It — ERI / CLI</title>
   <link rel="stylesheet" href="../../assets/css/style.css?v=1.1.0">
   <script defer src="../../assets/js/pages.js"></script>
 </head>
@@ -25,7 +25,7 @@
     <article>
       <header class="reader-head three-grid">
         <p class="reader-meta meta">Projects<br><time datetime="2026-06-20">20 Jun 2026</time><br>2 min read</p>
-        <h1 class="page-title">Restructuring the Homelab Page as a Service Launcher</h1>
+        <h1 class="page-title">My Lab Page Was Leaking Internal IPs So I Gutted It</h1>
       </header>
 
       <div class="reader-cut" aria-hidden="true">
@@ -34,27 +34,20 @@
 
       <div class="reader-body three-grid" id="article-body">
         <div class="reader-prose">
-          <p class="reader-lede">Deploying the staged portfolio revisions to production provided an opportunity to audit <code>/lab</code>, transforming it from an unfocused promotional section into a clean operational launcher.</p>
-          <h2>Deploying Staged Copy Revisions</h2>
-          <p>The copy adjustments, native <code>&lt;details&gt;</code> project cards, and navigation jump targets staged locally were deployed to production.</p>
-          <p>To maintain consistency across views:</p>
-          <ul><li>The four dedicated portfolio subpages were updated to use the same <code>&lt;details&gt;</code> card markup as the homepage.</li><li>On subpages, the details block is expanded by default via the HTML <code>open</code> attribute, ensuring that users navigating to dedicated project routes immediately see technical specifications.</li><li>A broken anchor reference on the completed projects archive was corrected.</li></ul>
-          <h2>Decoupling Public Launcher from Internal Topologies</h2>
-          <p>The original <code>/lab</code> page attempted to function as both a public portfolio showcase and a personal bookmark utility, presenting an excessive list of private services and infrastructure specs.</p>
-          <p>Committing comprehensive container topologies and internal addresses to a public GitHub repository introduces unnecessary reconnaissance exposure. The page was refactored with clear boundaries:</p>
-          <ul><li>The promotional homelab section on the homepage was eliminated.</li><li>The public <code>/lab</code> route was rebuilt as a lightweight launcher containing links strictly to services already exposed via Cloudflare Tunnel with active authentication (e.g. Home Assistant, Immich).</li><li>Private local network IPs, direct management ports, and internal Grafana dashboards remain unexposed, deferred to a dedicated private internal portal.</li><li>Host metrics (stack, container, image, and volume counts) are updated via a local git pre-commit hook that queries Docker daemon statistics directly.</li></ul>
-          <h2>Scripting Blog Generation</h2>
-          <p>Closing an inconsistency where the June 13 journal entry was omitted from the static build led to automating article publishing. Previously, reader pages had been generated manually.</p>
-          <p>A Node.js build script was written to parse markdown frontmatter, compile HTML prose templates, generate adjacent post navigation, and update the blog archive manifest. This script ensures that published articles retain correct chronologies without manual page assembly.</p>
-          <h2>Pending Verification</h2>
-          <ul><li>Verify that no private host IPs appear in public repository manifests.</li><li>Test blog generator against missing or malformed frontmatter.</li></ul>
+          <p class="reader-lede">Pushed the staged copy to production today — the rewritten About, the <code>&lt;details&gt;</code> cards, the anchor jumps.</p>
+          <p>While I was in there I finally fixed <code>/lab</code>.</p>
+          <p>It was trying to be two things: a public showcase and my personal bookmark page. Result was a wall of private services and specs nobody outside my LAN should see.</p>
+          <p>I do not want my container topology and internal addresses sitting in a public GitHub repo for anyone to recon. So:</p>
+          <ul><li>Killed the promo homelab section on the homepage.</li><li>Rebuilt <code>/lab</code> as a dumb launcher. Only links to stuff already exposed via Cloudflare Tunnel with auth — Home Assistant, Immich, that kind of thing.</li><li>Local IPs, management ports, Grafana internals? Not there. That&#39;s getting its own private portal.</li><li>Host counts (stacks, containers, images, volumes) update from a git pre-commit hook that asks the Docker daemon directly.</li></ul>
+          <p>Four subpages got the same <code>&lt;details&gt;</code> markup as the homepage for consistency. On subpages they default open via the <code>open</code> attribute so you see specs immediately. Also fixed a broken anchor on the completed archive — it was pointing nowhere.</p>
+          <p>One more thing: my June 13 post never made it into the static build. I&#39;d been generating reader pages by hand and just missed it. Wrote a Node script to parse frontmatter, build the HTML, wire prev/next, update the archive manifest. No more hand assembly. Still need to test what it does with missing frontmatter, but it ran clean tonight.</p>
         </div>
       </div>
     </article>
 
     <nav class="reader-nav three-grid" aria-label="Article navigation">
       <a href="../../blog/index.html">Back to Blog</a>
-      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/sharper-words-smaller-cards-a-copy-pass-on-the-portfolio/index.html"><span class="meta">Older</span>Editorial and Card Layout Revisions for the Portfolio</a><a class="adjacent-post newer-post" href="../../blog/taking-the-email-off-the-page-and-knowing-when-to-undo-a-logo/index.html"><span class="meta">Newer</span>Masking Contact Form Endpoints, Adding Blog Category Filters, and Reverting a Header Logo</a></div>
+      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/sharper-words-smaller-cards-a-copy-pass-on-the-portfolio/index.html"><span class="meta">Older</span>My About Page Said Full-Stack Developer and Meant Nothing</a><a class="adjacent-post newer-post" href="../../blog/taking-the-email-off-the-page-and-knowing-when-to-undo-a-logo/index.html"><span class="meta">Newer</span>I Took My Email Off the Page and Killed My Own Logo</a></div>
     </nav>
   </main>
 

@@ -1,56 +1,41 @@
 ---
-title: "Packaging the n5-board CLI and Production Deployment Manifests"
+title: "A Repo Containing the CLI but Not the Deployment Is Half of It"
 date: 2026-08-07
 category: Homelab
 summary: "Deploying the Planka-backed n5-board system, separating CLI code from infrastructure units, auditing false-positive leak alarms, and scoping a public client package."
 ---
-Resuming work on the n5-board Kanban automation stack began by reconciling session state after a week of stable operations. The nightly automations had executed without failure, providing a solid baseline to close the initial research spike and transition n5-board from experimental scripts into production infrastructure.
+Back on n5-board after a week away. Nightly automations ran clean the whole time, so I had a stable floor to promote it from scripts to real infra.
 
-## Phase 0 validation wrap-up
+## Two Checks Left From the Spike
 
-Two validation checks remained from the July 31 spike: verifying API key longevity after generation, and confirming whether shared OAuth token background refreshes survive concurrent session execution.
+API key longevity: its timer container had been stopped, so I'd never run it. Started it, ran the suite by hand — 33 mixed API calls, zero auth failures, eight days after generation. Planka stays. No fallback needed.
 
-The API key longevity check had been delayed because its timer container had been stopped. Starting the container and executing the test suite manually yielded a clean pass: 33 mixed API requests succeeded with zero authorization failures eight days post-generation, validating Planka as the permanent board backend over fallback alternatives.
+Token-refresh soak: 66 calls over six and a half hours to Discord + vault, never caught a natural refresh before quota died. Still indeterminate. I'm not assuming resilience; it stays on the unverified list.
 
-The concurrent token-refresh soak yielded an inconclusive result. The background soak ran 66 calls across six and a half hours, reporting telemetry to Discord and the vault, but did not capture a natural refresh cycle before quota exhaustion. Rather than assuming resilience, concurrent token refreshing remains categorized as indeterminate pending further empirical observation.
+## Prod Board
 
-## Production board deployment
+Backend went into an unprivileged container on node two — Ubuntu 26.04, Planka 2.1.1, Postgres. Fixed an upstream image tag omission in my own plan (embarrassing), bound the listener to the container's private IP only. DOCKER-USER allowlist: two host IPs, nothing else.
 
-With backend selection settled, Phase 1 focused on production provisioning across container infrastructure and local tooling.
+CLI lives at `~/n5-board/` in its own Python 3.14.4 venv, pip bootstrapped via get-pip.py for non-root. Verified meanly: 125 test cards across six lists, dry-run diffs with zero drift, full wipe-and-regen reproducing an identical board hash, doctor checks all green.
 
-The backend was deployed inside an unprivileged container on the second Proxmox node, running Ubuntu 26.04 and Planka 2.1.1 backed by PostgreSQL. The deployment corrected an upstream image tag omission in the initial plan and bound the web listener strictly to its private container IP. A DOCKER-USER firewall allowlist was configured to restrict network access to two specific host IPs.
+Monitoring: three Kuma HTTP probes across both nodes. Learned to verify probe attachments against the SQLite rows directly — failed API registrations look attached in the UI when they aren't. Cloudflare exposure stays parked until I review it by hand.
 
-The n5-board management CLI was installed at `~/n5-board/` within an isolated Python 3.14.4 virtual environment, bootstrapping pip via get-pip.py to accommodate non-root user permissions. Verification was strict: 125 test cards seeded across six lists, dry-run diffs verifying zero state drift, a full wipe-and-regeneration reproducing an identical board hash, and all doctor self-checks reporting healthy.
+## The Leak Alarm That Wasn't
 
-Monitoring was added via three Uptime Kuma HTTP health probes distributed across both nodes. To avoid false positives from failed API registrations, active probe attachments were verified directly against the underlying SQLite database records. External exposure through Cloudflare was kept parked pending manual review.
+Security check halted, screaming API key leak in the vault runsheet. Looked myself: the check pipes grep into head, which exits 0 whether or not anything matched. Runsheet held an eight-char non-sensitive prefix. Check bug, not a leak.
 
-## False-positive leak alarm inspection
+## The Review That Saved the Repo
 
-During configuration, an internal security check halted execution, reporting an apparent API key leak in the vault runsheet. Direct inspection revealed a flaw in the verification script: piping grep into head caused the pipeline to exit with status zero regardless of whether matches occurred. Verifying the runsheet confirmed only an eight-character non-sensitive identifier prefix was present, clearing the alert as a check syntax defect rather than a credential exposure.
+Split the project into its Forgejo repo. Two review passes before committing, both earned their keep.
 
-## Forgejo repository creation and architecture review
+Review one: my plan tracked CLI source but forgot every deployment manifest — Compose files, systemd units, DB backup scripts, hypervisor firewall rules. CLI without its deployment is unrepeatable. Unified both into the repo.
 
-Once the board and CLI were functional, the project was organized into a dedicated Forgejo Git repository. Two independent review passes evaluated the initial migration plan before committing.
+Review two caught: doc-sync drift detector stamping dynamic UTC timestamps into headers every run (false diffs on untouched files), and the credential pre-scan allowlist firing on substrings (`_PAT` inside plain English nouns, `TOKEN` inside variable names).
 
-The first review identified a significant scope omission: the repository plan included CLI source files but omitted the deployment manifests—Docker Compose configurations, systemd units, database backup scripts, and hypervisor firewall rules. A repository containing only the client CLI without its deployment definitions would leave the service unrepeatable. Both code and deployment automation were unified into the repository structure.
+Fixed both pre-init. Private repo: 44 files, 228 KB, zero real leaks. GitHub mirror deferred — my PAT can't create remote repos.
 
-The second review caught two implementation defects:
-1. The documentation synchronization drift detector injected dynamic UTC timestamps into file headers on every execution, generating false diffs on unchanged content.
-2. The credential pre-scan allowlist caused false positives on substring matches (such as `_PAT` within standard English nouns or `TOKEN` inside variable names).
+Remote access over Tailscale just worked, by the way. Gateway SNATs tailnet traffic to its LAN address, landing clients inside the allowlist automatically. Restricted rules intact, no manual creds shuffle.
 
-These issues were resolved prior to repository initialization, resulting in a private repository containing 44 tracked files (228 KB) with zero leaked credentials. A planned GitHub push-mirror was deferred, as the existing personal access token lacked permissions to create remote repositories.
+Evening: started scoping the public client (`plankamd`) for third-party use. Boundaries so far: Forgejo can't do anonymous clones (site-wide auth), so public lives on GitHub. Backlog parser is coupled to brittle heading parsing — slight format drift drops items silently. Tried abstracting branding off lab paths, hit a wall: CLI parses args before loading config, needs a two-phase parser for dynamic subcommands.
 
-## Off-network access via Tailscale and SNAT
-
-Accessing the board remotely over Tailscale revealed that manual credential retrieval was unnecessary. The primary gateway SNATs tailnet traffic to its internal LAN address, placing authenticated Tailscale clients inside the firewall allowlist automatically. This allowed seamless browser access while preserving restricted access rules.
-
-## Scoping the public client repository
-
-Later in the day, planning began for a standalone public version of the tooling (`plankamd`), designed to allow third parties to run the board workflow against external environments.
-
-The architectural pass established clear boundaries:
-- Internal hosting on Forgejo cannot serve anonymous public clones due to site-wide authentication policies, requiring public distribution on GitHub.
-- Code analysis identified strong coupling in the backlog parser, where brittle markdown heading parsing could drop items silently if formatting differed slightly.
-- A proposed branding abstraction was designed to decouple internal lab paths from generic CLI commands, but review highlighted an architectural hurdle: the CLI parsed arguments before loading configuration, requiring a two-phase parser to support dynamic subcommands.
-
-Work closed with the isolated public build initialized at 23:34:01, maintaining a clean boundary from the live private repository while package renaming and argument parsing refactors remain pending.
+Closed with the isolated public build initialized at 23:34:01, clean boundary from the live private repo. Renames and parser refactors pending.

@@ -1,44 +1,29 @@
 ---
-title: "Samsung T7 Shield UAS Timeouts, GRUB Quirks, and Post-Reboot Service Recovery"
+title: "I Moved a Folder, Rebooted, and Home Assistant Forgot Who It Was"
 date: 2026-06-11
 category: Homelab
 summary: "Disabling UAS kernel drivers to eliminate severe I/O latency on external SSD storage, diagnosing empty bind-mounts after a host reboot, and automating dev server persistence."
 ---
-Diagnosing severe storage latency on an external Samsung T7 SSD uncovered kernel UAS driver timeouts, requiring a GRUB quirk to stabilize I/O before addressing unexpected service outages following the host reboot.
+My 2TB external drive used to live at `/mnt/photos`. Since I don't have the real NAS hardware yet, I re-mounted it at `/mnt/tmpnas` as a general host share — updated `/etc/fstab`, pointed Immich's `UPLOAD_LOCATION` at the new path.
 
-## Storage Remount and Samba Provisioning
+Then I carved two Samba shares out of it in `/etc/samba/smb.conf`: a guest read/write drop folder for anything on the LAN, and a password-locked one for my admin backups, reachable over Tailscale at `smb://x.x.149.70`.
 
-The 2TB external storage drive previously mounted at `/mnt/photos` was designated as a general-purpose host share until dedicated NAS hardware is deployed. The drive was re-mounted at `/mnt/tmpnas`, updating `/etc/fstab` and reconfiguring Immich's `UPLOAD_LOCATION` environment variable.
+## My T7 Was Choking on UAS
 
-On top of this mount point, two Samba shares were configured in `/etc/samba/smb.conf`:
-- A guest-accessible read/write drop directory for general LAN devices.
-- An authenticated, password-restricted share for administrative backups, reachable over Tailscale via `smb://x.x.149.70`.
+Immich started stalling on loads. `docker stats` showed `immich_server` pinned at 147% disk util with 25-second flush waits. Write latency at 4,864ms. That's not slow, that's dead.
 
-## Samsung T7 Shield UAS Driver Timeouts
+`dmesg` was full of `uas_eh_abort_handler` timeouts on `/dev/sda`. The UAS driver just does not get along with this host controller + my Samsung T7 Shield combo. Kept aborting queued blocks.
 
-During regular indexing, Immich photo loading stalled completely. Telemetry from `docker stats` revealed `immich_server` holding 147% disk utilization with 25-second flush waits and write latency climbing to 4,864ms.
+Fix was a quirk. Added `usb-storage.quirks=04e8:61fb:u` to `GRUB_CMDLINE_LINUX_DEFAULT` in `/etc/default/grub` to force the T7 (`04e8:61fb`) onto plain `usb-storage`. Ran `update-grub`, rebooted. Write latency dropped from 4,864ms to 37ms. Night and day.
 
-System journal logs (`dmesg`) revealed repeated `uas_eh_abort_handler` kernel timeouts on `/dev/sda`. The USB Attached SCSI (UAS) protocol was failing on this host controller combination, aborting queued block transactions.
+That reboot is where the real damage happened.
 
-To stabilize disk operations, UAS was disabled specifically for the Samsung T7 Shield (`04e8:61fb`) via kernel parameter. Adding `usb-storage.quirks=04e8:61fb:u` to `GRUB_CMDLINE_LINUX_DEFAULT` in `/etc/default/grub` forced the device to use the standard `usb-storage` driver. Following `update-grub` and a system reboot, write latency dropped from 4,864ms to 37ms, restoring full throughput to container storage.
+`ha.n5hq.me` started returning 400, and hitting port 8123 locally dropped me on a fresh onboarding wizard. My stomach sank.
 
-## Post-Reboot Recovery: Home Assistant Bind-Mounts
+Here's what I'd done to myself: before rebooting, I'd moved the live `/homeassisstant` directory (yes, with that typo, it's mine) into `/maybebin` while tidying root. On boot, Docker saw the bind-mount path was empty and helpfully created a fresh empty dir there. Home Assistant happily initialized a brand-new config into it — no proxy trust, no users, nothing.
 
-While the storage layer stabilized, the host reboot exposed an issue with Home Assistant. External requests through `ha.n5hq.me` returned HTTP 400 Bad Request, while local connections on port 8123 redirected to an initial onboarding wizard.
+My real 3GB instance was sitting untouched in `/maybebin` the whole time.
 
-Timestamp reconstruction clarified the failure sequence:
-1. Prior to rebooting, the active `/homeassisstant` data directory had been moved into `/maybebin` during root directory maintenance.
-2. Upon restart, Docker auto-created an empty directory at the configured host bind-mount path. Home Assistant initialized a default configuration into this empty directory without reverse proxy trust or existing user accounts.
-3. The genuine 3GB instance containing historical data and integrations remained intact in `/maybebin`.
+Stopped the container, moved the directory back, restarted the stack. Automations, integrations, tunnel — all back. Scared me enough to admit I still have no automated off-host backups for container volumes. Just uncommitted disk state. Need to fix that with actual vzdump/tar jobs.
 
-Halting the container, restoring the original directory path, and restarting the stack brought all automations, integrations, and tunnel routing back online. An audit confirmed that automated off-host backups were not yet in place, emphasizing the requirement to build an external backup routine rather than relying on uncommitted disk state.
-
-## Service Persistence
-
-A secondary consequence of the reboot was the termination of the local static development server on port 3001, which had been executed manually without a supervisor. A crontab `@reboot` entry was added to ensure process persistence across future maintenance cycles.
-
-## Pending Verification
-
-- Monitor Samsung T7 I/O queue depths under extended read/write load.
-- Implement automated off-host vzdump/tar backups for container data volumes.
-- Verify AirTouch 4 integration connectivity.
+Oh, and the reboot also killed my static dev server on port 3001, because I'd started it by hand with no supervisor like an animal. Added a `@reboot` line in crontab. It'll survive next time.

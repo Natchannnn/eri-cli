@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="dark">
   <meta name="description" content="Eliminating generic buzzwords from the About section, replacing non-interactive pill elements with anchor jumps, and implementing native HTML details elements for project cards.">
   <link rel="icon" href="../../assets/img/logo.png">
-  <title>Editorial and Card Layout Revisions for the Portfolio — ERI / CLI</title>
+  <title>My About Page Said Full-Stack Developer and Meant Nothing — ERI / CLI</title>
   <link rel="stylesheet" href="../../assets/css/style.css?v=1.1.0">
   <script defer src="../../assets/js/pages.js"></script>
 </head>
@@ -25,7 +25,7 @@
     <article>
       <header class="reader-head three-grid">
         <p class="reader-meta meta">Projects<br><time datetime="2026-06-13">13 Jun 2026</time><br>2 min read</p>
-        <h1 class="page-title">Editorial and Card Layout Revisions for the Portfolio</h1>
+        <h1 class="page-title">My About Page Said Full-Stack Developer and Meant Nothing</h1>
       </header>
 
       <div class="reader-cut" aria-hidden="true">
@@ -34,28 +34,25 @@
 
       <div class="reader-body three-grid" id="article-body">
         <div class="reader-prose">
-          <p class="reader-lede">Auditing the portfolio copy and project layout on the local staging environment (port 3002) eliminated inflated claims and replaced dense card layouts with native collapsible elements.</p>
-          <h2>Removing Generic Buzzwords</h2>
-          <p>The original About copy defaulted to common boilerplate (&quot;passionate full-stack developer with deep expertise in building scalable solutions&quot;). This language failed to communicate verifiable technical competence.</p>
-          <p>The copy was refactored to emphasize actual systems:</p>
-          <ul><li>Documenting the physical homelab environment: five isolated VLANs, over twenty active containers, and continuous observability dashboards.</li><li>Framing career progression directly toward networking and infrastructure engineering.</li><li>Updating the site title and hero designation to &quot;Full-Stack &amp; Infrastructure&quot; to reflect both software projects and operational systems.</li><li>Replacing vague marketing headers with direct descriptions (&quot;Work that ships and runs&quot;).</li></ul>
-          <h2>Interactive Navigation and Anchor Links</h2>
-          <p>Under the Portfolio heading, three static pill badges (Completed, In Progress, Upcoming) had been styled like buttons but lacked interactivity. These elements were converted into functional anchor links targeting the corresponding project groupings, calculating offset margins to clear the fixed navigation bar.</p>
-          <h2>Native Expandable Project Cards</h2>
-          <p>The project showcase previously displayed full technical specifications, paragraphs of narrative, and dependency tags simultaneously, creating excessive vertical scroll.</p>
-          <p>To improve scannability, the cards were refactored using native HTML <code>&lt;details&gt;</code> and <code>&lt;summary&gt;</code> elements:</p>
-          <ul><li>By default, each card displays only the project title, a single-sentence overview, and a styled &quot;Details&quot; trigger.</li><li>Expanding the trigger reveals full architecture breakdowns, metrics, and technology tags without requiring client-side JavaScript.</li><li>Default browser disclosure triangles were hidden via <code>summary::-webkit-details-marker { display: none; }</code> and <code>summary { list-style: none; }</code>, replaced with custom CSS indicators that rotate dynamically on toggle.</li></ul>
-          <h2>Staging Status</h2>
-          <p>All revisions remain staged on the local development environment for cross-browser inspection prior to triggering production Vercel builds.</p>
-          <h2>Pending Verification</h2>
-          <ul><li>Verify native <code>&lt;details&gt;</code> keyboard accessibility across Chromium, WebKit, and Gecko engines.</li><li>Test mobile touch responsiveness on disclosure toggles.</li></ul>
+          <p class="reader-lede">Was working on staging (port 3002) today, just reading my own portfolio copy.</p>
+          <p>My About said &quot;passionate full-stack developer with deep expertise in building scalable solutions.&quot;</p>
+          <p>I deleted it. It says nothing.</p>
+          <p>Rewrote it around stuff I can actually prove: my homelab — five isolated VLANs, twenty-odd containers, dashboards that run all day. Said outright I&#39;m heading toward networking and infrastructure engineering. Changed the hero title to &quot;Full-Stack &amp; Infrastructure&quot; and swapped the marketing headers for plain ones. &quot;Work that ships and runs&quot; beats whatever I had before.</p>
+          <h2>The Pills That Weren&#39;t Buttons</h2>
+          <p>Under Portfolio I had three pills — Completed, In Progress, Upcoming. They looked like buttons. They did nothing.</p>
+          <p>Made them real anchor links to the project groups. Had to fiddle with offset margins so the fixed nav doesn&#39;t cover the headings when you jump. Small thing, bugged me for weeks.</p>
+          <h2>Cards Were Too Tall</h2>
+          <p>Every project card showed everything at once — full specs, paragraphs, tags. Endless scroll.</p>
+          <p>Rebuilt them on native <code>&lt;details&gt;</code> / <code>&lt;summary&gt;</code>. Collapsed you get title, one line, a Details trigger. Click, you get architecture, metrics, tags. No JS needed.</p>
+          <p>Hid the default browser triangles with <code>summary::-webkit-details-marker { display: none; }</code> and <code>summary { list-style: none; }</code>, rolled my own little indicators that rotate on toggle.</p>
+          <p>Still on staging only. Want to check keyboard access and mobile taps across Chromium, WebKit, Gecko before I push to Vercel.</p>
         </div>
       </div>
     </article>
 
     <nav class="reader-nav three-grid" aria-label="Article navigation">
       <a href="../../blog/index.html">Back to Blog</a>
-      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/three-designs-a-domain-cutover-and-the-linux-iso-stack-comes-home/index.html"><span class="meta">Older</span>Hybrid Seedbox Migration via SSHFS and Portfolio V2 Deployment</a><a class="adjacent-post newer-post" href="../../blog/the-copy-goes-live-and-the-lab-page-turns-personal/index.html"><span class="meta">Newer</span>Restructuring the Homelab Page as a Service Launcher</a></div>
+      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/three-designs-a-domain-cutover-and-the-linux-iso-stack-comes-home/index.html"><span class="meta">Older</span>My Seedbox Hardlinks Over SSHFS and Portfolio V2 Finally Went Live</a><a class="adjacent-post newer-post" href="../../blog/the-copy-goes-live-and-the-lab-page-turns-personal/index.html"><span class="meta">Newer</span>My Lab Page Was Leaking Internal IPs So I Gutted It</a></div>
     </nav>
   </main>
 

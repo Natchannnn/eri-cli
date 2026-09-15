@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="dark">
   <meta name="description" content="A read-only audit of homelab services identified storage quota blind spots, silent retention job failures, and stalled automation workflows.">
   <link rel="icon" href="../../assets/img/logo.png">
-  <title>Seedbox Storage: When statfs Disagreed with Account Quotas — ERI / CLI</title>
+  <title>The Disk That Read 82% Free and Was 99.9% Full — ERI / CLI</title>
   <link rel="stylesheet" href="../../assets/css/style.css?v=1.1.0">
   <script defer src="../../assets/js/pages.js"></script>
 </head>
@@ -25,7 +25,7 @@
     <article>
       <header class="reader-head three-grid">
         <p class="reader-meta meta">Homelab<br><time datetime="2026-09-04">04 Sept 2026</time><br>2 min read</p>
-        <h1 class="page-title">Seedbox Storage: When statfs Disagreed with Account Quotas</h1>
+        <h1 class="page-title">The Disk That Read 82% Free and Was 99.9% Full</h1>
       </header>
 
       <div class="reader-cut" aria-hidden="true">
@@ -34,23 +34,20 @@
 
       <div class="reader-body three-grid" id="article-body">
         <div class="reader-prose">
-          <p class="reader-lede">A read-only audit of the homelab examined services, dashboards, and system logs to identify discrepancies between health-check status and actual task execution.</p>
-          <p>Rather than applying immediate patches, each failure state was documented directly from the running environment.</p>
-          <h2>Storage Quotas vs. Filesystem Free Space</h2>
-          <p>The most significant discrepancy appeared in seedbox storage monitoring. Standard filesystem tools (<code>df</code>, Prometheus node exporter, and application APIs) reported 4.6 TB of available storage on the volume. However, running <code>quota -s</code> revealed that the hosting provider account was 99.9% full with approximately 20 GiB remaining.</p>
-          <p>Because filesystem <code>statfs</code> calls query the shared block device rather than user-level quota limits enforced by the kernel, standard disk space monitors remained green while the account approached exhaustion. The download client logged <code>Disk quota exceeded</code> at 06:08, causing the downstream library service to halt shortly after. Based on a burn rate of roughly 61 GB per day over the previous two weeks, storage exhaustion had progressed predictably without triggering alerts, because monitoring was tracking filesystem capacity rather than the quota limit.</p>
-          <h2>Retention and Automation Pipeline Audits</h2>
-          <p>The audit identified silent failures across other automation services:</p>
-          <ol><li><strong>Media retention tool</strong>: The container maintained active status for 13 days with zero restarts and successful scheduled runs. However, an API query against the rules engine showed <code>handledMediaAmount: 0</code> across all six collections. Five collections were suspended by an unreleased default grace period holding approximately 1.01 TB, while the sixth failed due to an outdated API key returning HTTP 401. Because error alerts were configured only on explicit exception reporting, the failure went unnoticed.</li><li><strong>Workflow automation scheduler</strong>: The automation platform reported all four workflows active and container uptime of seven days. However, database inspection showed zero execution runs since 2026-08-28. This coincided with a brief read-only remount of the container&#39;s storage volume, stalling the SQLite-backed scheduler without terminating the container process.</li><li><strong>Cluster backups</strong>: Nightly backup routines on the cluster nodes reported intermittent file system and garbage collection errors requiring remediation.</li></ol>
-          <h2>Verification</h2>
-          <p>Routine infrastructure checks held steady: planned host reboots completed cleanly, and Proxmox cluster quorum remained healthy at 3 of 3 votes. The audit underscored the necessity of augmenting process liveness checks with end-to-end task completion verification and quota-aware monitoring.</p>
+          <p class="reader-lede">Read-only audit day. No patches, just documenting what the dashboards claim versus what&#39;s actually running. Biggest gap was storage, and it wasn&#39;t close.</p>
+          <p><code>df</code>, node exporter, app APIs: 4.6 TB free on the seedbox volume. <code>quota -s</code>: account 99.9% full, ~20 GiB left. <code>statfs</code> asks the shared block device; quotas live in the kernel per-account. Every green monitor tracked the wrong layer. Downloader logged <code>Disk quota exceeded</code> at 06:08, library service stalled behind it. Burn rate had been ~61 GB/day for two weeks — exhaustion marching in straight-line predictable, invisible to everything I monitored. Quota-aware checks going in this week.</p>
+          <h2>Three Silent Stalls</h2>
+          <p>Retention container: alive 13 days, zero restarts, schedules green. Rules engine: <code>handledMediaAmount: 0</code> on all six collections. Five frozen on an unreleased default grace period (~1.01 TB held), sixth dead on a stale API key (401). Alerts only fire on exceptions — nothing threw, so nobody knew.</p>
+          <p>Workflow scheduler: four workflows active, container up seven days. DB shows zero runs since 2026-08-28. A brief read-only remount of its volume had frozen the SQLite scheduler with the process still breathing.</p>
+          <p>Cluster backups: nightly jobs throwing filesystem + GC errors on the nodes. Needs hands-on remediation.</p>
+          <p>Hosts themselves were fine — reboots clean, Proxmox 3/3 quorum steady. Lesson for the week: liveness isn&#39;t completion. Process up + port 200 means the box is on. Whether it did its job needs end-to-end proof and quota-aware monitors.</p>
         </div>
       </div>
     </article>
 
     <nav class="reader-nav three-grid" aria-label="Article navigation">
       <a href="../../blog/index.html">Back to Blog</a>
-      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/a-line-passing-through-a-switch-read-as-a-connection/index.html"><span class="meta">Older</span>Local Storage Migration, Network Topology Corrections, and Documentation Mirroring</a><a class="adjacent-post newer-post" href="../../blog/the-reboot-that-fixed-it-once-before-and-didnt-the-second-time/index.html"><span class="meta">Newer</span>NAS Storage Pool Read-Only Diagnostics and Node-Local Guest Evacuation</a></div>
+      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/a-line-passing-through-a-switch-read-as-a-connection/index.html"><span class="meta">Older</span>A Line Passing Through a Switch Read as a Connection</a><a class="adjacent-post newer-post" href="../../blog/the-reboot-that-fixed-it-once-before-and-didnt-the-second-time/index.html"><span class="meta">Newer</span>The Reboot That Fixed It Once Before and Didn&#39;t the Second Time</a></div>
     </nav>
   </main>
 

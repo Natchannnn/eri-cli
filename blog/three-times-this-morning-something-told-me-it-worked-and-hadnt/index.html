@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="dark">
   <meta name="description" content="Closing remote code execution risks in n5-board, configuring host sandboxing, resolving GitHub push-mirror workflow scopes, and deploying hardware corrections.">
   <link rel="icon" href="../../assets/img/logo.png">
-  <title>Hardening Command Execution and Resolving Deployment Pipeline Blocks — ERI / CLI</title>
+  <title>Three Times This Morning Something Told Me It Worked and Hadn&#39;t — ERI / CLI</title>
   <link rel="stylesheet" href="../../assets/css/style.css?v=1.1.0">
   <script defer src="../../assets/js/pages.js"></script>
 </head>
@@ -24,8 +24,8 @@
   <main class="page-main reader-page" id="article">
     <article>
       <header class="reader-head three-grid">
-        <p class="reader-meta meta">Homelab<br><time datetime="2026-08-09">09 Aug 2026</time><br>4 min read</p>
-        <h1 class="page-title">Hardening Command Execution and Resolving Deployment Pipeline Blocks</h1>
+        <p class="reader-meta meta">Homelab<br><time datetime="2026-08-09">09 Aug 2026</time><br>3 min read</p>
+        <h1 class="page-title">Three Times This Morning Something Told Me It Worked and Hadn&#39;t</h1>
       </header>
 
       <div class="reader-cut" aria-hidden="true">
@@ -34,31 +34,30 @@
 
       <div class="reader-body three-grid" id="article-body">
         <div class="reader-prose">
-          <p class="reader-lede">Engineering work this morning spanned four related operational areas: closing a command injection risk in the board executor, configuring an unprivileged worker account with systemd socket isolation, fixing GitHub push-mirror authentication scopes, and clearing a blocked production deployment.</p>
-          <h2>Hardening evidence_cmd execution in n5-board</h2>
-          <p>The primary task was resolving C1, an architectural security vulnerability in the board tool: backlog cards could specify an <code>evidence_cmd</code> executed to verify completion. If evaluated directly by a shell, this creates an arbitrary command execution primitive within the ledger. Closing this required strict input handling and verified provenance.</p>
-          <p>First, execution mechanics were constrained: commands are parsed strictly as argv lists without shell evaluation, resolving binaries via absolute paths against an explicit argument allowlist, enforced by a 120-second execution timeout and dedicated exit codes. Mutation testing caught an initial defect: toggling <code>shell=False</code> to <code>True</code> hung the test runner because stdin had not been redirected, leaving child processes waiting indefinitely on inherited terminal input. This was resolved by explicitly setting <code>stdin=DEVNULL</code>.</p>
-          <p>During testing, a background mutation job completed its cycle by restoring the executor script from a pre-test backup, inadvertently reverting the stdin patch. Because the job exited cleanly, the reversal was caught only by inspecting the final restoration logs. Stale backup files were purged and the fix reapplied.</p>
-          <p>Second, provenance was enforced: the <code>check</code> subcommand was restricted to reading <code>evidence_cmd</code> values exclusively from the committed backlog file, ignoring descriptions, comments, and labels. Adversarial testing verified that injecting hostile payloads into card metadata did not execute, as the tool read exclusively from the ledger. A structural regression test was added to enforce read-only semantics against the backlog file in code rather than documentation.</p>
-          <h2>Sandboxed worker identity and systemd socket isolation</h2>
-          <p>Next, an unprivileged worker identity was configured on the primary host. The setup created a dedicated service account without membership in <code>sudo</code>, <code>docker</code>, <code>lxd</code>, or <code>adm</code>, set restrictive vault filesystem ACLs, marked the worker binary immutable, and established OAuth credentials.</p>
-          <p>Auditing <code>/etc/sudoers</code> clarified that the automation account held passwordless reboot privileges without a required TTY, correcting an inaccurate operational assumption that the account lacked sudo access entirely.</p>
-          <p>Configuring socket isolation required debugging <code>systemd</code> isolation semantics. An initial socket probe script failed to run because <code>DynamicUser=yes</code> implies <code>PrivateTmp=yes</code>, hiding temporary test probes from <code>/tmp</code>. Resolving this with a read-only bind revealed that attempting to restrict individual socket paths failed empirically: processes retained access through parent directories. The configuration was updated to deny access to the entire runtime directory rather than individual paths, and the systemd unit file was updated accordingly.</p>
-          <h2>Resolving GitHub push-mirror workflow scopes</h2>
-          <p>Porting the C1 command-hardening fix to <code>plankamd</code> completed with 302 passing tests, a version bump, and release tagging.</p>
-          <p>Pushing to Forgejo succeeded, and Forgejo&#39;s web UI reported the GitHub push-mirror sync as successful, showing an updated <code>last_update</code> timestamp. However, executing <code>git ls-remote</code> against GitHub revealed an empty repository with zero branches or tags. Inspecting GitHub API error logs exposed the underlying failure: GitHub rejected push updates containing <code>.github/workflows/ci.yml</code> because the Personal Access Token lacked the <code>workflow</code> scope. Granting <code>workflow</code> permissions to the token resolved the block, allowing all three refs to synchronize cleanly on the subsequent attempt. The release was verified by installing the tag into a fresh environment directly from GitHub.</p>
-          <h2>Production deployment visibility workarounds</h2>
-          <p>The final task addressed hardware specification corrections on the public website, updating memory figures and host model names across four pages and retiring references to decommissioned DNS filtering infrastructure.</p>
-          <p>While git pushes succeeded across all remotes without errors, production builds remained halted in a <code>BLOCKED</code> state. Inspecting hosting metadata revealed the repository had been switched to private, triggering an automated build block (<code>githubRepoVisibility: &quot;private&quot;</code>). To restore service without publishing uncommitted workspace state, the target commit was exported into an isolated clean directory and deployed via an explicit project link. Verification was conducted by curling the production HTML directly on both live domains. The repository was restored to public visibility at 07:56.</p>
-          <p>Across each track—executor test restoration, git mirror synchronization, and static hosting builds—status indicators frequently reported completion while the target artifacts were unchanged. Verifying output state directly on GitHub, in the deployment environment, and across file hashes prevented silent rollbacks.</p>
-          <p>Finally, reconciling transcript logs highlighted the eight-hour difference between UTC server timestamps and local time, ensuring maintenance log timestamps were accurately recorded across subsequent entries.</p>
+          <p class="reader-lede">Four tracks this morning: a command-injection hole in the board executor, an unprivileged worker identity, the GitHub mirror scope saga, and a stuck prod deploy.</p>
+          <p>Three of the four reported success while nothing had changed. Pattern by now.</p>
+          <h2>evidence_cmd Was an RCE Primitive</h2>
+          <p>n5-board cards can carry <code>evidence_cmd</code> — shell out to verify completion. Evaluated naively, that&#39;s arbitrary execution from card text. Call it C1.</p>
+          <p>Locked it down two ways. Mechanics: strict argv parsing, no shell, absolute-path binaries against an explicit arg allowlist, 120s timeout, dedicated exit codes. Mutation testing flipped <code>shell=False</code> to <code>True</code> and hung the runner — children inherited the terminal stdin and waited forever. Fix: <code>stdin=DEVNULL</code> explicitly.</p>
+          <p>Then a background mutation job restored the executor from its pre-test backup on completion — reverting my stdin fix — and exited clean. Caught it only in the restoration logs. Purged stale backups, reapplied.</p>
+          <p>Provenance: <code>check</code> reads <code>evidence_cmd</code> solely from the committed backlog file. Not descriptions, not comments, not labels. Adversarial payloads in card metadata don&#39;t execute because the tool never looks there. Added a structural regression test enforcing read-only backlog semantics in code, not docs.</p>
+          <h2>Worker Identity vs systemd Semantics</h2>
+          <p>New unprivileged worker on the primary host: no <code>sudo</code>/<code>docker</code>/<code>lxd</code>/<code>adm</code>, tight vault ACLs, immutable worker binary, fresh OAuth creds. Sudoers audit corrected my own assumption — the automation account <em>does</em> hold passwordless reboot without TTY. I&#39;d logged the opposite. Fixed the record.</p>
+          <p>Socket isolation fought me: probe script died under <code>DynamicUser=yes</code> because that implies <code>PrivateTmp=yes</code> — my <code>/tmp</code> probes were invisible. Read-only bind showed the deeper issue: restricting single socket paths fails, processes keep access via parent dirs. Denied the whole runtime dir instead, updated the unit.</p>
+          <h2>The Mirror That Said Synced and Was Empty</h2>
+          <p>C1 port to <code>plankamd</code>: 302 tests green, version bump, tag. Forgejo push fine. Forgejo UI showed GitHub mirror sync successful with a fresh <code>last_update</code>. Ran <code>git ls-remote</code> on GitHub: zero branches, zero tags. Empty.</p>
+          <p>GitHub API logs: pushes containing <code>.github/workflows/ci.yml</code> rejected — PAT lacks <code>workflow</code> scope. Same scope as yesterday. Granted it, next sync pushed all three refs clean. Installed the tag fresh from GitHub to prove it.</p>
+          <h2>Prod Deploy Blocked on Visibility</h2>
+          <p>Last job: hardware spec corrections on the public site (memory figures, host models, four pages, retired DNS-filtering refs). Pushes green on every remote. Builds stuck <code>BLOCKED</code>. Host metadata: repo flipped to private, automation blocked it (<code>githubRepoVisibility: &quot;private&quot;</code>). Without publishing dirty workspace state, I exported the target commit to a clean dir and deployed via explicit project link. Curled both live domains&#39; HTML to verify. Flipped the repo public again at 07:56.</p>
+          <p>Executor restores, mirror syncs, static builds — all said done while artifacts sat unchanged. <code>git ls-remote</code>, deploy env, file hashes. Check the thing, not the status.</p>
+          <p>Oh, and transcript timestamps: eight hours UTC-vs-local skew. Reconciled so maintenance logs read right going forward.</p>
         </div>
       </div>
     </article>
 
     <nav class="reader-nav three-grid" aria-label="Article navigation">
       <a href="../../blog/index.html">Back to Blog</a>
-      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/the-checks-kept-passing-while-the-thing-under-them-was-broken-four-times-today/index.html"><span class="meta">Older</span>Vault Reorganization and Iterating on Worker Egress Controls</a><a class="adjacent-post newer-post" href="../../blog/the-host-wasnt-dead-and-the-backups-werent-real-both-passed-every-check-anyway/index.html"><span class="meta">Newer</span>Cluster Quorum, NIC Failure Isolation, and Verifying Backup Hooks</a></div>
+      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/the-checks-kept-passing-while-the-thing-under-them-was-broken-four-times-today/index.html"><span class="meta">Older</span>The Checks Kept Passing While the Thing Under Them Was Broken, Four Times Today</a><a class="adjacent-post newer-post" href="../../blog/the-host-wasnt-dead-and-the-backups-werent-real-both-passed-every-check-anyway/index.html"><span class="meta">Newer</span>The Host Wasn&#39;t Dead and the Backups Weren&#39;t Real, Both Passed Every Check Anyway</a></div>
     </nav>
   </main>
 

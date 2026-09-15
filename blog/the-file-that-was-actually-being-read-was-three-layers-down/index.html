@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="dark">
   <meta name="description" content="Resolving configuration hierarchy and stdin exhaustion in network-controller plugins, diagnosing recurring NAS interface flapping, and observing backup no-touch windows.">
   <link rel="icon" href="../../assets/img/logo.png">
-  <title>Network Controller Configuration Precedence and NAS Link Flapping Diagnostics — ERI / CLI</title>
+  <title>The File That Was Actually Being Read Was Three Layers Down — ERI / CLI</title>
   <link rel="stylesheet" href="../../assets/css/style.css?v=1.1.0">
   <script defer src="../../assets/js/pages.js"></script>
 </head>
@@ -24,8 +24,8 @@
   <main class="page-main reader-page" id="article">
     <article>
       <header class="reader-head three-grid">
-        <p class="reader-meta meta">Homelab<br><time datetime="2026-08-24">24 Aug 2026</time><br>3 min read</p>
-        <h1 class="page-title">Network Controller Configuration Precedence and NAS Link Flapping Diagnostics</h1>
+        <p class="reader-meta meta">Homelab<br><time datetime="2026-08-24">24 Aug 2026</time><br>2 min read</p>
+        <h1 class="page-title">The File That Was Actually Being Read Was Three Layers Down</h1>
       </header>
 
       <div class="reader-cut" aria-hidden="true">
@@ -34,27 +34,23 @@
 
       <div class="reader-body three-grid" id="article-body">
         <div class="reader-prose">
-          <p class="reader-lede">Engineering work on August 24 focused on migrating secrets into vault storage, resolving an authentication failure in network controller integrations, and diagnosing recurring link drops on NAS backup storage.</p>
-          <h2>Resolving configuration precedence and stdin contention</h2>
-          <p>The network controller integration repeatedly returned HTTP 403 authorization errors during initial initialization. Two rounds of configuration edits against the standalone configuration file failed to resolve the error.</p>
-          <p>Investigating startup execution paths revealed that the runtime loader did not read the standalone file; the controller plugin relied on an inline configuration block cached inside the plugin module directory, which took precedence over external paths. Updating the inline configuration block cleared the HTTP 403 error.</p>
-          <p>A subsequent login failure occurred due to empty credential submission. Analysis revealed that an early cache-warming step read from standard input (<code>stdin</code>) to prime cache state, consuming input before the credential authentication routine executed. Reordering initialization steps prevented <code>stdin</code> exhaustion, allowing credentials to reach the handshake handler and completing authentication.</p>
-          <h2>Diagnosing daily NAS link-state flapping</h2>
-          <p>Auditing storage target logs ahead of authentication updates uncovered an unmonitored link-state anomaly: the NAS network interface dropped link for 60 to 90 seconds at approximately 07:02 and 11:49 daily. Cross-referencing 30 days of historical logs confirmed the drops occurred consistently at both timestamps.</p>
-          <p>While initial alerts pointed to DHCP lease renewal timeouts, timestamp correlation proved interface loss preceded renewal attempts: DHCP failure was a symptom of physical interface unreachability rather than its cause. Other local network endpoints connected to the same switch showed zero link transitions during these windows, isolating the fault to the storage appliance. Because low-level kernel logs on the appliance are restricted behind administrative access, root cause remains unresolved.</p>
-          <p>To prevent interface drops from destabilizing downstream services, client mount definitions were hardened:</p>
-          <ul><li>Added <code>nofail</code> to <code>/etc/fstab</code> entries to prevent filesystem mount hangs during host reboots.</li><li>Set filesystem pass (<code>fsck</code>) order from <code>2</code> to <code>0</code>, ensuring network mounts bypass local boot filesystem checks.</li><li>Changes were verified using <code>findmnt --verify</code>.</li></ul>
-          <p>Planning for storage authentication was paused; introducing additional authentication handshakes over an interface undergoing daily drops would add failure modes without addressing underlying physical link instability.</p>
-          <h2>Documentation verification and backup no-touch enforcement</h2>
-          <p>A verification pass evaluated 17 operational claims against production systems, identifying multiple discrepancies: a documented backup timer was absent from systemd, an unmaintained utility was confirmed decommissioned, and several monitoring probes exhibited unreported flapping.</p>
-          <p>Additionally, a deployment near-miss was avoided when an automated task was triggered at 01:04, overlapping with the scheduled nightly backup no-touch window (01:00 to 05:30). The agent parsed the operational schedule, flagged the active maintenance restriction, and halted execution without making host modifications.</p>
+          <p class="reader-lede">Network controller integration kept throwing 403s on init.</p>
+          <p>Edited the standalone config file twice. Nothing changed. Because the runtime never read that file — the plugin loads an inline config block cached inside its own module directory, which wins over external paths. Found it by tracing startup paths instead of configs. Updated the inline block, 403 gone.</p>
+          <p>Then login failed with empty creds. An early cache-warming step read <code>stdin</code> to prime state, swallowing input before auth ran. Credentials never reached the handshake. Reordered init so warming happens after auth. Login completed.</p>
+          <p>Two failures, both the same shape: the thing being read wasn&#39;t the thing I was editing.</p>
+          <h2>My NAS Blinks Twice a Day</h2>
+          <p>Storage logs showed the NAS interface dropping link 60–90s at ~07:02 and ~11:49, daily. Thirty days back, both timestamps, every day. First guess was DHCP renewal timing out. Correlation says the opposite: link loss comes first, DHCP fails because there&#39;s no interface to renew on. Symptom, not cause. Same switch, other endpoints: zero link transitions in those windows. Fault is the appliance, not the wire. Low-level kernel logs need admin access I don&#39;t have, so root cause stays open.</p>
+          <p>Hardened the clients meanwhile: <code>nofail</code> on the <code>/etc/fstab</code> entries so reboots don&#39;t hang on mounts, fsck pass <code>2</code> → <code>0</code> so net mounts skip local boot checks. Verified with <code>findmnt --verify</code>.</p>
+          <p>Paused the storage-auth project over it. New handshakes on an interface that drops twice daily just add failure modes without fixing the physical flapping.</p>
+          <h2>The Backup Window Almost Got Violated</h2>
+          <p>Verification pass over 17 operational claims: a systemd backup timer documented but absent, one utility confirmed dead, several probes flapping unreported. And at 01:04 an automated task fired inside the nightly no-touch window (01:00–05:30). The agent read the schedule, saw the restriction, halted with zero host modifications. The one time the guardrail earned its keep. Left everything alone and logged it.</p>
         </div>
       </div>
     </article>
 
     <nav class="reader-nav three-grid" aria-label="Article navigation">
       <a href="../../blog/index.html">Back to Blog</a>
-      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/the-rule-that-could-only-see-one-user-in-thirty-one/index.html"><span class="meta">Older</span>Retention Rule Scoping Across Multi-User Libraries and Service Freshness Monitoring</a><a class="adjacent-post newer-post" href="../../blog/the-check-meant-to-avoid-touching-a-secret-printed-it-anyway/index.html"><span class="meta">Newer</span>Shell Parameter Expansion Traps in Credential Migration and Log Timezone Correlation</a></div>
+      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/the-rule-that-could-only-see-one-user-in-thirty-one/index.html"><span class="meta">Older</span>The Rule That Could Only See One User in Thirty-One</a><a class="adjacent-post newer-post" href="../../blog/the-check-meant-to-avoid-touching-a-secret-printed-it-anyway/index.html"><span class="meta">Newer</span>The Check Meant to Avoid Touching a Secret Printed It Anyway</a></div>
     </nav>
   </main>
 

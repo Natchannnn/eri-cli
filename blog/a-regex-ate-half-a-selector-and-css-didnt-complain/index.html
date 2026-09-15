@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="dark">
   <meta name="description" content="Integrating animated brand lockups, alpha-channel video fallbacks, layout radius tokens, and diagnosing a silent CSS selector truncation caused by regex deletion.">
   <link rel="icon" href="../../assets/img/logo.png">
-  <title>Regex Selector Truncation and Animated Brand Integration — ERI / CLI</title>
+  <title>A Regex Ate Half a Selector and CSS Didn&#39;t Complain — ERI / CLI</title>
   <link rel="stylesheet" href="../../assets/css/style.css?v=1.1.0">
   <script defer src="../../assets/js/pages.js"></script>
 </head>
@@ -24,8 +24,8 @@
   <main class="page-main reader-page" id="article">
     <article>
       <header class="reader-head three-grid">
-        <p class="reader-meta meta">Web<br><time datetime="2026-08-13">13 Aug 2026</time><br>4 min read</p>
-        <h1 class="page-title">Regex Selector Truncation and Animated Brand Integration</h1>
+        <p class="reader-meta meta">Web<br><time datetime="2026-08-13">13 Aug 2026</time><br>2 min read</p>
+        <h1 class="page-title">A Regex Ate Half a Selector and CSS Didn&#39;t Complain</h1>
       </header>
 
       <div class="reader-cut" aria-hidden="true">
@@ -34,42 +34,33 @@
 
       <div class="reader-body three-grid" id="article-body">
         <div class="reader-prose">
-          <p class="reader-lede">Front-end updates across the portfolio and lab sites focused on integrating animated brand assets, alpha-channel video fallbacks, and design token refinements, concluding with a layout fix caused by an accidental CSS selector truncation.</p>
-          <p>Handling new video and vector assets required adapting to format constraints: H.264 lacks alpha transparency, frame interpolation introduces artifacts on sharp vector wipes, and regex pattern matching without strict boundary assertions can truncate CSS selectors.</p>
-          <h2>Processing wordmark and monogram assets</h2>
-          <p>Source wordmark videos (&quot;ERIC LI&quot; and &quot;N5HQ&quot;) were delivered as 1440×1440 renders with roughly 80% empty margins. Bounding box analysis measured the active artwork at 942×294 within the canvas, requiring an automated crop to isolate active content.</p>
-          <p>A 1:1 square monogram resolved favicon rendering constraints where the 3:1 aspect ratio wordmark illegibly collapsed at 16px. Traced to a 1.5 KB SVG, the monogram served as both <code>favicon.svg</code> and a lightweight fallback without requiring markup revisions.</p>
-          <p>Combined lockups were delivered with embedded entry and exit sequences. Frame-difference analysis separated the assets into four distinct clips: entry, exit, hover-in, and hover-out. Inspecting rest frames also caught two mislabeled assets containing legacy text, preventing incorrect branding from reaching the lab site.</p>
-          <h2>Evaluating animation timing and frame rates</h2>
-          <p>Extending a 0.65-second reveal sequence to 1.5 seconds at 30 fps was evaluated across three rendering strategies:</p>
-          <ol><li>Motion-compensated interpolation generated visible block artifacts along sharp vector edges.</li><li>Frame blending introduced ghosting smears during transitions.</li><li>Direct frame duplication preserved sharp graphic boundaries without distortion.</li></ol>
-          <p>Because vector wipes transition via binary state changes rather than continuous camera movement, frame duplication produced the cleanest result.</p>
-          <h2>Design token alignment and border radius normalization</h2>
-          <p>The navigation bar styling transitioned from a full pill to a 3px rounded rectangle, prompting an audit of site-wide border radii:</p>
-          <ul><li>Updating <code>--r-pill: 99rem</code> to <code>3px</code> adjusted navigation containers, buttons, chips, eyebrow tags, and status badges in a single token update.</li><li>Circular elements hardcoded at <code>50%</code> (mobile menu trigger, social links, button arrow discs) were updated explicitly.</li><li>Functional indicators (status LEDs, active navigation dots, and decorative background orbs) remained circular at <code>50%</code> to preserve visual hierarchy.</li></ul>
-          <h2>Responsive navigation condensation</h2>
-          <p>Initial scroll behavior animated the logo out while leaving the navigation container expanded, producing an unnatural empty bar. This was revised to condense the navigation bar dynamically: past the hero section, the bar shrinks to wrap its contents, standardizing the gap between the logo lockup and adjacent links to 26px.</p>
-          <p>Because CSS cannot smoothly transition from <code>max-width</code> to <code>max-content</code>, the condensed width is measured dynamically and stored in a CSS custom property to enable smooth transitions, reinforced with 90px of scroll hysteresis to eliminate edge jitter.</p>
-          <h2>Alpha transparency and video encoding</h2>
-          <p>Generating transparent video overlays from dark renders required color separation rather than simple threshold keying, which leaves jagged boundary artifacts. The alpha channel was solved mathematically per pixel against known foreground tones: $p = a \cdot F$ Recompositing over black confirmed a mean error of 0.04 across the dataset.</p>
-          <p>Because MP4 does not support alpha transparency, assets were encoded into VP9 WebM for Chrome, Firefox, and Edge, with opaque fallbacks provided for browsers lacking VP9 alpha decode support.</p>
-          <h2>Debugging silent CSS selector truncation</h2>
-          <p>During cleanup of legacy contact markup, unused social icon styles were targeted with a regex pattern matching <code>.social-icon{</code>. One rule in the stylesheet was defined as:</p>
+          <p class="reader-lede">Front-end day across portfolio + lab: animated brand assets, alpha video fallbacks, token cleanup.</p>
+          <p>Ended with a broken hero caused by my own regex. CSS said nothing. Builds passed. Of course.</p>
+          <h2>Brand Assets In</h2>
+          <p>Wordmark videos (&quot;ERIC LI&quot;, &quot;N5HQ&quot;) arrived 1440×1440 with ~80% empty margin. Bbox measured live art at 942×294 — auto-cropped.</p>
+          <p>3:1 wordmark collapses to mush at 16px favicon, so I traced a 1:1 monogram (1.5 KB SVG) doubling as <code>favicon.svg</code> + lightweight fallback. No markup changes needed.</p>
+          <p>Lockups shipped with embedded in/out sequences. Frame-diffing split them into entry, exit, hover-in, hover-out. Rest-frame inspection caught two mislabeled assets with legacy text — would&#39;ve shipped wrong branding to the lab site.</p>
+          <h2>Timing: Duplication Beat Interpolation</h2>
+          <p>Stretching the 0.65s reveal to 1.5s at 30fps, three options tested: motion-compensated interpolation (block artifacts on sharp vector edges), frame blending (ghost smears), plain frame duplication. Vector wipes are binary state changes, not camera motion — duplication won, sharp boundaries intact.</p>
+          <h2>One Token to Round Them</h2>
+          <p>Nav went full-pill → 3px rounded rect, so I audited every radius: <code>--r-pill: 99rem</code> → <code>3px</code> swept nav containers, buttons, chips, eyebrows, badges in one update. True circles hardcoded <code>50%</code> (menu trigger, socials, arrow discs) updated by hand. Status LEDs, nav dots, bg orbs stay <code>50%</code> — functional indicators keep their hierarchy.</p>
+          <p>Scroll behavior v1 animated the logo away leaving a fat empty bar. Reworked: past hero, the bar condenses to wrap contents, logo-to-link gap standardized 26px. CSS can&#39;t transition <code>max-width</code> → <code>max-content</code>, so I measure the condensed width into a custom property at runtime + 90px scroll hysteresis against edge jitter.</p>
+          <p>Alpha overlays from dark renders: threshold keying leaves jagged edges. Solved per-pixel against known foreground tones ($p = a \cdot F$), recomposite-over-black mean error 0.04. MP4 can&#39;t carry alpha — VP9 WebM for Chrome/FF/Edge, opaque fallbacks elsewhere.</p>
+          <h2>The Regex</h2>
+          <p>Cleaning dead contact markup, I targeted unused social styles with a regex for <code>.social-icon{</code>. One rule read:</p>
           <pre><code class="language-css">.cta .social-icon{color:var(--grey)}</code></pre>
-          <p>The regex matched from <code>.social-icon{</code> onward and deleted the declaration, leaving <code>.cta</code> as an orphaned selector on the preceding line.</p>
-          <p>Because CSS parsers discard whitespace and comments, the orphaned selector bound directly to the subsequent declaration:</p>
+          <p>Regex matched from <code>.social-icon{</code> rightward and deleted the declaration. Left <code>.cta</code> orphaned on its line. CSS ignores whitespace, so <code>.cta</code> glued itself to the next rule:</p>
           <pre><code class="language-css">.cta .mock{...}</code></pre>
-          <p>This converted <code>.mock</code> into a descendant selector matching non-existent markup. Consequently, the hero dashboard mockup lost its <code>max-width</code>, negative margins, and stacking context, expanding full-bleed across the screen.</p>
-          <p>The resulting stylesheet was valid CSS, allowing build pipelines and git commits to pass without diagnostic warnings. The defect was identified during visual regression review and fixed by removing the orphan selector, verified by inspecting the computed <code>max-width</code> (928px).</p>
-          <p>Before pushing updates, repository remotes were migrated from the retired bare repository on pve01 to the active Forgejo instance on pve02, ensuring deployment webhooks triggered correctly.</p>
-          <p>The asset pass successfully integrated transparent WebM animations, consolidated border radii to the 3px token across UI chrome, and dynamic condensed nav sizing. Diagnosing the broken hero mockup emphasized the danger of regex-based stylesheet cleanups: leaving an orphaned selector preamble created valid syntax that quietly unbound hero styling, caught and verified by checking computed CSS layout metrics.</p>
+          <p><code>.mock</code> became a descendant selector matching nothing. Hero mockup lost <code>max-width</code>, negative margins, stacking context — full-bleed across the screen.</p>
+          <p>Valid CSS. Builds green, commits clean, zero warnings. Found it in visual regression, fixed by deleting the orphan, confirmed computed <code>max-width</code> back at 928px.</p>
+          <p>Migrated repo remotes from the retired pve01 bare repo to Forgejo on pve02 before pushing, so webhooks actually fired. Lesson filed: never regex-edit stylesheets. Orphaned preambles are valid syntax that silently unbinds everything below them.</p>
         </div>
       </div>
     </article>
 
     <nav class="reader-nav three-grid" aria-label="Article navigation">
       <a href="../../blog/index.html">Back to Blog</a>
-      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/four-things-were-quietly-doing-nothing-and-all-of-them-looked-fine/index.html"><span class="meta">Older</span>Stream Deck Plugin Fork: Dial Support, Upstream Bug Isolation, and Repository Housekeeping</a><a class="adjacent-post newer-post" href="../../blog/the-hardlink-that-never-once-linked-anything/index.html"><span class="meta">Newer</span>The Hardlink That Never Once Linked Anything</a></div>
+      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/four-things-were-quietly-doing-nothing-and-all-of-them-looked-fine/index.html"><span class="meta">Older</span>Four Things Were Quietly Doing Nothing and All of Them Looked Fine</a><a class="adjacent-post newer-post" href="../../blog/the-hardlink-that-never-once-linked-anything/index.html"><span class="meta">Newer</span>The Hardlink That Never Once Linked Anything</a></div>
     </nav>
   </main>
 

@@ -1,29 +1,25 @@
 ---
-title: "Automating Frontend Visual Verification with Headless Chromium"
+title: "I Gave the AI a Browser and We Shipped the Redesign"
 date: 2026-07-13
 category: Projects
 summary: "Integrating Playwright and headless Chromium into the development workflow to catch layout bugs, font rendering issues, and responsive stylesheet regressions."
 ---
-Iterating on website layout and responsive design manually created an inspection bottleneck during rapid development. To eliminate guesswork, Playwright and headless Chromium were deployed on the development server, allowing automated full-page screenshot capture across various viewport dimensions.
+I was tired of eyeballing every layout change, so I put Playwright + headless Chromium on my dev server. Full-page screenshots at a few viewports, every push. Caught stuff no text diff ever would.
 
-The automated visual tests immediately caught an issue invisible in text diffs: an exotic Unicode character used for the square meter symbol (`m²`) failed to render, displaying an empty tofu glyph for clients without specialized fonts installed. Replacing the symbol with standard semantic markup resolved the rendering bug across all browsers.
+First catch: my square-meter symbol. I'd used a raw `m²` character. On machines without the right font it rendered as tofu — empty box. Replaced it with proper semantic markup. Fixed everywhere.
 
-## Stylesheet Caching and Component Sizing
+## Stale CSS Made My Footer Icons Huge
 
-Rebuilding the footer layout to follow a clean card structure revealed a caching pitfall. On initial load, social media icons rendered at viewport width because the browser retained an earlier cached stylesheet that lacked explicit dimensions for new SVG elements.
+Rebuilt the footer as clean cards. First load, the social SVGs blew up to viewport width. Browser was holding a cached stylesheet that predated the new SVG dimensions.
 
-The issue was resolved with two measures:
-1. Declaring hardcoded width and height attributes directly on SVG markup to guarantee baseline sizing before styles load.
-2. Adding asset version query parameters to stylesheet links to invalidate stale client caches on updates.
+Two fixes, both dumb-obvious in hindsight: hardcode width/height right on the SVG tags so there's a baseline before CSS loads, and stick version query params on stylesheet links so updates actually invalidate client caches.
 
-During this pass, internal homelab navigation links were moved out of the primary header and placed into the footer to reserve the main navigation for visitors.
+Moved the homelab links out of the header into the footer while I was in there. Header is for visitors now.
 
-## Visual Design and Interactive Scenes
+## The About Background Got Silly (in a Good Way)
 
-The About section background was updated with a dynamic 3D scene: a rotating server rack model paired with a canvas-rendered duotone projection of NASA's Blue Marble map. The scene maps real-time scroll position to axial rotation, using layered cloud textures to give depth to the sphere. Patch cable arcs connect rack port nodes to geographic coordinates on the globe surface.
+About section now has a rotating server rack model over a canvas duotone of NASA's Blue Marble. Scroll position drives the rotation. Cloud layers for depth. Little patch-cable arcs from rack ports to map coordinates. Overkill? Yeah. I like it.
 
-## Homelab Metrics Automation
+Homelab page stopped being text blocks, too. It's a ledger now — rack photo plus live numbers pulled from the Docker daemon by a pre-commit hook: 7 stacks, 27 containers, 39 images, 11 volumes, 12 networks. No hand-editing figures that rot.
 
-The homelab overview page was transitioned from generic text blocks to an infrastructure ledger. The page displays a hardware rack photograph alongside live metrics: 7 Compose stacks, 27 running containers, 39 images, 11 volumes, and 12 networks. These statistics are queried directly from the local Docker daemon by an automated pre-commit hook, ensuring published figures match production deployments without manual data entry.
-
-The updated design was deployed to production and verified across desktop and mobile viewports with clean cache invalidation.
+Deployed to prod, checked desktop + mobile with clean cache. Shipped.

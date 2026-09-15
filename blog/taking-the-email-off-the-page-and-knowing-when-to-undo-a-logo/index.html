@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="dark">
   <meta name="description" content="Replacing raw email markup with a FormSubmit AJAX endpoint, implementing client-side blog filtering, and evaluating then reverting an experimental network-port logo mark.">
   <link rel="icon" href="../../assets/img/logo.png">
-  <title>Masking Contact Form Endpoints, Adding Blog Category Filters, and Reverting a Header Logo — ERI / CLI</title>
+  <title>I Took My Email Off the Page and Killed My Own Logo — ERI / CLI</title>
   <link rel="stylesheet" href="../../assets/css/style.css?v=1.1.0">
   <script defer src="../../assets/js/pages.js"></script>
 </head>
@@ -25,7 +25,7 @@
     <article>
       <header class="reader-head three-grid">
         <p class="reader-meta meta">Projects<br><time datetime="2026-06-21">21 Jun 2026</time><br>2 min read</p>
-        <h1 class="page-title">Masking Contact Form Endpoints, Adding Blog Category Filters, and Reverting a Header Logo</h1>
+        <h1 class="page-title">I Took My Email Off the Page and Killed My Own Logo</h1>
       </header>
 
       <div class="reader-cut" aria-hidden="true">
@@ -34,30 +34,22 @@
 
       <div class="reader-body three-grid" id="article-body">
         <div class="reader-prose">
-          <p class="reader-lede">Auditing production assets addressed privacy exposure in the contact form, introduced dynamic tag filtering on the blog, and evaluated a custom brand identity mark.</p>
-          <h2>Obfuscating Contact Form Endpoints</h2>
-          <p>The initial portfolio contact form included a raw email address in the HTML action attribute. Even on an indexed site, exposing raw mailto links invites automated harvesting.</p>
-          <p>The implementation was upgraded:</p>
-          <ul><li>The form action was moved to a masked FormSubmit alias, removing direct email addresses from client-side markup entirely.</li><li>Form submissions were switched to the FormSubmit <code>/ajax/</code> endpoint using <code>fetch()</code>, verifying JSON response status codes and presenting user-facing error states without full page redirects.</li></ul>
-          <h2>Client-Side Blog Category Filtering</h2>
-          <p>As article volume expanded, browsing the flat chronological list became inefficient. Client-side tag filtering was added to the archive:</p>
-          <ul><li>Article metadata cards and category pills were bound to active category filters.</li><li>Clicking a category tag isolates matching articles in-place without triggering full page reloads or requiring separate route manifests.</li><li>Initial UI defects—such as an active filter banner persisting when no tags were selected, or empty tag states failing to reset—were corrected.</li></ul>
-          <h2>Evaluating and Reverting Brand Mark Iterations</h2>
-          <p>The site header and footer previously used a generic rotated square motif. An alternative mark was designed based on physical networking symbolism: an &#39;N&#39; glyph structured from RJ-45 jack outlines, featuring simulated LED link lights above the ports.</p>
-          <p>While technically sound as a standalone vector illustration, integrating the glyph across navigation bars revealed optical balance issues:</p>
-          <ul><li>The descender of the letter crowded the LED accent points at small viewport scales.</li><li>In-situ review across header and footer elements showed excessive visual weight compared to the typographic layout.</li></ul>
-          <p>The change was reverted across all templates, restoring the neutral placeholder mark while archiving the vector asset in <code>assets/</code> for future typography refinement.</p>
-          <h2>Production Deployment</h2>
-          <p>Following the logo reversion, verified changes—including the FormSubmit AJAX handler, category filter logic, and updated project copy—were deployed to production.</p>
-          <h2>Pending Verification</h2>
-          <ul><li>Send an end-to-end test submission through the masked FormSubmit endpoint.</li><li>Verify archive category filtering behavior when JavaScript execution is disabled.</li></ul>
+          <p class="reader-lede">Spent today on privacy and small UX stuff in production.</p>
+          <p>My contact form had my raw email sitting right in the HTML action. That&#39;s just asking scrapers to find it. Moved it to a masked FormSubmit alias — no email address in the markup at all now. Switched submits to their <code>/ajax/</code> endpoint with <code>fetch()</code>, checking JSON status, showing errors inline instead of a full page redirect.</p>
+          <h2>Blog Filtering</h2>
+          <p>Archive was just a flat chronological wall. Added client-side category filtering — click a tag pill, matching cards stay, rest hide. No reloads, no extra routes.</p>
+          <p>Had two dumb bugs: the active-filter banner stuck around with nothing selected, and empty tag states wouldn&#39;t reset. Fixed both.</p>
+          <h2>The Logo That Didn&#39;t Survive the Header</h2>
+          <p>Header and footer had a generic rotated square. I tried replacing it with something mine: an &#39;N&#39; built out of RJ-45 jack outlines with little LED link lights on top.</p>
+          <p>Looked great as a solo SVG. In the actual nav? Terrible. The descender crowded the LEDs at small sizes, and it carried way too much visual weight next to the type. Ripped it out of every template, put the neutral placeholder back. The vector is still sitting in <code>assets/</code> — maybe I&#39;ll fix the typography later.</p>
+          <p>Pushed the FormSubmit handler, the filter logic, and the copy updates to prod after the revert. Still owe it an end-to-end test submission through the masked endpoint.</p>
         </div>
       </div>
     </article>
 
     <nav class="reader-nav three-grid" aria-label="Article navigation">
       <a href="../../blog/index.html">Back to Blog</a>
-      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/the-copy-goes-live-and-the-lab-page-turns-personal/index.html"><span class="meta">Older</span>Restructuring the Homelab Page as a Service Launcher</a><a class="adjacent-post newer-post" href="../../blog/moving-immich-to-the-nas-and-the-drive-that-tried-to-take-my-photos-with-it/index.html"><span class="meta">Newer</span>Migrating Immich Storage to the NAS and Diagnosing USB Bus Dropouts</a></div>
+      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/the-copy-goes-live-and-the-lab-page-turns-personal/index.html"><span class="meta">Older</span>My Lab Page Was Leaking Internal IPs So I Gutted It</a><a class="adjacent-post newer-post" href="../../blog/moving-immich-to-the-nas-and-the-drive-that-tried-to-take-my-photos-with-it/index.html"><span class="meta">Newer</span>Moving 135GB of Photos and the USB Cable That Almost Killed Them</a></div>
     </nav>
   </main>
 

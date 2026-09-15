@@ -1,42 +1,24 @@
 ---
-title: "Migrating Immich Storage to the NAS and Diagnosing USB Bus Dropouts"
+title: "Moving 135GB of Photos and the USB Cable That Almost Killed Them"
 date: 2026-06-28
 category: Homelab
 summary: "Migrating 135GB of Immich photo data from a bus-powered external SSD to a network-attached storage pool, diagnosing USB link dropouts during sustained transfers, and verifying file counts."
 ---
-Migrating Immich photo storage from an external SSD to a network-attached storage pool relocated 135GB of media onto larger shared storage while exposing physical USB link instability under sustained load.
+Moved my Immich library off the bus-powered Samsung T7 Shield at `/mnt/tmpnas` onto my NAS pool at `/mnt/ugnas01-personal`. 135GB. Should've been boring.
 
-## Storage Scope and Architecture
+Scope was small, thankfully. The T7 held the 135GB library plus two empty Samba shares in `/etc/samba/smb.conf`. Postgres and the ML models already live on my internal NVMe, so I only had to change `UPLOAD_LOCATION`, the bind-mounts, `/etc/fstab`, and Samba. Easy part.
 
-The photo library had initially been hosted on a bus-powered Samsung T7 Shield external SSD mounted at `/mnt/tmpnas`. To consolidate media onto a primary storage pool, Immich was re-targeted to `/mnt/ugnas01-personal`.
+Started the copy. NAS benchmarks over 190 MB/s. Actual transfer? Single files taking thirty seconds each.
 
-An inventory of dependencies confirmed the migration boundary:
-- The external SSD held the 135GB Immich library directory along with two empty Samba shares (`/etc/samba/smb.conf`).
-- The PostgreSQL database and machine learning models were already running on the server's internal NVMe drive, keeping stateful transaction data off external drives.
-- The only configurations requiring modification were Immich's `UPLOAD_LOCATION` environment variable, container bind-mounts, `/etc/fstab`, and Samba shares.
+`dmesg` told the story: the source ext4 on `/dev/sdb` had remounted `emergency_ro,shutdown` after I/O errors. The drive was falling off the USB bus and coming back as `005`, then `006`, then `007`. Just walking device numbers upward.
 
-## Diagnosing Source Storage Dropouts
+I assumed the NAND was dying. It wasn't. SMART said `PASSED`, 0% wear, zero reallocs. `fsck` just replayed the journal — all 121,599 files intact. The flash was fine. The cable + front port combo couldn't hold a sustained transfer.
 
-Initiating the data copy to the NAS produced severe transfer degradation. While baseline write benchmarks to the NAS exceeded 190 MB/s, file transfer rates collapsed to individual files taking up to thirty seconds.
+Unmounted everything, swapped to a known-good cable straight into a rear motherboard USB 3.2 port. Rerun held a steady 107 MB/s, zero errors.
 
-Analysis of kernel logs (`dmesg`) revealed that the source ext4 filesystem on `/dev/sdb` had remounted into `emergency_ro,shutdown` after logging unrecoverable I/O errors. The external drive was dropping off the USB bus entirely and re-enumerating under incrementing device numbers (`005`, `006`, `007`).
+Stopped Immich for consistency, `rsync`'d, counted everything file by file because I didn't trust it anymore:
+library 25,125 / 25,125. Thumbs 49,341 / 49,341. Encoded video, backups, upload profiles — all exact.
 
-SMART telemetry confirmed that the NAND flash itself was completely healthy: 0% wear indicators and `PASSED` status across all health metrics. A filesystem check (`fsck`) required only replaying the ext4 journal, verifying that all 121,599 files remained uncorrupted.
+Repointed `UPLOAD_LOCATION`, brought the stack up. Healthchecks green, new uploads hitting the NAS pool directly.
 
-The failure was physical USB bus instability under sustained throughput. The drive was stopped, unmounted, and reconnected using a verified USB cable attached directly to a rear motherboard USB 3.2 port. Re-executing the transfer with the new cable sustained a steady 107 MB/s without error.
-
-## Verification and Decommissioning
-
-Following the physical cable swap, Immich was stopped to ensure point-in-time consistency. Data was synchronized via `rsync` with strict file-by-file count verification:
-- Library directory: 25,125 files source, 25,125 files destination.
-- Thumbnails directory: 49,341 files source, 49,341 files destination.
-- Encoded video, automated backup archives, and upload profiles matched exactly.
-
-`UPLOAD_LOCATION` was repointed to the NAS path, and the container stack was brought online. API healthchecks responded immediately, with new uploads writing directly to the network pool.
-
-Following successful validation, the stale local SSD data was purged, the temporary Samba configurations were validated with `testparm` and removed, and the fstab entry was deleted.
-
-## Pending Verification
-
-- Configure off-host scheduled backups for the NAS storage pool, which currently runs without parity redundancy.
-- Monitor long-term transfer stability on the replacement USB interface.
+Wiped the stale SSD data, `testparm`'d the Samba cleanup, removed the fstab entry. The NAS pool still has no parity and no off-host backup. That part keeps me up at night. Next job.

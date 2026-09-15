@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="dark">
   <meta name="description" content="Building an automated container and host update pipeline with n8n, debugging a silent bash parameter expansion defect in change evaluation, and deploying an LTS Forgejo git forge.">
   <link rel="icon" href="../../assets/img/logo.png">
-  <title>Automated Patch Auditing with n8n and Deploying a Self-Hosted Forgejo Git Forge — ERI / CLI</title>
+  <title>I Asked If My Containers Were Up to Date and Ended the Day Running My Own Git Forge — ERI / CLI</title>
   <link rel="stylesheet" href="../../assets/css/style.css?v=1.1.0">
   <script defer src="../../assets/js/pages.js"></script>
 </head>
@@ -24,8 +24,8 @@
   <main class="page-main reader-page" id="article">
     <article>
       <header class="reader-head three-grid">
-        <p class="reader-meta meta">Homelab<br><time datetime="2026-07-24">24 Jul 2026</time><br>4 min read</p>
-        <h1 class="page-title">Automated Patch Auditing with n8n and Deploying a Self-Hosted Forgejo Git Forge</h1>
+        <p class="reader-meta meta">Homelab<br><time datetime="2026-07-24">24 Jul 2026</time><br>3 min read</p>
+        <h1 class="page-title">I Asked If My Containers Were Up to Date and Ended the Day Running My Own Git Forge</h1>
       </header>
 
       <div class="reader-cut" aria-hidden="true">
@@ -34,43 +34,37 @@
 
       <div class="reader-body three-grid" id="article-body">
         <div class="reader-prose">
-          <p class="reader-lede">After completing a routine maintenance pass across thirty containers and host packages, I automated the evaluation of upstream updates.</p>
-          <p>To replace manual changelog reviews, I configured an n8n pipeline to triage updates, debugged a silent parser defect in bash fallback parameter handling, and deployed a self-hosted Forgejo git forge configured with push mirrors to support existing edge deployment pipelines.</p>
-          <h2>Orchestrating patch reviews via n8n and changelog evaluation</h2>
-          <p>The goal of the automation was to inspect pending apt packages and Docker container image digests daily, sorting each candidate into automatic application, postponement, or human review.</p>
-          <p>The automation runs through n8n on port 5678. To keep the orchestrator maintainable and testable outside the UI, logic is decoupled into shell scripts placed in <code>~/bin/</code>. An automated judge reviews upstream changelogs against explicit criteria: if an update involves a breaking major version bump or unverified dependency changes, the update is skipped and a detailed changelog summary is routed to a Discord notification channel for manual review.</p>
-          <p>Privileged execution is strictly scoped: the <code>sudoers</code> configuration enforces exact binary paths without wildcards to prevent option injection. During initial integration, an issue emerged where conditional branches downstream of Discord webhook notifications failed to execute. Because the Discord API returns an empty HTTP 204 body on successful webhook execution, downstream JSON parsers received null payloads, requiring explicit status-code branching rather than payload presence checks.</p>
-          <h2>Diagnosing a silent bash parameter expansion syntax error</h2>
-          <p>During validation against eleven pending host packages, the evaluation engine successfully classified all updates as low-risk point releases. However, the execution pipeline consistently reported <code>skip</code>.</p>
-          <p>The discrepancy stemmed from a parameter expansion fallback in the orchestration script:</p>
-          <pre><code class="language-bash"># Intended to supply an empty JSON object if JUDGE was empty:
-PAYLOAD=&quot;${JUDGE:-{}}&quot;</code></pre>
-          <p>In bash, parameter expansion treats <code>{</code> as the default value string, appending the remaining <code>}</code> as a literal trailing character. Consequently, valid JSON output from the evaluator had a trailing closing brace appended (<code>{...}}</code>), causing <code>jq</code> deserialization to fail.</p>
-          <p>Because the pipeline caught the parsing failure and fell back to the safe default (<code>skip</code>), the workflow completed with zero exit errors and zero Discord alerts. The pipeline appeared operational while silently suppressing all legitimate patch applications. Replacing the syntax with an explicit null fallback and validating JSON object structure prior to branching resolved the evaluation logic:</p>
+          <p class="reader-lede">Finished a routine pass over thirty containers + host packages and thought: I&#39;m not hand-reading changelogs every day.</p>
+          <p>Built an n8n pipeline on port 5678 to triage updates — auto-apply, postpone, or ping me on Discord with a changelog summary for breaking majors and sketchy deps.</p>
+          <p>Logic lives in <code>~/bin/</code> shell scripts so I can test outside the UI. sudoers pins exact binary paths, no wildcards. First integration bug: everything downstream of the Discord webhook never ran. Discord returns empty HTTP 204 on success — my JSON parser got null and died. Had to branch on status code, not payload.</p>
+          <h2>The Bash Brace That Ate Every Patch</h2>
+          <p>Validated against eleven pending host packages. Judge called all of them low-risk point releases. Pipeline said <code>skip</code> on all eleven. No errors, no Discord pings. Looked perfectly operational while doing absolutely nothing.</p>
+          <p>Culprit, one line:</p>
+          <pre><code class="language-bash">PAYLOAD=&quot;${JUDGE:-{}}&quot;</code></pre>
+          <p>I meant &quot;empty JSON object if JUDGE is empty.&quot; Bash meant: default value is the string <code>{</code>, then append a literal <code>}</code>. So valid judge output <code>{...}</code> became <code>{...}}</code>. <code>jq</code> choked, pipeline fell back to safe-default <code>skip</code>. Silently.</p>
+          <p>Fixed to:</p>
           <pre><code class="language-bash">PAYLOAD=&quot;${JUDGE:-null}&quot;
 if ! echo &quot;$PAYLOAD&quot; | jq -e &#39;type == &quot;object&quot;&#39; &gt;/dev/null 2&gt;&amp;1; then
   # Explicit error logging
 fi</code></pre>
-          <h2>Inventory audit and automated documentation generation</h2>
-          <p>Running an inventory of the active homelab environment uncovered two inactive processes: an obsolete cron job attempting to bind a deprecated web root, and a legacy reverse proxy retaining ports 80 and 443 without routing active backend targets. Both were removed.</p>
-          <p>To prevent documentation from lagging behind container changes, I built an event-driven documentation updater. A host daemon monitors Docker engine events via the socket API (<code>docker events --filter &#39;event=create&#39;</code>). When container creation events fire, the daemon waits sixty seconds to debounce batch deployments, sanitizes sensitive tokens and environment variables from <code>docker-compose.yml</code>, and generates updated stack reference documentation. The watcher automatically tracks both terminal <code>docker compose</code> invocations and Portainer stack deployments.</p>
-          <h2>Hardware diagnostics: Realtek USB Ethernet link failure</h2>
-          <p>Troubleshooting a new handheld gaming console connected via a 2.5GbE USB-C adapter initially pointed toward management VLAN MAC filtering. However, network sweeps revealed that the device never generated link pulses or DHCP discovery broadcasts.</p>
-          <p>Physical layer inspection confirmed the port remained in a link-down state across autonegotiation, forced 2.5 Gbps, and forced 1.0 Gbps duplex modes. The interface failure was isolated to a missing Realtek driver on the console&#39;s clean OS image, preventing the physical controller from initializing. Additionally, a five-port gigabit switch previously disconnected from the port required resetting link negotiation overrides before re-establishing connectivity.</p>
-          <h2>Experimental document OCR pipeline validation</h2>
-          <p>As a separate engineering experiment, I implemented a local document ingestion script designed to extract structured telemetry from photographed work orders. Using schema validation with defined type boundaries and confidence thresholds, the script extracted sixteen target fields across three sample formats without key-level errors, while correctly discarding noisy control images. Because production forms have not yet been standardized, the background daemon was stopped and archived with its systemd unit files preserved for future integration.</p>
-          <h2>Deploying Forgejo with GitHub push mirrors</h2>
-          <p>To establish local version control for private infrastructure scripts and runsheets, I deployed Forgejo (the non-profit fork of Gitea).</p>
-          <p>Key architectural requirements included preserving Vercel&#39;s automated deployment webhooks, which integrate natively with GitHub:</p>
-          <ul><li><strong>Topology</strong>: Forgejo acts as the primary authoritative git host, while configuring automated push mirrors to private GitHub repositories ensures zero disruption to external build triggers.</li><li><strong>SSH Connectivity</strong>: The Forgejo container runs its SSH listener on port 2222. Initial push mirror syncs failed with HTTP 500 until the remote host keys were populated in <code>/etc/ssh/ssh_known_hosts</code>.</li><li><strong>Backup Verification</strong>: Scheduled daily dumps write compressed tarballs directly to the NAS NFS datastore. Initial backup verification confirmed a 433 MB archive creation and passing healthchecks.</li></ul>
-          <p>Within two minutes of Forgejo&#39;s container startup, the automated documentation watcher detected the new stack and generated a verified service document on disk, confirming the event-driven documentation pipeline in production.</p>
+          <p>Now it validates shape before branching and actually logs. Patches flow again.</p>
+          <h2>Found Two Corpses in Inventory</h2>
+          <p>Swept the environment, found an ancient cron binding a dead web root and a legacy reverse proxy squatting on 80/443 with no backends. Deleted both.</p>
+          <p>Also built a docs watcher so docs stop rotting: host daemon tails <code>docker events --filter &#39;event=create&#39;</code>, waits 60s to debounce batches, scrubs tokens/env out of <code>docker-compose.yml</code>, regenerates stack reference docs. Catches both raw <code>docker compose</code> runs and Portainer deploys.</p>
+          <h2>The Handheld Dongle Was Just Missing a Driver</h2>
+          <p>That 2.5GbE USB-C dongle on the handheld from last week — I blamed VLAN filtering. Wrong. Sweeps showed zero link pulses, zero DHCP discovers. Port stayed link-down across auto, forced 2.5G, forced 1G. Clean OS image with no Realtek driver — controller never initialized. Also had to reset neg overrides on a five-port gigabit switch I&#39;d unplugged earlier.</p>
+          <p>Side experiment: local OCR script pulling sixteen fields off photographed work orders across three form layouts, zero key errors, correctly ignored junk control images. Forms aren&#39;t standardized yet in production, so I stopped the daemon and archived it with its systemd units. Later.</p>
+          <h2>Forgejo</h2>
+          <p>Needed local git for private infra scripts and runsheets, so I deployed Forgejo (the Gitea fork). Requirement: don&#39;t break Vercel deploys that hook off GitHub. So Forgejo is authoritative, with push mirrors to private GitHub repos keeping the webhooks alive.</p>
+          <p>Mirrors failed with HTTP 500 at first — SSH on 2222, remote host keys missing from <code>/etc/ssh/ssh_known_hosts</code>. Populated, syncs started. Daily dumps go to the NAS NFS store — first one 433 MB, healthchecks passing.</p>
+          <p>Two minutes after Forgejo came up, my docs watcher detected the new stack and wrote its service doc to disk unprompted. Pipeline works.</p>
         </div>
       </div>
     </article>
 
     <nav class="reader-nav three-grid" aria-label="Article navigation">
       <a href="../../blog/index.html">Back to Blog</a>
-      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/i-certified-the-network-at-2-5-gigabit-then-spent-three-hours-losing-to-a-usb-dongle/index.html"><span class="meta">Older</span>Benchmarking 2.5GbE Throughput with iperf3 and Isolating USB NIC Power Quirks</a><a class="adjacent-post newer-post" href="../../blog/twenty-three-cents-to-read-a-photo-and-almost-none-of-it-was-the-photo/index.html"><span class="meta">Newer</span>Auditing Token Overhead and Cache Inefficiencies in Vision Pipelines</a></div>
+      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/i-certified-the-network-at-2-5-gigabit-then-spent-three-hours-losing-to-a-usb-dongle/index.html"><span class="meta">Older</span>I Certified the Network at 2.5 Gigabit Then Lost Three Hours to a USB Dongle</a><a class="adjacent-post newer-post" href="../../blog/twenty-three-cents-to-read-a-photo-and-almost-none-of-it-was-the-photo/index.html"><span class="meta">Newer</span>Twenty-Three Cents to Read a Photo and Almost None of It Was the Photo</a></div>
     </nav>
   </main>
 

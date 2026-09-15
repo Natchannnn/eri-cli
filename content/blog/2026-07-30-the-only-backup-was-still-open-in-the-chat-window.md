@@ -1,62 +1,39 @@
 ---
-title: "SSH Command Dispatch Hardening, Context Recovery, and Infrastructure Backlogs"
+title: "The Only Backup Was Still Open in the Chat Window"
 date: 2026-07-30
 category: Homelab
 summary: "Mitigating subshell injection vulnerabilities in automated SSH workflows with forced-command dispatchers, recovering rules from memory buffers, and structuring infrastructure backlogs."
 ---
-A comprehensive infrastructure pass resolved an input-sanitization flaw in automated SSH workflows, restructured operational documentation across thirty runsheets, and established hardened execution boundaries for a planned automated task tracking service.
+Updated my workstation skills/packages today and the uninstaller wiped `~/.claude/` — including four custom condensed rule files I'd written. Checked the 03:02 host backup: `~/.claude/rules` was on the exclusion list. Never backed up. Not once.
 
-## Context recovery during tooling reinstallation
+Only copy left was in my terminal's memory — the session had loaded all four at init. Restaged them straight out of the context buffer, archived to an external repo. User config dirs are in the nightly manifest now. And I'm done maintaining divergent local rule forks; upstream packages from here.
 
-A maintenance pass to update development skills and configuration rules on the primary workstation exposed a gap in backup coverage. The local skill directory had lagged behind upstream revisions, preventing user-level extensions from loading.
+## The SSH One-Liner That Ran Somebody Else's Subshell
 
-Executing an uninstaller purged local directory state under `~/.claude/`. However, four custom condensed rule files were deleted in the process. Inspecting the 03:02 automated host backup archive revealed that `~/.claude/rules` had historically been excluded from backup inclusion lists.
-
-Fortunately, because the active terminal session had loaded all four rule files into its memory context at initialization, the exact configurations remained present in the active session buffer. The files were restaged directly from memory buffers and archived to an external repository. To prevent future data loss, user configuration directories were explicitly added to the nightly backup manifest, while avoiding divergent local rule customizations in favor of standard upstream packages.
-
-## Mitigating subshell injection in automated SSH execution
-
-While auditing the parameter formatting of automated n8n workflows that invoke remote management scripts, I identified a command injection vulnerability.
-
-The workflow constructed remote execution strings using JSON stringification:
+Auditing n8n → remote script calls, found this construction:
 
 ```text
 n5-doc-stack.sh {{ JSON.stringify($json.body?.project ?? '') }}
 ```
 
-While `JSON.stringify` escapes string boundary quotes, it does not prevent bash subshell interpolation (`$(...)`). Executing a test payload with `$(id -un)` caused the remote server to evaluate the subshell and return the host's administrative username. Because the initiating webhook listener was accessible across the local network without authentication, the injection vector presented a critical privilege escalation risk.
+`JSON.stringify` quotes the string. It does nothing about `$(...)`. Sent a test payload with `$(id -un)` — remote host evaluated it and handed back its admin username. The webhook listener was LAN-reachable with no auth. That's RCE with extra steps.
 
-Rather than attempting to construct sanitization filters within the workflow engine, I enforced security at the SSH transport layer on the target server. In `/root/.ssh/authorized_keys`, the automation's public key was bound to a restricted forced command:
+Didn't try to sanitize inside the workflow engine. Pinned it at the transport layer instead — forced command on the automation key in `/root/.ssh/authorized_keys`:
 
 ```text
 command="/usr/local/bin/ssh-dispatch.sh",no-port-forwarding,no-X11-forwarding,no-pty ssh-ed25519 ...
 ```
 
-The `ssh-dispatch.sh` handler intercepts `$SSH_ORIGINAL_COMMAND` as unparsed text, matches it against a strict whitelist of twelve predetermined commands, and executes corresponding static binaries. 
+`ssh-dispatch.sh` takes `$SSH_ORIGINAL_COMMAND` as raw text, matches against twelve whitelisted commands, runs static binaries. Anything else gets rate-limited alerts to the security channel.
 
-During validation, live invocations initially failed because the n8n SSH client prepends `cd / ; ` to all remote command strings by default. Once the dispatcher script was updated to strip and normalize leading shell prefixes, all twenty-four invocation variants (both bare and prefixed) passed verification. Unmatched command attempts trigger rate-limited alerts to a dedicated security monitoring channel.
+Validation failed at first — all live calls bouncing. n8n's SSH client prepends `cd / ; ` to every remote string. Taught the dispatcher to strip and normalize leading prefixes. All twenty-four variants (bare + prefixed) pass now.
 
-## Automated infrastructure audit and runsheet maintenance
+## Backlog Surgery
 
-To consolidate technical debt across the homelab, automated agents conducted a read-only audit across all system documentation, operational runsheets, and configuration files, generating `BACKLOG.md` (761 lines, 124 distinct actionable items). All supporting raw findings (403 cited references across 16 files, totaling 864 KB) were preserved and verified with cryptographic hashes.
+Pointed read-only agents at every runsheet and config, got back `BACKLOG.md` — 761 lines, 124 actionables, raw findings preserved (403 refs, 16 files, 864 KB, hashed).
 
-A review of thirty operational runsheets evaluated proposals to condense historical incident logs:
-- **Preserving Negative Evidence**: An initial proposal to purge diagnostic dead-ends was rejected. Documented ruled-out hypotheses—such as records confirming stable 53.4V PoE delivery during hardware restarts—serve as critical negative evidence that prevents engineers from repeating refuted investigations.
-- **Pruning Stale Material**: A targeted review safely removed 57 lines of obsolete command syntax while establishing static cross-links between runsheets and the central backlog.
-- **Reconciling Documentation Timestamps**: An apparent conflict between two network audit reports listing different VLAN IDs was resolved by examining commit metadata. The reports had been generated 42 minutes apart, accurately capturing state before and after a planned network renumbering pass.
+Reviewed thirty runsheets. Kept the dead ends deliberately — the note saying PoE held 53.4V steady during restarts is negative evidence that stops the next person re-running a refuted theory. Cut 57 lines of genuinely dead syntax, cross-linked runsheets to the backlog. One VLAN-ID conflict across two audit reports turned out to be real: generated 42 minutes apart, straddling a renumber. Both correct.
 
-## Repository mirroring and rsync delta performance
+Mirrored 38 starred GitHub repos into Forgejo for offline access. Lesson: `git remote update` in an uninitialized dir fails `no such file` — recover with clean `git clone --mirror` first, then reattach. NAS backups of the 3.9 GB mirror set stalled on CIFS/NFS perm + mtime semantics; `--size-only` fixed it, 32s → 1.77s incremental. Windows 1219s again — orphaned guest IPC$ from Explorer browsing, kill sessions before remapping.
 
-To provide offline access to critical upstream dependencies, I configured Forgejo to maintain private mirrors of thirty-eight starred GitHub repositories:
-
-- **Mirror Recovery Verification**: Testing bare repository restoration revealed that invoking `git remote update` against an uninitialized repository directory fails with `no such file or directory`. Validated recovery procedures require executing a clean `git clone --mirror` into the target directory before database re-attachment.
-- **Incremental Rsync Backups**: Backing up mirror data to the NAS via `rsync` encountered issues with permission bits and modification timestamps on the remote CIFS/NFS share. Configuring `rsync` to compare file size (`--size-only`) resolved synchronization stalls, reducing subsequent backup passes for 3.9 GB of repositories from 32 seconds to a 1.77-second incremental scan.
-- **SMB Error 1219**: Windows workstation disconnects were traced to orphaned guest IPC$ sessions created during File Explorer browsing, resolved by terminating existing sessions before re-authenticating mapped drives.
-
-## Task execution architecture for Planka
-
-I initiated architectural planning for an automated task tracking board using Planka to manage infrastructure workflows.
-
-A security review of early designs established strict execution boundaries:
-- **Decoupling Authority from Cards**: Rather than embedding execution privileges or script parameters within task card metadata (which risks privilege escalation if unauthorized sessions alter card text), permissions are enforced via immutable, root-owned host configuration files.
-- **Filesystem Isolation**: Workflows execute within ephemeral containers utilizing read-only volume mounts and drop all supplementary Linux capabilities (`NoNewPrivileges=true`), ensuring that automated tasks cannot alter underlying host configuration files or hypervisor state.
+Started sketching Planka as the task board. Security line already drawn: no execution authority in card text (anyone editing a card could escalate), perms live in root-owned host files only, workers run ephemeral with read-only mounts and `NoNewPrivileges=true`. Cards describe work. They don't grant it.

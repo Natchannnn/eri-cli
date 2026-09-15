@@ -1,39 +1,27 @@
 ---
-title: "Editorial and Card Layout Revisions for the Portfolio"
+title: "My About Page Said Full-Stack Developer and Meant Nothing"
 date: 2026-06-13
 category: Projects
 summary: "Eliminating generic buzzwords from the About section, replacing non-interactive pill elements with anchor jumps, and implementing native HTML details elements for project cards."
 ---
-Auditing the portfolio copy and project layout on the local staging environment (port 3002) eliminated inflated claims and replaced dense card layouts with native collapsible elements.
+Was working on staging (port 3002) today, just reading my own portfolio copy. My About said "passionate full-stack developer with deep expertise in building scalable solutions."
 
-## Removing Generic Buzzwords
+I deleted it. It says nothing.
 
-The original About copy defaulted to common boilerplate ("passionate full-stack developer with deep expertise in building scalable solutions"). This language failed to communicate verifiable technical competence.
+Rewrote it around stuff I can actually prove: my homelab — five isolated VLANs, twenty-odd containers, dashboards that run all day. Said outright I'm heading toward networking and infrastructure engineering. Changed the hero title to "Full-Stack & Infrastructure" and swapped the marketing headers for plain ones. "Work that ships and runs" beats whatever I had before.
 
-The copy was refactored to emphasize actual systems:
-- Documenting the physical homelab environment: five isolated VLANs, over twenty active containers, and continuous observability dashboards.
-- Framing career progression directly toward networking and infrastructure engineering.
-- Updating the site title and hero designation to "Full-Stack & Infrastructure" to reflect both software projects and operational systems.
-- Replacing vague marketing headers with direct descriptions ("Work that ships and runs").
+## The Pills That Weren't Buttons
 
-## Interactive Navigation and Anchor Links
+Under Portfolio I had three pills — Completed, In Progress, Upcoming. They looked like buttons. They did nothing.
 
-Under the Portfolio heading, three static pill badges (Completed, In Progress, Upcoming) had been styled like buttons but lacked interactivity. These elements were converted into functional anchor links targeting the corresponding project groupings, calculating offset margins to clear the fixed navigation bar.
+Made them real anchor links to the project groups. Had to fiddle with offset margins so the fixed nav doesn't cover the headings when you jump. Small thing, bugged me for weeks.
 
-## Native Expandable Project Cards
+## Cards Were Too Tall
 
-The project showcase previously displayed full technical specifications, paragraphs of narrative, and dependency tags simultaneously, creating excessive vertical scroll.
+Every project card showed everything at once — full specs, paragraphs, tags. Endless scroll.
 
-To improve scannability, the cards were refactored using native HTML `<details>` and `<summary>` elements:
-- By default, each card displays only the project title, a single-sentence overview, and a styled "Details" trigger.
-- Expanding the trigger reveals full architecture breakdowns, metrics, and technology tags without requiring client-side JavaScript.
-- Default browser disclosure triangles were hidden via `summary::-webkit-details-marker { display: none; }` and `summary { list-style: none; }`, replaced with custom CSS indicators that rotate dynamically on toggle.
+Rebuilt them on native `<details>` / `<summary>`. Collapsed you get title, one line, a Details trigger. Click, you get architecture, metrics, tags. No JS needed.
 
-## Staging Status
+Hid the default browser triangles with `summary::-webkit-details-marker { display: none; }` and `summary { list-style: none; }`, rolled my own little indicators that rotate on toggle.
 
-All revisions remain staged on the local development environment for cross-browser inspection prior to triggering production Vercel builds.
-
-## Pending Verification
-
-- Verify native `<details>` keyboard accessibility across Chromium, WebKit, and Gecko engines.
-- Test mobile touch responsiveness on disclosure toggles.
+Still on staging only. Want to check keyboard access and mobile taps across Chromium, WebKit, Gecko before I push to Vercel.

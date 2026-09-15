@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="dark">
   <meta name="description" content="Eliminating plaintext credential fallbacks, isolating shell parameter expansion leaks during interactive debugging, and aligning UTC-local log timelines during appliance reboots.">
   <link rel="icon" href="../../assets/img/logo.png">
-  <title>Shell Parameter Expansion Traps in Credential Migration and Log Timezone Correlation — ERI / CLI</title>
+  <title>The Check Meant to Avoid Touching a Secret Printed It Anyway — ERI / CLI</title>
   <link rel="stylesheet" href="../../assets/css/style.css?v=1.1.0">
   <script defer src="../../assets/js/pages.js"></script>
 </head>
@@ -24,8 +24,8 @@
   <main class="page-main reader-page" id="article">
     <article>
       <header class="reader-head three-grid">
-        <p class="reader-meta meta">Homelab<br><time datetime="2026-08-25">25 Aug 2026</time><br>3 min read</p>
-        <h1 class="page-title">Shell Parameter Expansion Traps in Credential Migration and Log Timezone Correlation</h1>
+        <p class="reader-meta meta">Homelab<br><time datetime="2026-08-25">25 Aug 2026</time><br>2 min read</p>
+        <h1 class="page-title">The Check Meant to Avoid Touching a Secret Printed It Anyway</h1>
       </header>
 
       <div class="reader-cut" aria-hidden="true">
@@ -34,37 +34,27 @@
 
       <div class="reader-body three-grid" id="article-body">
         <div class="reader-prose">
-          <p class="reader-lede">Engineering work on August 25 focused on completing a phased credential migration into secure vault storage, remediating an interactive shell variable expansion leak, and correlating asynchronous system logs.</p>
-          <h2>Shell parameter expansion traps during credential testing</h2>
-          <p>While verifying environment variables during an interactive debugging pass, a shell syntax trap exposed token material into session transcript logs.</p>
-          <p>Testing variable presence was attempted using standard shell substitution idioms:</p>
-          <pre><code class="language-bash">echo &quot;${TOKEN:-UNSET}&quot;</code></pre>
-          <p>While intended to display a fallback placeholder when unassigned, this parameter expansion evaluates and outputs the active value whenever the variable is defined. Consequently, attempting to confirm token existence inadvertently printed the live credential to standard output.</p>
-          <p>Remediation was executed immediately:</p>
-          <ol><li>The exposed token was revoked at the authentication provider, with revocation confirmed via HTTP 401 responses.</li><li>Replacement credentials were provisioned and validated out-of-band.</li><li>A subsequent occurrence exposed secondary service identifiers under the same shell pattern. Those tokens were similarly invalidated, rotated, and verified.</li></ol>
-          <p>To prevent recurrence, expansion-based presence testing was formally deprecated across all operational runbooks and scripts in favor of non-expanding variable inspection:</p>
+          <p class="reader-lede"><code>echo &quot;${TOKEN:-UNSET}&quot;</code> looks like a safe existence check.</p>
+          <p>It isn&#39;t. If the variable is set, that expansion prints the live value to stdout. I ran it during interactive debugging to confirm a token existed — and pasted the live credential straight into the transcript log.</p>
+          <p>Revoked it at the provider immediately (401s confirmed), provisioned a replacement out-of-band. Then did the exact same thing to a second service&#39;s identifiers with the same pattern. Revoked and rotated those too.</p>
+          <p>Banned the idiom everywhere. Presence checks now use:</p>
           <pre><code class="language-bash">if [ -n &quot;${TOKEN+x}&quot; ]; then echo &quot;Set&quot;; else echo &quot;Unset&quot;; fi</code></pre>
-          <p>This syntax asserts variable definition without evaluating or printing underlying string contents.</p>
-          <h2>Plaintext credential decommissioning across hosts</h2>
-          <p>Decommissioning legacy plaintext credential files progressed across three cluster hosts:</p>
-          <ul><li>Host 1: Reduced from 17 orphaned credential files to 2.</li><li>Host 2: Reduced from 19 files to 1.</li><li>Host 3: Reduced from 3 files to 0.</li></ul>
-          <p>Each deletion was preceded by system-wide grep queries to confirm no active services, timers, or scripts retained file path references.</p>
-          <p>Two persistent files were uncovered through global filesystem sweeps:</p>
-          <ol><li>An environment file sourced inside a shell profile prior to non-interactive environment guards, quietly exposing variables to batch tasks.</li><li>A configuration file preserved during an uncataloged directory relocation outside standard search roots.</li></ol>
-          <p>Both artifacts were sanitized and migrated to the centralized vault.</p>
-          <h2>Correlating multi-system logs across UTC and local time</h2>
-          <p>Correlating intermittent backup storage errors with appliance instability initially stalled due to timestamp formatting differences. The primary backup host logged events in UTC, whereas the storage appliance logged timestamps in local time (UTC+8).</p>
-          <p>Normalizing the eight-hour offset established an exact temporal match: every logged backup storage timeout corresponded directly to an ungraceful appliance reboot. Evaluating power monitoring across adjacent cluster hardware confirmed neighboring nodes experienced zero power interruptions, isolating the instability to appliance-specific events rather than facility-wide outages.</p>
-          <h2>Webhook rotation and monitoring state preservation</h2>
-          <p>A webhook credential embedded in legacy configuration archives was rotated in place. Updating the existing token reference preserved 19 active service bindings, avoiding recreation routines that would have invalidated attached notification targets. Secret updates were passed via standard input pipelines rather than CLI invocation arguments, preventing credentials from appearing in host process tables (<code>ps aux</code>).</p>
-          <p>Additionally, ahead of scheduled container maintenance, active monitoring probes were suspended using explicit API pause endpoints rather than configuration update mutations. This mitigated an Uptime Kuma defect where interrupted edit operations execute an un-transacted deletion that clears attached notification channels. Probes were inspected post-maintenance, verifying notification bindings remained intact.</p>
+          <p><code>${VAR+x}</code> asserts defined-ness without expanding contents. Nothing to leak. Updated every runbook and script that used the old form.</p>
+          <h2>Plaintext Cleanup Across Three Hosts</h2>
+          <p>Legacy cred files had to go. Swept all three cluster hosts, grepping system-wide for live references before deleting anything:</p>
+          <ul><li>Host 1: 17 orphaned files → 2.</li><li>Host 2: 19 → 1.</li><li>Host 3: 3 → 0.</li></ul>
+          <p>Two stragglers only turned up in full-filesystem sweeps: one env file sourced in a shell profile ahead of the non-interactive guards (leaking into batch tasks), one config preserved through an uncatalogued dir move outside my search roots. Both sanitized into the vault now.</p>
+          <h2>The Eight-Hour Ghost</h2>
+          <p>Backup storage errors wouldn&#39;t correlate with appliance instability until I noticed the clocks: backup host logs UTC, appliance logs local (UTC+8). Shifted eight hours, every storage timeout lands exactly on an ungraceful appliance reboot. Neighbors on adjacent hardware: zero power events. Appliance-only problem, not facility power.</p>
+          <p>Rotated a webhook cred sitting in legacy archives in place — kept all 19 service bindings alive instead of recreating them. Passed secrets over stdin pipes, never CLI args, so nothing lands in <code>ps aux</code>.</p>
+          <p>And before container maintenance, paused Kuma probes via the API pause endpoint instead of config edits. Kuma has that un-transacted delete-then-reinsert bug on interrupted edits — one hiccup mid-edit wipes notification bindings. Probes inspected after: bindings intact.</p>
         </div>
       </div>
     </article>
 
     <nav class="reader-nav three-grid" aria-label="Article navigation">
       <a href="../../blog/index.html">Back to Blog</a>
-      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/the-file-that-was-actually-being-read-was-three-layers-down/index.html"><span class="meta">Older</span>Network Controller Configuration Precedence and NAS Link Flapping Diagnostics</a><a class="adjacent-post newer-post" href="../../blog/a-restart-that-reported-success-and-changed-nothing/index.html"><span class="meta">Newer</span>Model Proxy Architecture, Prompt Cache Thresholds, and Container Lifecycle Traps</a></div>
+      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/the-file-that-was-actually-being-read-was-three-layers-down/index.html"><span class="meta">Older</span>The File That Was Actually Being Read Was Three Layers Down</a><a class="adjacent-post newer-post" href="../../blog/a-restart-that-reported-success-and-changed-nothing/index.html"><span class="meta">Newer</span>A Restart That Reported Success and Changed Nothing</a></div>
     </nav>
   </main>
 

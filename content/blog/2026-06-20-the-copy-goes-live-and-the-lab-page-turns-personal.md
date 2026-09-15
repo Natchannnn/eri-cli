@@ -1,37 +1,20 @@
 ---
-title: "Restructuring the Homelab Page as a Service Launcher"
+title: "My Lab Page Was Leaking Internal IPs So I Gutted It"
 date: 2026-06-20
 category: Projects
 summary: "Deploying the revised portfolio copy, removing marketing embellishments from the Lab page, and creating a lightweight public service launcher restricted to tunnel-routed services."
 ---
-Deploying the staged portfolio revisions to production provided an opportunity to audit `/lab`, transforming it from an unfocused promotional section into a clean operational launcher.
+Pushed the staged copy to production today — the rewritten About, the `<details>` cards, the anchor jumps. While I was in there I finally fixed `/lab`.
 
-## Deploying Staged Copy Revisions
+It was trying to be two things: a public showcase and my personal bookmark page. Result was a wall of private services and specs nobody outside my LAN should see.
 
-The copy adjustments, native `<details>` project cards, and navigation jump targets staged locally were deployed to production. 
+I do not want my container topology and internal addresses sitting in a public GitHub repo for anyone to recon. So:
 
-To maintain consistency across views:
-- The four dedicated portfolio subpages were updated to use the same `<details>` card markup as the homepage.
-- On subpages, the details block is expanded by default via the HTML `open` attribute, ensuring that users navigating to dedicated project routes immediately see technical specifications.
-- A broken anchor reference on the completed projects archive was corrected.
+- Killed the promo homelab section on the homepage.
+- Rebuilt `/lab` as a dumb launcher. Only links to stuff already exposed via Cloudflare Tunnel with auth — Home Assistant, Immich, that kind of thing.
+- Local IPs, management ports, Grafana internals? Not there. That's getting its own private portal.
+- Host counts (stacks, containers, images, volumes) update from a git pre-commit hook that asks the Docker daemon directly.
 
-## Decoupling Public Launcher from Internal Topologies
+Four subpages got the same `<details>` markup as the homepage for consistency. On subpages they default open via the `open` attribute so you see specs immediately. Also fixed a broken anchor on the completed archive — it was pointing nowhere.
 
-The original `/lab` page attempted to function as both a public portfolio showcase and a personal bookmark utility, presenting an excessive list of private services and infrastructure specs.
-
-Committing comprehensive container topologies and internal addresses to a public GitHub repository introduces unnecessary reconnaissance exposure. The page was refactored with clear boundaries:
-- The promotional homelab section on the homepage was eliminated.
-- The public `/lab` route was rebuilt as a lightweight launcher containing links strictly to services already exposed via Cloudflare Tunnel with active authentication (e.g. Home Assistant, Immich).
-- Private local network IPs, direct management ports, and internal Grafana dashboards remain unexposed, deferred to a dedicated private internal portal.
-- Host metrics (stack, container, image, and volume counts) are updated via a local git pre-commit hook that queries Docker daemon statistics directly.
-
-## Scripting Blog Generation
-
-Closing an inconsistency where the June 13 journal entry was omitted from the static build led to automating article publishing. Previously, reader pages had been generated manually.
-
-A Node.js build script was written to parse markdown frontmatter, compile HTML prose templates, generate adjacent post navigation, and update the blog archive manifest. This script ensures that published articles retain correct chronologies without manual page assembly.
-
-## Pending Verification
-
-- Verify that no private host IPs appear in public repository manifests.
-- Test blog generator against missing or malformed frontmatter.
+One more thing: my June 13 post never made it into the static build. I'd been generating reader pages by hand and just missed it. Wrote a Node script to parse frontmatter, build the HTML, wire prev/next, update the archive manifest. No more hand assembly. Still need to test what it does with missing frontmatter, but it ran clean tonight.

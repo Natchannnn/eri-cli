@@ -4,9 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark">
-  <meta name="description" content="Developing FileIt—a robust PowerShell downloads organizer—debugging .NET exception unwrapping and wildcard expansion bugs, and validating edge cases via Windows Sandbox.">
+  <meta name="description" content="Developing FileIt-a robust PowerShell downloads organizer-debugging .NET exception unwrapping and wildcard expansion bugs, and validating edge cases via Windows Sandbox.">
   <link rel="icon" href="../../assets/img/logo.png">
-  <title>FileIt: Building a PowerShell Downloads Sorter, Windows Sandbox Harness, and Safe Repository Sanitization — ERI / CLI</title>
+  <title>I Built a Downloads Sorter in Six Hours and Every Bug in It Looked Like Working Code — ERI / CLI</title>
   <link rel="stylesheet" href="../../assets/css/style.css?v=1.1.0">
   <script defer src="../../assets/js/pages.js"></script>
 </head>
@@ -24,8 +24,8 @@
   <main class="page-main reader-page" id="article">
     <article>
       <header class="reader-head three-grid">
-        <p class="reader-meta meta">Projects<br><time datetime="2026-07-29">29 Jul 2026</time><br>5 min read</p>
-        <h1 class="page-title">FileIt: Building a PowerShell Downloads Sorter, Windows Sandbox Harness, and Safe Repository Sanitization</h1>
+        <p class="reader-meta meta">Projects<br><time datetime="2026-07-29">29 Jul 2026</time><br>3 min read</p>
+        <h1 class="page-title">I Built a Downloads Sorter in Six Hours and Every Bug in It Looked Like Working Code</h1>
       </header>
 
       <div class="reader-cut" aria-hidden="true">
@@ -34,37 +34,31 @@
 
       <div class="reader-body three-grid" id="article-body">
         <div class="reader-prose">
-          <p class="reader-lede">Engineering an automated file organizer requires handling edge cases that typical test suites miss: partial downloads in flight, NTFS junction points, case-insensitive variable scoping, and wildcard expansion in path resolution.</p>
-          <p>This post documents the implementation of FileIt—a PowerShell utility for categorizing Downloads folders—alongside creating an automated Windows Sandbox testing environment and securing homelab Docker volume backups.</p>
-          <h2>Docker volume backups and SQLite WAL snapshot mechanics</h2>
-          <p>Prior to starting application development, I finalized an automated backup pipeline for the primary server&#39;s thirty-one Docker containers. Named volumes store critical runtime state, including database records, monitoring telemetry, and orchestration workflows.</p>
-          <p>The initial backup script exposed two critical storage mechanics:</p>
-          <ol><li><strong>Positional Tar Arguments</strong>: GNU <code>tar</code> treats <code>--exclude</code> flags as strictly positional. Placing exclusion patterns after the file operand causes <code>tar</code> to ignore the filters entirely, packing active ephemeral database locks into the archive. Moving exclusion arguments ahead of target directory operands dropped archive size from 1.3 GB to 230 MB.</li><li><strong>SQLite WAL Concurrency</strong>: Attempting to snapshot SQLite databases configured in Write-Ahead Logging (WAL) mode via a read-only filesystem mount triggered intermittent <code>SQLITE_CANTOPEN</code> failures. Opening a WAL-mode database requires creating or accessing shared memory (<code>-shm</code>) sidecar files. The script was updated to execute <code>sqlite3 &lt;db&gt; &quot;.backup &lt;dest&gt;&quot;</code> from within read-write container contexts, validating all eight snapshots with <code>PRAGMA integrity_check</code>.</li></ol>
-          <p>A mountpoint guard was added to abort execution if the remote NAS mount drops, preventing the backup script from generating false-positive archives in an unmounted local directory.</p>
-          <h2>FileIt architecture and a hostile test corpus</h2>
-          <p>FileIt was designed to organize cluttered Downloads folders on Windows 11 into clean categories without disrupting active transfers.</p>
-          <p>To prevent moving files mid-download, the engine implements an age gate: files are only processed if their <code>LastWriteTime</code> exceeds 60 minutes. Rather than relying on continuous memory-resident filesystem watchers (which fail silently across reboots), the tool operates as a stateless scheduled task executing every 15 minutes.</p>
-          <p>To build a rigorous test suite, I transcribed 118 real filenames from historical download directories into a test fixture. The corpus captured diverse filesystem edge cases:</p>
-          <ul><li>Thirty-one distinct file extensions (including case variants like <code>.PDF</code>).</li><li>Twenty-seven filenames containing whitespace.</li><li>Files lacking extensions entirely.</li><li>Filenames containing special characters: <code>&amp;</code>, <code>+</code>, commas, and square brackets (<code>[</code>, <code>]</code>).</li><li>Sparse multi-gigabyte ISO archives and nested subdirectories.</li></ul>
-          <h2>Debugging four subtle PowerShell runtime bugs</h2>
-          <p>Validating the script against the test corpus surfaced four discrete runtime defects:</p>
-          <ol><li><strong>Move-Item Wildcard Expansion</strong>: In PowerShell, <code>Move-Item -Destination</code> automatically interprets square brackets as regex wildcard characters. Because <code>-LiteralPath</code> only applies to source paths, destination paths containing brackets routed files to unintended paths. I replaced the cmdlet with a direct .NET method invocation (<code>[System.IO.File]::Move($source, $destination)</code>), ensuring literal string handling.</li><li><strong>Exception Unwrapping</strong>: Catching <code>[System.IO.IOException]</code> failed to trigger when handling filename collisions. PowerShell wraps underlying .NET runtime exceptions inside <code>System.Management.Automation.MethodInvocationException</code>. Catch blocks were updated to inspect the inner exception object: ``<code>powershell catch [System.Management.Automation.MethodInvocationException] { if ($_.Exception.InnerException -is [System.IO.IOException]) { ... } } </code>``</li><li><strong>NTFS Junction Traversal</strong>: To ensure moves remain atomic within a single physical volume, the script initially validated volume roots via <code>[System.IO.Path]::GetPathRoot()</code>. Because <code>GetPathRoot</code> executes string manipulation without resolving filesystem reparse points, category folders mapped to directory junctions crossing physical disk boundaries bypassed the check. I updated the validation to explicitly detect and reject reparse points (<code>FileAttributes.ReparsePoint</code>).</li><li><strong>Case-Insensitive Variable Collision</strong>: Within the installer UI loop, defining <code>foreach ($l in $list)</code> silently clobbered the script-level layout configuration hashtable <code>$L</code> because PowerShell variable names are case-insensitive. Renaming loop iterators and establishing a script-wide variable naming audit resolved the null reference crash.</li></ol>
-          <h2>Windows Sandbox automated test harness</h2>
-          <p>To validate FileIt on clean Windows environments without manual workstation testing, I implemented an 18-test validation harness executed inside Windows Sandbox. A single command spawns an ephemeral Windows instance, maps the codebase read-only, and executes the suite under native Windows PowerShell 5.1.</p>
-          <ul><li><strong>MAX_PATH Limitations</strong>: Test 15—which validates long-path handling using a 230-character filename—initially failed during fixture initialization. Because the Sandbox user profile path was 72 characters long, total path length exceeded the 260-character Win32 API ceiling (<code>306 &gt; 260</code>). The harness was updated to dynamically size test strings based on runtime working directory length.</li><li><strong>Mutation Testing</strong>: The suite was verified by deliberately introducing regressions (disabling collision renaming, bypassing the 60-minute age filter, and emptying ignore lists). Each mutation triggered exact corresponding test assertion failures.</li><li><strong>Performance Benchmark</strong>: The pipeline processed 2,000 synthetic test files with 60 sequential name collisions in 2.4 seconds, confirming predictable scaling.</li></ul>
-          <h2>Sanitizing test fixtures and scrubbing Git history</h2>
-          <p>Before publishing FileIt to a public GitHub repository, an audit revealed that early test fixtures contained proprietary and personal filenames.</p>
-          <p>To sanitize the codebase:</p>
-          <ul><li>Replaced the fixture with 118 synthetically generated filenames replicating the exact extension distribution, length profiles, and special character combinations.</li><li>Reset the git history to a single clean initial commit, preventing old filenames from persisting in historical git tree objects.</li><li>Flushed local reflogs and expired remote-tracking references: ``<code>bash git reflog expire --expire=now --all git gc --prune=now --aggressive </code>``</li><li>Deleted and recreated the remote GitHub repository via API, ensuring detached commit hashes could not be retrieved from upstream git object caches. An anonymous clone verified a clean 22-file tree with zero sensitive references.</li></ul>
-          <h2>Content-based magic byte sorting</h2>
-          <p>In addition to extension-based routing, I implemented a dedicated utility for screenshot sorting. The tool reads initial file header magic bytes rather than file extensions. This prevents misnamed files—such as HTML error pages downloaded with a <code>.png</code> extension—from being filed into media archives, isolating corrupt payloads into an explicit review queue.</p>
+          <p class="reader-lede">Wanted a Downloads sorter for Windows 11 that doesn&#39;t eat half-downloaded files.</p>
+          <p>Built FileIt in about six hours. Every bug in it passed casual testing and only died on real filenames. That&#39;s the whole story, really.</p>
+          <p>Warmed up on backups first: thirty-one containers&#39; named volumes (DBs, telemetry, n8n flows). Two gotchas. GNU <code>tar</code> <code>--exclude</code> is positional — put it after the file operand and it&#39;s silently ignored. I was archiving live DB locks into a 1.3 GB tarball. Moved excludes before targets: 230 MB. And SQLite WAL mode can&#39;t snapshot off a read-only mount — opening needs <code>-shm</code> sidecars, throws <code>SQLITE_CANTOPEN</code>. Switched to <code>sqlite3 &lt;db&gt; &quot;.backup &lt;dest&gt;&quot;</code> from read-write container context, all eight verified with <code>PRAGMA integrity_check</code>. Added a mountpoint guard so a dropped NAS mount aborts instead of backing up an empty dir and calling it success.</p>
+          <h2>The Sorter</h2>
+          <p>Stateless scheduled task every 15 minutes, no resident watcher to die on reboot. Age gate: only touch files with <code>LastWriteTime</code> older than 60 minutes, so in-flight downloads survive.</p>
+          <p>Test corpus was 118 real filenames I&#39;d transcribed — 31 extensions plus case variants (<code>.PDF</code>), 27 with spaces, some with no extension at all, <code>&amp;</code> <code>+</code> commas square brackets, sparse multi-gig ISOs, nested dirs.</p>
+          <p>Four bugs, all subtle:</p>
+          <p><code>Move-Item -Destination</code> expands <code>[ ]</code> as wildcards. <code>-LiteralPath</code> only covers the source. Files with brackets went to wrong places. Replaced with <code>[System.IO.File]::Move($source, $destination)</code>. Literal, always.</p>
+          <p>Catching <code>[System.IO.IOException]</code> on collisions never fired. PowerShell wraps .NET throws in <code>MethodInvocationException</code>. Have to catch that and inspect inside:</p>
+          <pre><code class="language-powershell">catch [System.Management.Automation.MethodInvocationException] {
+    if ($_.Exception.InnerException -is [System.IO.IOException]) { ... }
+}</code></pre>
+          <p>Volume check via <code>[System.IO.Path]::GetPathRoot()</code> is string math — doesn&#39;t resolve NTFS junctions. Category folders on junctions crossing disks sailed past the &quot;same volume, atomic move&quot; guard. Now I explicitly reject <code>FileAttributes.ReparsePoint</code>.</p>
+          <p>Installer crashed with null refs. Loop var was <code>foreach ($l in $list)</code>, script-level config hashtable is <code>$L</code>. PowerShell variables are case-insensitive. The loop ate my config. Renamed iterators, audited every <code>$L</code>-adjacent name.</p>
+          <h2>Sandbox Harness</h2>
+          <p>18 tests inside Windows Sandbox — one command, ephemeral instance, codebase mapped read-only, runs under stock PowerShell 5.1. Test 15 (230-char filename) failed on fixture setup: sandbox profile path is 72 chars, total blew past Win32 260 (<code>306 &gt; 260</code>). Harness now sizes strings off runtime cwd length. Mutation-tested it too — disabled collision renaming, bypassed the age gate, emptied ignore lists — each broke exactly its assertions. 2,000 synthetic files with 60 collisions sorted in 2.4s.</p>
+          <p>Before publishing I found proprietary filenames baked into early fixtures. Replaced with 118 synthetic names matching extension/length/special-char distributions, squashed history to one clean commit, <code>git reflog expire --expire=now --all</code> + <code>git gc --prune=now --aggressive</code>, deleted and recreated the GitHub repo via API so detached hashes die in the object cache. Anonymous clone: 22 files, zero leaks.</p>
+          <p>Bonus tool: screenshot sorter that reads magic bytes, not extensions. HTML error pages saved as <code>.png</code> go to review queue instead of polluting the media archive.</p>
         </div>
       </div>
     </article>
 
     <nav class="reader-nav three-grid" aria-label="Article navigation">
       <a href="../../blog/index.html">Back to Blog</a>
-      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/a-second-server-in-the-morning-an-open-front-door-by-midnight/index.html"><span class="meta">Older</span>Proxmox Secondary Node Provisioning, Network Bonding, and Security Audit</a><a class="adjacent-post newer-post" href="../../blog/the-only-backup-was-still-open-in-the-chat-window/index.html"><span class="meta">Newer</span>SSH Command Dispatch Hardening, Context Recovery, and Infrastructure Backlogs</a></div>
+      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/a-second-server-in-the-morning-an-open-front-door-by-midnight/index.html"><span class="meta">Older</span>A Second Server in the Morning, an Open Front Door by Midnight</a><a class="adjacent-post newer-post" href="../../blog/the-only-backup-was-still-open-in-the-chat-window/index.html"><span class="meta">Newer</span>The Only Backup Was Still Open in the Chat Window</a></div>
     </nav>
   </main>
 

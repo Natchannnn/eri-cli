@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="dark">
   <meta name="description" content="Disabling UAS kernel drivers to eliminate severe I/O latency on external SSD storage, diagnosing empty bind-mounts after a host reboot, and automating dev server persistence.">
   <link rel="icon" href="../../assets/img/logo.png">
-  <title>Samsung T7 Shield UAS Timeouts, GRUB Quirks, and Post-Reboot Service Recovery — ERI / CLI</title>
+  <title>I Moved a Folder, Rebooted, and Home Assistant Forgot Who It Was — ERI / CLI</title>
   <link rel="stylesheet" href="../../assets/css/style.css?v=1.1.0">
   <script defer src="../../assets/js/pages.js"></script>
 </head>
@@ -24,8 +24,8 @@
   <main class="page-main reader-page" id="article">
     <article>
       <header class="reader-head three-grid">
-        <p class="reader-meta meta">Homelab<br><time datetime="2026-06-11">11 Jun 2026</time><br>3 min read</p>
-        <h1 class="page-title">Samsung T7 Shield UAS Timeouts, GRUB Quirks, and Post-Reboot Service Recovery</h1>
+        <p class="reader-meta meta">Homelab<br><time datetime="2026-06-11">11 Jun 2026</time><br>2 min read</p>
+        <h1 class="page-title">I Moved a Folder, Rebooted, and Home Assistant Forgot Who It Was</h1>
       </header>
 
       <div class="reader-cut" aria-hidden="true">
@@ -34,31 +34,26 @@
 
       <div class="reader-body three-grid" id="article-body">
         <div class="reader-prose">
-          <p class="reader-lede">Diagnosing severe storage latency on an external Samsung T7 SSD uncovered kernel UAS driver timeouts, requiring a GRUB quirk to stabilize I/O before addressing unexpected service outages following the host reboot.</p>
-          <h2>Storage Remount and Samba Provisioning</h2>
-          <p>The 2TB external storage drive previously mounted at <code>/mnt/photos</code> was designated as a general-purpose host share until dedicated NAS hardware is deployed. The drive was re-mounted at <code>/mnt/tmpnas</code>, updating <code>/etc/fstab</code> and reconfiguring Immich&#39;s <code>UPLOAD_LOCATION</code> environment variable.</p>
-          <p>On top of this mount point, two Samba shares were configured in <code>/etc/samba/smb.conf</code>:</p>
-          <ul><li>A guest-accessible read/write drop directory for general LAN devices.</li><li>An authenticated, password-restricted share for administrative backups, reachable over Tailscale via <code>smb://x.x.149.70</code>.</li></ul>
-          <h2>Samsung T7 Shield UAS Driver Timeouts</h2>
-          <p>During regular indexing, Immich photo loading stalled completely. Telemetry from <code>docker stats</code> revealed <code>immich_server</code> holding 147% disk utilization with 25-second flush waits and write latency climbing to 4,864ms.</p>
-          <p>System journal logs (<code>dmesg</code>) revealed repeated <code>uas_eh_abort_handler</code> kernel timeouts on <code>/dev/sda</code>. The USB Attached SCSI (UAS) protocol was failing on this host controller combination, aborting queued block transactions.</p>
-          <p>To stabilize disk operations, UAS was disabled specifically for the Samsung T7 Shield (<code>04e8:61fb</code>) via kernel parameter. Adding <code>usb-storage.quirks=04e8:61fb:u</code> to <code>GRUB_CMDLINE_LINUX_DEFAULT</code> in <code>/etc/default/grub</code> forced the device to use the standard <code>usb-storage</code> driver. Following <code>update-grub</code> and a system reboot, write latency dropped from 4,864ms to 37ms, restoring full throughput to container storage.</p>
-          <h2>Post-Reboot Recovery: Home Assistant Bind-Mounts</h2>
-          <p>While the storage layer stabilized, the host reboot exposed an issue with Home Assistant. External requests through <code>ha.n5hq.me</code> returned HTTP 400 Bad Request, while local connections on port 8123 redirected to an initial onboarding wizard.</p>
-          <p>Timestamp reconstruction clarified the failure sequence:</p>
-          <ol><li>Prior to rebooting, the active <code>/homeassisstant</code> data directory had been moved into <code>/maybebin</code> during root directory maintenance.</li><li>Upon restart, Docker auto-created an empty directory at the configured host bind-mount path. Home Assistant initialized a default configuration into this empty directory without reverse proxy trust or existing user accounts.</li><li>The genuine 3GB instance containing historical data and integrations remained intact in <code>/maybebin</code>.</li></ol>
-          <p>Halting the container, restoring the original directory path, and restarting the stack brought all automations, integrations, and tunnel routing back online. An audit confirmed that automated off-host backups were not yet in place, emphasizing the requirement to build an external backup routine rather than relying on uncommitted disk state.</p>
-          <h2>Service Persistence</h2>
-          <p>A secondary consequence of the reboot was the termination of the local static development server on port 3001, which had been executed manually without a supervisor. A crontab <code>@reboot</code> entry was added to ensure process persistence across future maintenance cycles.</p>
-          <h2>Pending Verification</h2>
-          <ul><li>Monitor Samsung T7 I/O queue depths under extended read/write load.</li><li>Implement automated off-host vzdump/tar backups for container data volumes.</li><li>Verify AirTouch 4 integration connectivity.</li></ul>
+          <p class="reader-lede">My 2TB external drive used to live at <code>/mnt/photos</code>.</p>
+          <p>Since I don&#39;t have the real NAS hardware yet, I re-mounted it at <code>/mnt/tmpnas</code> as a general host share — updated <code>/etc/fstab</code>, pointed Immich&#39;s <code>UPLOAD_LOCATION</code> at the new path.</p>
+          <p>Then I carved two Samba shares out of it in <code>/etc/samba/smb.conf</code>: a guest read/write drop folder for anything on the LAN, and a password-locked one for my admin backups, reachable over Tailscale at <code>smb://x.x.149.70</code>.</p>
+          <h2>My T7 Was Choking on UAS</h2>
+          <p>Immich started stalling on loads. <code>docker stats</code> showed <code>immich_server</code> pinned at 147% disk util with 25-second flush waits. Write latency at 4,864ms. That&#39;s not slow, that&#39;s dead.</p>
+          <p><code>dmesg</code> was full of <code>uas_eh_abort_handler</code> timeouts on <code>/dev/sda</code>. The UAS driver just does not get along with this host controller + my Samsung T7 Shield combo. Kept aborting queued blocks.</p>
+          <p>Fix was a quirk. Added <code>usb-storage.quirks=04e8:61fb:u</code> to <code>GRUB_CMDLINE_LINUX_DEFAULT</code> in <code>/etc/default/grub</code> to force the T7 (<code>04e8:61fb</code>) onto plain <code>usb-storage</code>. Ran <code>update-grub</code>, rebooted. Write latency dropped from 4,864ms to 37ms. Night and day.</p>
+          <p>That reboot is where the real damage happened.</p>
+          <p><code>ha.n5hq.me</code> started returning 400, and hitting port 8123 locally dropped me on a fresh onboarding wizard. My stomach sank.</p>
+          <p>Here&#39;s what I&#39;d done to myself: before rebooting, I&#39;d moved the live <code>/homeassisstant</code> directory (yes, with that typo, it&#39;s mine) into <code>/maybebin</code> while tidying root. On boot, Docker saw the bind-mount path was empty and helpfully created a fresh empty dir there. Home Assistant happily initialized a brand-new config into it — no proxy trust, no users, nothing.</p>
+          <p>My real 3GB instance was sitting untouched in <code>/maybebin</code> the whole time.</p>
+          <p>Stopped the container, moved the directory back, restarted the stack. Automations, integrations, tunnel — all back. Scared me enough to admit I still have no automated off-host backups for container volumes. Just uncommitted disk state. Need to fix that with actual vzdump/tar jobs.</p>
+          <p>Oh, and the reboot also killed my static dev server on port 3001, because I&#39;d started it by hand with no supervisor like an animal. Added a <code>@reboot</code> line in crontab. It&#39;ll survive next time.</p>
         </div>
       </div>
     </article>
 
     <nav class="reader-nav three-grid" aria-label="Article navigation">
       <a href="../../blog/index.html">Back to Blog</a>
-      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/network-fixes-tailscale-and-a-nic-upgrade/index.html"><span class="meta">Older</span>UniFi VLAN Firewall Rules, Tailscale Consolidation, and 2.5GbE NIC Upgrade</a><a class="adjacent-post newer-post" href="../../blog/three-designs-a-domain-cutover-and-the-linux-iso-stack-comes-home/index.html"><span class="meta">Newer</span>Hybrid Seedbox Migration via SSHFS and Portfolio V2 Deployment</a></div>
+      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/network-fixes-tailscale-and-a-nic-upgrade/index.html"><span class="meta">Older</span>My Doorbell Was on the Wrong VLAN and My Printer Was on the Wrong Subnet</a><a class="adjacent-post newer-post" href="../../blog/three-designs-a-domain-cutover-and-the-linux-iso-stack-comes-home/index.html"><span class="meta">Newer</span>My Seedbox Hardlinks Over SSHFS and Portfolio V2 Finally Went Live</a></div>
     </nav>
   </main>
 

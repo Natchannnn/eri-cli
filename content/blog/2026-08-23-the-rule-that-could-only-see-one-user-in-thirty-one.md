@@ -1,40 +1,30 @@
 ---
-title: "Retention Rule Scoping Across Multi-User Libraries and Service Freshness Monitoring"
+title: "The Rule That Could Only See One User in Thirty-One"
 date: 2026-08-23
 category: Homelab
 summary: "Auditing media retention rules across 31 users, isolating Docker Compose .env restart mechanics, and deploying heartbeat freshness monitors against silent database corruption."
 ---
-Engineering work on August 23 addressed media retention rules for the media library, resolved a Docker environment variable reload issue affecting scheduled tasks, and implemented activity-based freshness monitoring.
+My retention rule was about to delete movies people watched last week. Dry run flagged 426 items, 3,161 GiB, under a simple policy: prune anything unplayed 18 months+, never touch anything ingested within the last 12.
 
-## Multi-user retention policy scoping
+Six of the flagged items had been watched days ago. That's when I looked at the data source: Plex's native `lastPlayedAt`. Turns out that field returns `lastViewedAt` for the calling admin account only. My server has 31 active users. The rule was judging the whole library on one person's history and ignoring the other 30.
 
-The media retention policy was designed to prune unaccessed media older than 18 months, with a hard guard preventing the deletion of anything ingested within the last 12 months.
+Repointed at Tautulli's aggregated endpoint, which rolls up all 31 users. Rerun: 251 genuine candidates, 1,435 GiB. Less than half the original flag set. The other 175 were somebody's favorites I nearly shredded.
 
-The initial implementation referenced Plex's native `lastPlayedAt` property. An initial dry-run matched 426 items totaling 3,161 GiB. Inspecting the API response revealed that `lastPlayedAt` returned the `lastViewedAt` timestamp solely for the calling administrative account. Across a server with 31 active users, the rule was evaluating only one user's playback history and ignoring the remaining 30 accounts. Six recently watched media items were incorrectly flagged for deletion.
+## restart Doesn't Read .env
 
-The data source was redirected to Tautulli's aggregated `lastPlayedAt` endpoint, which rolls up watch events across all 31 registered users. Re-running the filter against aggregate telemetry identified 251 genuine pruning candidates totaling 1,435 GiB.
+Cron task firing an hour off. Old notes blamed missing `tzdata` in Alpine — Node falling back to UTC. Tested it: Alpine's `/bin/date` indeed lacks zoneinfo, but Node ships its own ICU data and resolves timezones without touching `/usr/share/zoneinfo`. Theory dead.
 
-## Docker Compose environment variable lifecycle
+Real cause was dumber. I'd edited `TZ` in `.env` 22 hours earlier and run `docker compose restart`. Restart signals existing processes. It never re-reads `.env` — env is baked at creation. `docker compose up -d` recreated the container, timezone applied, cron fires on local hour now. Twenty-two hours of offset because I used the wrong verb.
 
-A scheduled cron task had been executing with an offset, previously attributed in system notes to missing `tzdata` in the Alpine container base image causing Node to fall back to UTC.
+## Healthchecks That Check Nothing
 
-Empirical testing disproved this assumption: while the Alpine container's `/bin/date` utility lacked zoneinfo files, Node bundles its own ICU dataset and resolves timezones independently of host `/usr/share/zoneinfo`.
+This one stung: a backend DB sat unreadable for 13 days while `/health` returned 200 and the process showed alive. Up/down probes check existence. I needed throughput.
 
-The root cause was operational: the `TZ` environment variable had been modified in `.env` 22 hours earlier, but the service had only been cycled using `docker compose restart`. A restart command signals existing container processes without re-reading `.env` files; environment variables are baked at container creation. Recreating the container via `docker compose up -d` applied the updated timezone, ensuring the cron task triggered at the intended local hour.
+Four log-based freshness probes now, watching actual activity instead of process state:
+- 14h threshold on a 6-hour job (2.3× margin)
+- 3h on the 15- and 30-minute jobs
+- 2h on another 6-hour routine
 
-## Activity-based freshness monitoring
+All `maxretries=0`, `resendInterval=1` — missing heartbeat pages immediately. Tested both directions: stalled the pipeline to force DOWN, restored logs for UP.
 
-Activity freshness monitoring was introduced following a failure where a backend database remained in an unreadable state for 13 days while basic up/down health probes continued reporting healthy (HTTP 200 on `/health` and alive process status).
-
-Four log-based telemetry probes were established to monitor service throughput rather than process existence:
-- A 14-hour threshold on a job scheduled every 6 hours (2.3× safety factor).
-- A 3-hour threshold on jobs running at 15- and 30-minute intervals.
-- A 2-hour threshold on a routine running every 6 hours.
-
-Each probe was configured with `maxretries=0` and `resendInterval=1` to alert immediately on missing heartbeats. Alert delivery was validated in both directions by simulating pipeline stalls to trigger DOWN events and restoring logs to verify UP transitions.
-
-Backups were updated to exclude a corrupt SQLite database file (`Page 2779: never used`, invalid entry counts across three indexes verified by external reads) with documented tickets for database reconstruction.
-
-## Outstanding maintenance items
-
-The corrupt SQLite database remains quarantined pending manual repair, and four inventoried API keys remain scheduled for rotation during the next planned maintenance window. The activity-based freshness monitoring pattern proved effective at catching silent service freezes and is slated for expansion across seven additional background workers.
+Backups now exclude a corrupt SQLite file too (`Page 2779: never used`, three indexes with garbage counts on external read). Rebuild ticketed. Four API keys still queued for rotation next window. Freshness pattern works — extending it to seven more background workers next.

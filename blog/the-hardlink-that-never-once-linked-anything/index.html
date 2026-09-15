@@ -24,7 +24,7 @@
   <main class="page-main reader-page" id="article">
     <article>
       <header class="reader-head three-grid">
-        <p class="reader-meta meta">Homelab<br><time datetime="2026-08-21">21 Aug 2026</time><br>3 min read</p>
+        <p class="reader-meta meta">Homelab<br><time datetime="2026-08-21">21 Aug 2026</time><br>2 min read</p>
         <h1 class="page-title">The Hardlink That Never Once Linked Anything</h1>
       </header>
 
@@ -34,35 +34,29 @@
 
       <div class="reader-body three-grid" id="article-body">
         <div class="reader-prose">
-          <p class="reader-lede">I was preparing to deploy Maintainerr to automate disk cleanup across my media libraries when a routine storage check caught my eye.</p>
-          <p>Radarr and Sonarr had <code>copyUsingHardlinks: true</code> enabled from day one, so completed downloads in staging and organized files in the library were supposed to point to identical filesystem inodes.</p>
-          <h2>The stat check and 229 GB of duplicate data</h2>
-          <p>Curious about how much space hardlinking was actually saving, I ran <code>stat</code> across a batch of library items:</p>
+          <p class="reader-lede">About to deploy Maintainerr for disk cleanup, I checked how much space hardlinking actually saves me.</p>
+          <p>Radarr + Sonarr have run <code>copyUsingHardlinks: true</code> since day one. Staging downloads and library files should share inodes.</p>
           <pre><code class="language-bash">stat -c &quot;%n - Inode: %i - Links: %h&quot; /data/media/movies/*</code></pre>
-          <p>Every single file returned <code>Links: 1</code>. Not <code>2</code>.</p>
-          <p>The downloads and the library weren&#39;t sharing storage at all. They were two separate, distinct files on disk. Removing a movie from Radarr only freed the library file, leaving the initial download sitting untouched in the staging directory. That silent fallback had quietly eaten 229 GB of unmanaged duplicate storage across movies and TV seasons.</p>
-          <h2>Cross-dataset boundaries, not protocol limits</h2>
-          <p>My first instinct was to blame transport layers. Parts of my remote ingest workflow touch SSHFS mounts over SFTP, and it&#39;s easy to assume SFTP lacks remote link primitives. But modern OpenSSH servers support the <code>hardlink@openssh.com</code> protocol extension, and manual tests with <code>ln</code> worked fine within the same remote directory.</p>
-          <p>The actual culprit was much more mundane: storage architecture.</p>
-          <p>In my ZFS pool, downloads lived on <code>tank/downloads</code> while the library sat on <code>tank/media</code>. Because they were provisioned as two distinct ZFS datasets, Linux treats them as entirely separate filesystems. Attempting to create a hardlink across dataset boundaries returns <code>EXDEV: Invalid cross-device link</code>.</p>
-          <p>Inside Docker, the containers had separate volume mounts for <code>/downloads</code> and <code>/media</code>. When Radarr and Sonarr hit <code>EXDEV</code>, they don&#39;t crash or throw a visible alert; they silently catch the error and fall back to an atomic full file copy.</p>
-          <p>The fix was consolidating storage under a single ZFS dataset (<code>tank/data</code>) with subdirectories for downloads and media, then mounting that single root into Docker. Once both paths shared an identical filesystem boundary, hardlinking worked instantly, dropping link creation from several seconds of disk I/O to sub-millisecond inode references.</p>
-          <h2>Pinning Maintainerr versions</h2>
-          <p>While fixing the storage layout, I set up Maintainerr. Unlike legacy containers in my stack that historically floated on <code>:latest</code>, I explicitly pinned <code>ghcr.io/jorenn92/maintainerr:v3.24.0</code>.</p>
-          <p>Maintainerr&#39;s v3 release introduced significant database schema migrations and breaking architectural changes compared to v2. Floating on <code>:latest</code> in an unattended environment invites background database migrations that can corrupt state or break rules during automated image pulls. Pinning to a known-good release tag keeps updates intentional.</p>
-          <h2>Pre-migration backups for monitoring</h2>
-          <p>The second half of the maintenance window went toward preparing nine monitoring containers for migration to a guest VM on my secondary node:</p>
-          <ol><li><strong>Home Assistant entity coupling</strong>: About 66 automations and dashboard cards in Home Assistant were mapped directly to numeric Uptime Kuma monitor IDs. Deleting and recreating monitors on the new host would assign fresh IDs and break those automations silently. The migration had to preserve the existing database state in-place.</li><li><strong>Unexported Grafana dashboards</strong>: Around 15 custom dashboards existed exclusively inside the Grafana SQLite database volume, without Git repository backups or automated JSON exports. Rebuilding the container without preserving the volume would mean losing months of dashboard tuning.</li></ol>
-          <p>Before touching the primary host, I used a helper container to create snapshot archives of the root-owned volumes:</p>
-          <ul><li><strong>Prometheus TSDB</strong>: 2.85 GB</li><li><strong>Grafana</strong>: 95 MB</li><li><strong>Loki</strong>: 194 MB (22,139 chunk files)</li></ul>
-          <p>I verified all SHA256 checksums, confirmed Prometheus ULID blocks and the Grafana SQLite database were intact, and staged the migration for the next window.</p>
+          <p>Every file: <code>Links: 1</code>. Every single one.</p>
+          <p>Nothing ever linked. Each download existed twice — staging copy + library copy, separate files. Deleting a movie in Radarr freed the library side while the staging original sat there forever. 229 GB of silent duplicates across movies and seasons.</p>
+          <h2>Not SFTP. ZFS Datasets.</h2>
+          <p>First suspect was transport — parts of ingest cross SSHFS/SFTP, easy to assume no remote-link primitive. Wrong: modern OpenSSH supports <code>hardlink@openssh.com</code>, and <code>ln</code> works fine within one remote dir. Tested, confirmed.</p>
+          <p>Real cause was dumber: my pool holds <code>tank/downloads</code> and <code>tank/media</code> as two separate ZFS datasets. Linux sees those as two filesystems. Hardlink across them returns <code>EXDEV: Invalid cross-device link</code>. Docker made it worse — <code>/downloads</code> and <code>/media</code> were separate volume mounts. On <code>EXDEV</code>, Radarr/Sonarr don&#39;t alert. They catch it and fall back to full copy. Silently. For months.</p>
+          <p>Fix: one dataset (<code>tank/data</code>), subdirs for downloads + media, single root mounted into Docker. Same filesystem boundary both sides. Hardlinks went from seconds of I/O to sub-millisecond inode refs instantly.</p>
+          <h2>Pinned Maintainerr</h2>
+          <p>Set up Maintainerr while the layout was open. Everything legacy floats <code>:latest</code>; I pinned <code>ghcr.io/jorenn92/maintainerr:v3.24.0</code> deliberately. v3 brought schema migrations + breaking architecture vs v2. Floating <code>:latest</code> with unattended pulls invites background migrations that corrupt state mid-rule-run. Pinned stays intentional.</p>
+          <h2>Backups Before Moving Monitoring</h2>
+          <p>Second half: prepping nine monitoring containers for a VM on node two. Two traps:</p>
+          <p>HA has ~66 automations/cards bound to numeric Kuma monitor IDs. Recreate monitors fresh and every ID shifts — automations break silently. Migration must preserve the DB in place.</p>
+          <p>~15 Grafana dashboards exist only inside the Grafana SQLite volume. No git backups, no JSON exports. Rebuild the container bare and months of tuning evaporate.</p>
+          <p>Snapshotted the root-owned volumes through a helper container first — Prometheus TSDB 2.85 GB, Grafana 95 MB, Loki 194 MB (22,139 chunks). SHA256s verified, ULID blocks + SQLite intact. Migration staged for next window.</p>
         </div>
       </div>
     </article>
 
     <nav class="reader-nav three-grid" aria-label="Article navigation">
       <a href="../../blog/index.html">Back to Blog</a>
-      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/a-regex-ate-half-a-selector-and-css-didnt-complain/index.html"><span class="meta">Older</span>Regex Selector Truncation and Animated Brand Integration</a><a class="adjacent-post newer-post" href="../../blog/every-number-i-started-with-was-measuring-something-else/index.html"><span class="meta">Newer</span>Monitoring Relocation, Linux Memory Pressure Analysis, and Hypervisor Maintenance</a></div>
+      <div class="reader-adjacent"><a class="adjacent-post older-post" href="../../blog/a-regex-ate-half-a-selector-and-css-didnt-complain/index.html"><span class="meta">Older</span>A Regex Ate Half a Selector and CSS Didn&#39;t Complain</a><a class="adjacent-post newer-post" href="../../blog/every-number-i-started-with-was-measuring-something-else/index.html"><span class="meta">Newer</span>Every Number I Started With Was Measuring Something Else</a></div>
     </nav>
   </main>
 
