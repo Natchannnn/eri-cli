@@ -2,7 +2,7 @@
 title: "A Repo Containing the CLI but Not the Deployment Is Half of It"
 date: 2026-08-07
 category: Homelab
-summary: "Deploying the Planka-backed n5-board system, separating CLI code from infrastructure units, auditing false-positive leak alarms, and scoping a public client package."
+summary: "The n5-board repository contained the client but none of the units that kept it alive. I brought the deployment under version control and separated the public package."
 ---
 Back on n5-board after a week away. Nightly automations ran clean the whole time, so I had a stable floor to promote it from scripts to real infra.
 

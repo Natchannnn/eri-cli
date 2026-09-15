@@ -2,7 +2,7 @@
 title: "Every Number I Started With Was Measuring Something Else"
 date: 2026-08-22
 category: Homelab
-summary: "Migrating Prometheus and Grafana onto a dedicated VM, diagnosing Linux memory page cache metrics, resolving static IP collisions, and patching hypervisor hosts."
+summary: "The host was not truly at 98% memory, and the target address was not actually free. Both numbers belonged to a different layer than I first assumed."
 ---
 Four jobs today: move monitoring off the main host, figure out why the host claims 98% RAM, migrate n8n without hitting a ghost, patch both hypervisors. Every starting number I had was wrong in an interesting way.
 

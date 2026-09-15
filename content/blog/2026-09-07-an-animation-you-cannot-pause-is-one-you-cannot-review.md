@@ -2,7 +2,7 @@
 title: "An Animation You Cannot Pause Is One You Cannot Review"
 date: 2026-09-07
 category: Web
-summary: "Implementing deterministic animation frame control via renderAt(ms) and relative clocks, and running multi-critic review cycles on homepage WebGL components."
+summary: "A reviewable animation needed a clock I could stop at an exact frame. Seventeen review rounds later, only one of three homepage pieces was ready to ship."
 ---
 Three homepage pieces, three critics each, plus the determinism work to make the verdicts mean anything.
 

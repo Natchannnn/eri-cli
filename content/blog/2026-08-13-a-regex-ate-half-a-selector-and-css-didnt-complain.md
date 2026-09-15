@@ -2,7 +2,7 @@
 title: "A Regex Ate Half a Selector and CSS Didn't Complain"
 date: 2026-08-13
 category: Web
-summary: "Integrating animated brand lockups, alpha-channel video fallbacks, layout radius tokens, and diagnosing a silent CSS selector truncation caused by regex deletion."
+summary: "A cleanup regex removed half a selector without producing invalid CSS. The build stayed green while the hero quietly broke."
 ---
 Front-end day across portfolio + lab: animated brand assets, alpha video fallbacks, token cleanup. Ended with a broken hero caused by my own regex. CSS said nothing. Builds passed. Of course.
 

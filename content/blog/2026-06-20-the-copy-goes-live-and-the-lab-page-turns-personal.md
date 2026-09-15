@@ -2,7 +2,7 @@
 title: "My Lab Page Was Leaking Internal IPs So I Gutted It"
 date: 2026-06-20
 category: Projects
-summary: "Deploying the revised portfolio copy, removing marketing embellishments from the Lab page, and creating a lightweight public service launcher restricted to tunnel-routed services."
+summary: "The revised portfolio went live, but the Lab page still exposed too much internal detail. I cut it back to a small launcher for services already behind the tunnel."
 ---
 Pushed the staged copy to production today — the rewritten About, the `<details>` cards, the anchor jumps. While I was in there I finally fixed `/lab`.
 

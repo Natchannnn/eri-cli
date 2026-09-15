@@ -2,6 +2,8 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+const { BLOG_CATEGORIES, escapeHtml, parseFrontmatter, readingTime, slugify } = require('./blog-utils');
+const { markdownToHtml } = require('./markdown');
 
 const root = path.resolve(__dirname, '..');
 const contentDir = path.join(root, 'content', 'blog');
@@ -9,212 +11,12 @@ const templatesDir = path.join(root, 'templates');
 const outputDir = path.join(root, 'blog');
 const tempDir = path.join(root, '.blog-build-tmp');
 const markerName = '.generated-by-build-blog';
-const allowedCategories = new Set(['Homelab', 'Projects', 'Web']);
+const allowedCategories = new Set(BLOG_CATEGORIES);
 
 function assertDirectChild(target) {
   if (path.dirname(path.resolve(target)) !== root) {
     throw new Error(`Refusing to replace a path outside the project root: ${target}`);
   }
-}
-
-function escapeHtml(value) {
-  return String(value)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
-function inlineMarkdown(value) {
-  const code = [];
-  let output = value.replace(/`([^`]+)`/g, (_, text) => {
-    code.push(`<code>${escapeHtml(text)}</code>`);
-    return `\u0000CODE${code.length - 1}\u0000`;
-  });
-  output = escapeHtml(output);
-  output = output.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2">$1</a>');
-  output = output.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-  output = output.replace(/\*([^*]+)\*/g, '<em>$1</em>');
-  output = output.replace(/\u0000CODE(\d+)\u0000/g, (_, index) => code[Number(index)]);
-  return output;
-}
-
-function buildListTree(rawItems) {
-  const root = { indent: -1, children: [] };
-  const stack = [root];
-  for (const item of rawItems) {
-    while (stack.length > 1 && stack[stack.length - 1].indent >= item.indent) {
-      stack.pop();
-    }
-    const parent = stack[stack.length - 1];
-    parent.children.push(item);
-    stack.push(item);
-  }
-  return root.children;
-}
-
-function renderListItems(items) {
-  if (!items || items.length === 0) return '';
-  let html = '';
-  let i = 0;
-  while (i < items.length) {
-    const currentTag = items[i].tag;
-    html += `<${currentTag}>`;
-    while (i < items.length && items[i].tag === currentTag) {
-      const item = items[i];
-      let itemHtml = inlineMarkdown(item.text);
-      if (item.children && item.children.length > 0) {
-        itemHtml += renderListItems(item.children);
-      }
-      html += `<li>${itemHtml}</li>`;
-      i++;
-    }
-    html += `</${currentTag}>`;
-  }
-  return html;
-}
-
-function markdownToHtml(markdown) {
-  const lines = markdown.replace(/\r/g, '').split('\n');
-  const blocks = [];
-  let index = 0;
-  let paragraphCount = 0;
-
-  const beginsBlock = (line) => /^(\s*#{2,3}\s|\s*[-*+]\s|\s*\d+\.\s|>\s|```|---+(\s*)$)/.test(line);
-
-  while (index < lines.length) {
-    const line = lines[index];
-    if (!line.trim()) { index += 1; continue; }
-
-    if (/^---+$/.test(line.trim())) {
-      blocks.push('<hr>');
-      index += 1;
-      continue;
-    }
-
-    const fence = /^```(.*)$/.exec(line);
-    if (fence) {
-      const language = fence[1].trim();
-      const code = [];
-      index += 1;
-      while (index < lines.length && !/^```/.test(lines[index])) code.push(lines[index++]);
-      if (index < lines.length) index += 1;
-      const className = language ? ` class="language-${escapeHtml(language)}"` : '';
-      blocks.push(`<pre><code${className}>${escapeHtml(code.join('\n'))}</code></pre>`);
-      continue;
-    }
-
-    const heading = /^(#{2,3})\s+(.+)$/.exec(line);
-    if (heading) {
-      const level = heading[1].length;
-      blocks.push(`<h${level}>${inlineMarkdown(heading[2])}</h${level}>`);
-      index += 1;
-      continue;
-    }
-
-    const listMatch = /^(\s*)([-*+]|\d+\.)\s+(.*)$/.exec(line);
-    if (listMatch) {
-      const rawItems = [];
-      const baseIndent = listMatch[1].length;
-
-      while (index < lines.length) {
-        const curLine = lines[index];
-        if (!curLine.trim()) {
-          let nextNonEmpty = index + 1;
-          while (nextNonEmpty < lines.length && !lines[nextNonEmpty].trim()) {
-            nextNonEmpty++;
-          }
-          if (nextNonEmpty < lines.length) {
-            const nextMatch = /^(\s*)([-*+]|\d+\.)\s+(.*)$/.exec(lines[nextNonEmpty]);
-            if (nextMatch && nextMatch[1].length >= baseIndent) {
-              index = nextNonEmpty;
-              continue;
-            }
-          }
-          break;
-        }
-
-        const itemMatch = /^(\s*)([-*+]|\d+\.)\s+(.*)$/.exec(curLine);
-        if (itemMatch) {
-          if (itemMatch[1].length < baseIndent) break;
-          rawItems.push({
-            indent: itemMatch[1].length,
-            tag: /\d+\./.test(itemMatch[2]) ? 'ol' : 'ul',
-            text: itemMatch[3],
-            children: []
-          });
-          index++;
-        } else if (rawItems.length > 0 && curLine.search(/\S/) > baseIndent && !beginsBlock(curLine)) {
-          rawItems[rawItems.length - 1].text += ' ' + curLine.trim();
-          index++;
-        } else {
-          break;
-        }
-      }
-
-      const tree = buildListTree(rawItems);
-      blocks.push(renderListItems(tree));
-      continue;
-    }
-
-    if (/^>\s?/.test(line)) {
-      const quote = [];
-      while (index < lines.length && /^>\s?/.test(lines[index])) {
-        quote.push(lines[index].replace(/^>\s?/, ''));
-        index += 1;
-      }
-      blocks.push(`<blockquote><p>${inlineMarkdown(quote.join(' '))}</p></blockquote>`);
-      continue;
-    }
-
-    const paragraph = [line.trim()];
-    index += 1;
-    while (index < lines.length && lines[index].trim() && !beginsBlock(lines[index])) {
-      paragraph.push(lines[index].trim());
-      index += 1;
-    }
-    const paragraphText = paragraph.join(' ');
-    if (paragraphCount++ === 0) {
-      const sentenceBreak = paragraphText.search(/(?<=[.!?])\s+(?=[A-Z0-9])/);
-      if (sentenceBreak > 24 && sentenceBreak < paragraphText.length - 1) {
-        blocks.push(`<p class="reader-lede">${inlineMarkdown(paragraphText.slice(0, sentenceBreak))}</p>`);
-        blocks.push(`<p>${inlineMarkdown(paragraphText.slice(sentenceBreak).trim())}</p>`);
-      } else {
-        blocks.push(`<p class="reader-lede">${inlineMarkdown(paragraphText)}</p>`);
-      }
-    } else {
-      blocks.push(`<p>${inlineMarkdown(paragraphText)}</p>`);
-    }
-  }
-
-  return blocks.join('\n          ');
-}
-
-function parseFrontmatter(text, filename) {
-  const match = /^---\n([\s\S]*?)\n---\n([\s\S]*)$/.exec(text.replace(/\r\n/g, '\n'));
-  if (!match) throw new Error(`${filename}: missing frontmatter.`);
-  const data = {};
-  match[1].split('\n').forEach((line) => {
-    if (!line.trim()) return;
-    const separator = line.indexOf(':');
-    if (separator === -1) throw new Error(`${filename}: invalid frontmatter line: ${line}`);
-    const key = line.slice(0, separator).trim();
-    const raw = line.slice(separator + 1).trim();
-    data[key] = raw.startsWith('"') ? JSON.parse(raw) : raw;
-  });
-  return { data, body: match[2].trim() };
-}
-
-function slugify(value) {
-  return value
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[’']/g, '')
-    .replace(/&/g, ' and ')
-    .replace(/[^a-zA-Z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .toLowerCase();
 }
 
 function formatDate(value) {
@@ -256,8 +58,7 @@ const posts = fs.readdirSync(contentDir)
     if (!allowedCategories.has(category)) throw new Error(`${filename}: category must be Homelab, Projects or Web.`);
     const filenameSlug = filename.replace(/^\d{4}-\d{2}-\d{2}-/, '').replace(/\.md$/, '');
     const slug = parsed.data.slug ? slugify(parsed.data.slug) : filenameSlug;
-    const words = parsed.body.split(/\s+/).filter(Boolean).length;
-    return { filename, title, date, category, summary, slug, body: parsed.body, readingTime: Math.max(1, Math.ceil(words / 220)) };
+    return { filename, title, date, category, summary, slug, body: parsed.body, readingTime: readingTime(parsed.body) };
   })
   .sort((a, b) => b.date.localeCompare(a.date) || a.title.localeCompare(b.title));
 
@@ -314,16 +115,6 @@ if (fs.existsSync(outputDir)) {
   fs.rmSync(outputDir, { recursive: true, force: false });
 }
 fs.renameSync(tempDir, outputDir);
-
-// Sync to dist destination
-const distTargets = [
-  path.join(root, 'dist', 'blog')
-];
-for (const target of distTargets) {
-  if (fs.existsSync(path.dirname(target))) {
-    fs.cpSync(outputDir, target, { recursive: true });
-  }
-}
 
 // Sync featured blog post metadata and title on index.html
 const indexHtmlPath = path.join(root, 'index.html');

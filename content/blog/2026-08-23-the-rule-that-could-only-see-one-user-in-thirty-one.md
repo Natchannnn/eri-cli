@@ -2,7 +2,7 @@
 title: "The Rule That Could Only See One User in Thirty-One"
 date: 2026-08-23
 category: Homelab
-summary: "Auditing media retention rules across 31 users, isolating Docker Compose .env restart mechanics, and deploying heartbeat freshness monitors against silent database corruption."
+summary: "A retention rule covering 31 users had only been checking one of them. Its dry run wanted to remove 3,161GiB before the data model was fixed."
 ---
 My retention rule was about to delete movies people watched last week. Dry run flagged 426 items, 3,161 GiB, under a simple policy: prune anything unplayed 18 months+, never touch anything ingested within the last 12.
 

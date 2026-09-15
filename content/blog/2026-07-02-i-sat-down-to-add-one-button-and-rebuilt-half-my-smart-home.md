@@ -2,7 +2,7 @@
 title: "I Sat Down to Add One Button and Rebuilt Half My Smart Home"
 date: 2026-07-02
 category: Homelab
-summary: "Preparing Home Assistant for physical Stream Deck+ hardware control required deploying a standalone Matter Server container, enabling UniFi mDNS reflection, and migrating fifteen devices to meross_lan."
+summary: "One Stream Deck button turned into a Home Assistant audit. By the end, Matter had its own server and fifteen devices had moved to local control."
 ---
 All I wanted was to bind some Home Assistant actions to the dials on my Elgato Stream Deck+. Ended up auditing the whole smart home first, because my containerized HA (not HAOS) had a bunch of stuff half-configured across VLANs.
 

@@ -2,7 +2,7 @@
 title: "Two Rooms That Turn Themselves Off Once I Worked Out What They Were Called"
 date: 2026-07-12
 category: Homelab
-summary: "Implementing presence-based lighting automations in Home Assistant, auditing gateway firewall rules for ISP migration readiness, and refactoring portfolio styles without headless visual feedback."
+summary: "I used recorder history to choose a five-minute vacancy timeout, cleaned up an old firewall rule, and made a CSS change I could not yet see."
 ---
 Sunday afternoon, three unrelated jobs: occupancy automations in HA, an ISP-migration audit on the gateway, and portfolio CSS I couldn't actually look at.
 

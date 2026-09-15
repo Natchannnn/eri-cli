@@ -2,7 +2,7 @@
 title: "A Second Server in the Morning, an Open Front Door by Midnight"
 date: 2026-07-28
 category: Homelab
-summary: "Provisioning a second Proxmox node with active-backup network bonding, migrating Home Assistant to a dedicated HAOS VM, and conducting a security audit that identified an unauthenticated webhook endpoint."
+summary: "The second Proxmox node survived a live link failure with no lost pings. Hours later, an audit found an unauthenticated webhook exposed to the internet."
 ---
 Big day: killed single points of failure. New Dell OptiPlex 3070 Micro (i5-9500T, 16 GB, 256 GB NVMe) as second Proxmox VE 9.2.5 host at `x.x.0.20`, bonded networking, Home Assistant out of Docker into its own HAOS VM. Ended the night finding an open front door I didn't know I had.
 

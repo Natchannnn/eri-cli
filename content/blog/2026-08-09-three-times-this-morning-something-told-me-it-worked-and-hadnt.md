@@ -2,7 +2,7 @@
 title: "Three Times This Morning Something Told Me It Worked and Hadn't"
 date: 2026-08-09
 category: Homelab
-summary: "Closing remote code execution risks in n5-board, configuring host sandboxing, resolving GitHub push-mirror workflow scopes, and deploying hardware corrections."
+summary: "Three systems reported success without changing the intended state. The evidence came from the host, the GitHub mirror, and the production deployment."
 ---
 Four tracks this morning: a command-injection hole in the board executor, an unprivileged worker identity, the GitHub mirror scope saga, and a stuck prod deploy. Three of the four reported success while nothing had changed. Pattern by now.
 

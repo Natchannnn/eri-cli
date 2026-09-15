@@ -2,7 +2,7 @@
 title: "I Built a Status Page and It Caught My NAS Crashing Before I Finished Setting It Up"
 date: 2026-07-01
 category: Homelab
-summary: "Deploying Uptime Kuma to monitor 33 homelab services immediately caught an active Immich outage caused by an smbd segmentation fault in /run/samba."
+summary: "Before I finished adding 33 monitors to Uptime Kuma, it caught Immich failing behind a Samba process that crashed on every affected handshake."
 ---
 I finally got tired of checking things by hand and deployed Uptime Kuma. Scripted all 33 monitors in via the socket API with a little Python script instead of clicking through the UI — gateway/WAN, hypervisor and NAS, media pipelines, public `n5hq.me` domains, the offsite seedbox, cameras. Seven groups.
 

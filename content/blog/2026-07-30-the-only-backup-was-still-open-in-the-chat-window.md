@@ -2,7 +2,7 @@
 title: "The Only Backup Was Still Open in the Chat Window"
 date: 2026-07-30
 category: Homelab
-summary: "Mitigating subshell injection vulnerabilities in automated SSH workflows with forced-command dispatchers, recovering rules from memory buffers, and structuring infrastructure backlogs."
+summary: "An uninstaller erased four rule files that had never reached backup. Their last intact copies were still sitting in a live chat buffer."
 ---
 Updated my workstation skills/packages today and the uninstaller wiped `~/.claude/` — including four custom condensed rule files I'd written. Checked the 03:02 host backup: `~/.claude/rules` was on the exclusion list. Never backed up. Not once.
 

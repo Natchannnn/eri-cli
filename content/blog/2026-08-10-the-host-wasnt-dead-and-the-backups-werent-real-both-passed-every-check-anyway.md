@@ -2,7 +2,7 @@
 title: "The Host Wasn't Dead and the Backups Weren't Real, Both Passed Every Check Anyway"
 date: 2026-08-10
 category: Homelab
-summary: "Expanding the Proxmox cluster to three nodes, diagnosing an e1000e transmit hang on pve02, and fixing a vzdump monitoring hook that reported false positives."
+summary: "A third Proxmox node gave the cluster quorum, but a NIC hang and a dishonest backup hook showed why green status alone was not enough."
 ---
 `pve03` joined as node 3 — `pvecm add x.x.0.20 --use_ssh 1 --link0 x.x.0.25`. Quorum now 2-of-3, 3 expected votes. Every guest stayed up through the join, no migrations needed. Network bond mirrors `pve01` (2.5G USB primary, onboard 1GbE failover), config backed up to `/root/interfaces.bak-2026-08-10` first. Same pass removed an unauthenticated enterprise apt repo that was locking updates.
 

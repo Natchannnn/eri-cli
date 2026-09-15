@@ -2,7 +2,7 @@
 title: "Twenty-Three Cents to Read a Photo and Almost None of It Was the Photo"
 date: 2026-07-25
 category: Projects
-summary: "Measuring cost breakdown in a document transcription pipeline revealed that agent scaffolding and cache write churn represented 97% of total token usage."
+summary: "A single photo cost about $0.23 to transcribe because 97% of the tokens belonged to scaffolding and cache churn, not the image."
 ---
 My work-order transcription pipeline — watch for handwritten photos, extract tables to CSV — was costing ~$0.23 a pop. Felt wrong for one photo. It was wrong.
 

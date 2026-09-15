@@ -2,7 +2,7 @@
 title: "Moving 135GB of Photos and the USB Cable That Almost Killed Them"
 date: 2026-06-28
 category: Homelab
-summary: "Migrating 135GB of Immich photo data from a bus-powered external SSD to a network-attached storage pool, diagnosing USB link dropouts during sustained transfers, and verifying file counts."
+summary: "A 135GB Immich move nearly failed when the USB link began dropping under sustained load. A cable swap held 107 MB/s, and the source and destination counts matched."
 ---
 Moved my Immich library off the bus-powered Samsung T7 Shield at `/mnt/tmpnas` onto my NAS pool at `/mnt/ugnas01-personal`. 135GB. Should've been boring.
 

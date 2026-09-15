@@ -2,7 +2,7 @@
 title: "The Night I Learned a Model Can't Be Trusted to Report on Itself"
 date: 2026-07-31
 category: Homelab
-summary: "Validating agent harness isolation, comparing model self-reporting against mechanical hook logs, and deploying Bazarr subtitle sidecars."
+summary: "Three model reports said the work was safe; three mechanical checks showed otherwise. The night ended with stricter harness boundaries and logs I could trust."
 ---
 I was about to be gone a week with no reliable remote access. Anything undecided by morning sits blocked for seven days. So from just after midnight to 05:45 I ground through the architectural backlog. Picked up threads from earlier, plus a five-hour quiet gap I had to reconcile against a parallel worker first.
 

@@ -2,7 +2,7 @@
 title: "I Asked If My Containers Were Up to Date and Ended the Day Running My Own Git Forge"
 date: 2026-07-24
 category: Homelab
-summary: "Building an automated container and host update pipeline with n8n, debugging a silent bash parameter expansion defect in change evaluation, and deploying an LTS Forgejo git forge."
+summary: "A routine update check became an n8n triage pipeline, then a shell expansion bug made unchanged packages look new. I finished the day with Forgejo running locally."
 ---
 Finished a routine pass over thirty containers + host packages and thought: I'm not hand-reading changelogs every day. Built an n8n pipeline on port 5678 to triage updates — auto-apply, postpone, or ping me on Discord with a changelog summary for breaking majors and sketchy deps.
 

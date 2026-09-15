@@ -2,7 +2,7 @@
 title: "The 502 Was Just a Typo in Trusted Proxies"
 date: 2026-06-07
 category: Homelab
-summary: "Exposing Home Assistant remotely using a Cloudflare Tunnel without open firewall ports, debugging container DNS resolution, and correcting reverse proxy headers."
+summary: "A Cloudflare Tunnel reached Home Assistant only after I fixed host-network DNS and a mistyped trusted proxy."
 ---
 I wanted remote access to my Home Assistant dashboard without punching holes in my router's firewall. The obvious move was spinning up a Cloudflare Tunnel alongside it in Docker, routing `ha.n5hq.me` straight at the local web UI.
 

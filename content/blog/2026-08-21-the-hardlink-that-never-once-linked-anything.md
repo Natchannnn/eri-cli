@@ -2,7 +2,7 @@
 title: "The Hardlink That Never Once Linked Anything"
 date: 2026-08-21
 category: Homelab
-summary: "Diagnosing 229 GB of silent file duplication across ZFS dataset boundaries, pinning Maintainerr versions, and backing up monitoring volumes ahead of node migration."
+summary: "Separate ZFS datasets had forced Radarr and Sonarr to copy every import for months. The inode check accounted for 229GB of duplicated data."
 ---
 About to deploy Maintainerr for disk cleanup, I checked how much space hardlinking actually saves me. Radarr + Sonarr have run `copyUsingHardlinks: true` since day one. Staging downloads and library files should share inodes.
 

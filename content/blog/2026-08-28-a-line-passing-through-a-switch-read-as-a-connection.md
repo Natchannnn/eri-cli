@@ -2,7 +2,7 @@
 title: "A Line Passing Through a Switch Read as a Connection"
 date: 2026-08-28
 category: Homelab
-summary: "Migrating VM storage off failing NAS disks to local NVMe, clarifying isolated switch topology in architecture diagrams, and building a 584-page offline documentation mirror."
+summary: "A storage move recovered the VM from a failing NAS pool. In the architecture diagram, one innocent line also made an isolated switch look directly connected."
 ---
 My primary VM lived on the NAS pool. The pool started timing out reads and refusing to give back freed space. Moved the 150 GiB disk image to local NVMe on the hypervisor.
 

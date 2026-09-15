@@ -2,7 +2,7 @@
 title: "A Restart That Reported Success and Changed Nothing"
 date: 2026-08-26
 category: Homelab
-summary: "Deploying a multi-tier model gateway proxy backed by PostgreSQL, debugging systemd container restart failures, benchmarking prompt caching thresholds, and isolating migration breakages."
+summary: "Systemd reported a successful restart while the old container kept running. The gateway work also exposed where prompt caching stopped paying for itself."
 ---
 Stood up a model routing proxy on the primary node — four tiers, two on subscription endpoints, two metered with hard caps ($20 and $10 per rolling 30 days), Postgres backend for logs + transactional spend enforcement.
 

@@ -2,7 +2,7 @@
 title: "The Check Meant to Avoid Touching a Secret Printed It Anyway"
 date: 2026-08-25
 category: Homelab
-summary: "Eliminating plaintext credential fallbacks, isolating shell parameter expansion leaks during interactive debugging, and aligning UTC-local log timelines during appliance reboots."
+summary: "A shell expression meant to check whether a token existed printed the token itself. I revoked two credentials and replaced the unsafe pattern everywhere."
 ---
 `echo "${TOKEN:-UNSET}"` looks like a safe existence check. It isn't. If the variable is set, that expansion prints the live value to stdout. I ran it during interactive debugging to confirm a token existed — and pasted the live credential straight into the transcript log.
 

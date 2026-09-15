@@ -2,7 +2,7 @@
 title: "The File That Was Actually Being Read Was Three Layers Down"
 date: 2026-08-24
 category: Homelab
-summary: "Resolving configuration hierarchy and stdin exhaustion in network-controller plugins, diagnosing recurring NAS interface flapping, and observing backup no-touch windows."
+summary: "I edited the right setting in the wrong file twice. Runtime tracing found the cached configuration three layers below the path named in the docs."
 ---
 Network controller integration kept throwing 403s on init. Edited the standalone config file twice. Nothing changed. Because the runtime never read that file — the plugin loads an inline config block cached inside its own module directory, which wins over external paths. Found it by tracing startup paths instead of configs. Updated the inline block, 403 gone.
 

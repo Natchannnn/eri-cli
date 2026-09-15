@@ -2,7 +2,7 @@
 title: "I Moved One WAN Cable and Lost Three Minutes of Edge"
 date: 2026-06-30
 category: Homelab
-summary: "Moving a gateway WAN link caused a transient 3-minute Cloudflare tunnel reconnect cycle, followed by troubleshooting a Windows diskpart VDS concurrency lock on a 256 GB USB drive."
+summary: "Moving one WAN cable cost three minutes of edge connectivity. The suspicious USB drive later turned out to be real; Windows had simply locked the disk service."
 ---
 Moved my UniFi gateway's WAN uplink off the 10GbE SFP+ port down to plain RJ45. Wanted the fast ports free for local stuff. Public IP didn't change. Still cost me three minutes of edge.
 

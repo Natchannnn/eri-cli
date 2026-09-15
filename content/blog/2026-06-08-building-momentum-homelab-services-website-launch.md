@@ -2,7 +2,7 @@
 title: "My Monitoring Stack Lies About WAN Uptime and My Site Builds From Obsidian"
 date: 2026-06-08
 category: Projects
-summary: "Setting up Prometheus, Grafana, Loki, and UnPoller on an OptiPlex host, exposing Immich via Cloudflare Tunnel, and creating a static portfolio generator from Obsidian markdown notes."
+summary: "I brought up the monitoring stack, then learned that one green WAN panel was measuring the wrong thing. The same day, my Obsidian notes became a static site."
 ---
 Spent most of today getting Prometheus, Grafana, Loki, Promtail, Node Exporter, cAdvisor, and UnPoller all up on my OptiPlex as one Docker Compose stack. Metrics are landing on a dashboard I built at `status.n5hq.me`.
 

@@ -2,7 +2,7 @@
 title: "The Abort-on-Failure Hook Had One Failure Mode It Couldn't Catch"
 date: 2026-09-08
 category: Web
-summary: "Placing local pre-commit hooks into tracked repository source, establishing an isolated design repo, extracting inlined web assets, and deploying an automated /dev/v3 preview."
+summary: "The pre-commit guard lived only in one machine's untracked hooks directory. I moved it into the repository before building the isolated v3 preview."
 ---
 My hero-stat pre-commit hook — rewrites site tiles from live container counts — existed on exactly one machine, untracked, in `.git/hooks/`. An abort-on-failure hook that vanishes with a disk wipe aborts nothing. It's tracked source now: `scripts/hooks/pre-commit` (123 lines) + README, `.git/hooks/pre-commit` symlinked to it. One file to edit and diff, not two drifting copies. The abort-loud behavior (no host reach / non-numeric / zero count) stays — added earlier this year to replace the version that failed silently. This closes the remaining hole: the guard itself is now versioned.
 

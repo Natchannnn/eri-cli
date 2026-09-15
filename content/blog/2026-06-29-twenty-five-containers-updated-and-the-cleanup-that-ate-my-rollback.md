@@ -2,7 +2,7 @@
 title: "Twenty-Five Containers Updated and the Cleanup That Ate My Rollback"
 date: 2026-06-29
 category: Homelab
-summary: "A routine maintenance cycle across six Docker Compose stacks uncovered edge cases: a Cloudflare tunnel syntax change, a corrupt upstream build publishing a 9-byte binary, and strict seeder thresholds discarding queries."
+summary: "Twenty-five containers came back healthy, but the tunnel did not. The same maintenance window exposed a 9-byte upstream binary and a cleanup that removed my rollback."
 ---
 Supposed to be routine. Pull new tags across my six Compose stacks — home auto, photos, media, monitoring, proxy, odd daemons — recreate, done. Twenty-five containers came up healthy.
 

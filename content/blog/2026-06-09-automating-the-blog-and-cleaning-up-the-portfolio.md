@@ -2,7 +2,7 @@
 title: "GitHub Actions Committed Before I Could Push"
 date: 2026-06-09
 category: Projects
-summary: "Setting up GitHub Actions for automated manifest generation, purging early placeholder posts, and simplifying homepage project tiles."
+summary: "The first automated blog publish committed before my local push, so I had to fix the workflow race before cleaning up the site."
 ---
 I got tired of running my Node script by hand every time I wanted to publish, so I wired up a GitHub Actions workflow (`.github/workflows/blog-publish.yml`). Push any `.md` under `blog/posts/` on main, it runs `scripts/regenerate-manifest.js` and rebuilds `posts.json` for me.
 

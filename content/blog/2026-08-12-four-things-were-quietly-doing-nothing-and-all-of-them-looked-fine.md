@@ -2,7 +2,7 @@
 title: "Four Things Were Quietly Doing Nothing and All of Them Looked Fine"
 date: 2026-08-12
 category: Homelab
-summary: "Extending a Stream Deck plugin fork with Stream Deck+ dial support, resolving an upstream UIController bug, migrating runsheet git remotes, and fixing drift checker search roots."
+summary: "A plugin, a remote, and a drift check all looked healthy while doing nothing useful. Each failure lived below the layer I had been watching."
 ---
 Plugin day plus housekeeping. Forked the Claude-usage Stream Deck plugin for dial support, and the infra audit kept finding things that looked healthy while doing nothing.
 

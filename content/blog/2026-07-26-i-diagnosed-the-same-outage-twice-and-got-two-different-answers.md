@@ -2,7 +2,7 @@
 title: "I Diagnosed the Same Outage Twice and Got Two Different Answers"
 date: 2026-07-26
 category: Homelab
-summary: "Deploying Stirling-PDF with verified OCR mounts, tracing recurring camera dropouts to gateway proxy crashes rather than physical links, and auditing UniFi RF congestion."
+summary: "I blamed the same camera outage on two different layers in one day. Proxy logs eventually cleared the physical link and exposed the real failure."
 ---
 Weekend infra pass: stood up Stirling-PDF, chased camera dropouts, stared at UniFi RF numbers. The cameras taught me something — I diagnosed the same outage twice in one day and blamed two different layers. Both times I was confident. Once I was wrong.
 

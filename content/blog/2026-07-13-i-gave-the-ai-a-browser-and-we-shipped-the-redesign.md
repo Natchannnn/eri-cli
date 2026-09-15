@@ -2,7 +2,7 @@
 title: "I Gave the AI a Browser and We Shipped the Redesign"
 date: 2026-07-13
 category: Projects
-summary: "Integrating Playwright and headless Chromium into the development workflow to catch layout bugs, font rendering issues, and responsive stylesheet regressions."
+summary: "Once the development workflow could take its own screenshots, it found layout and font failures that every text-only check had missed."
 ---
 I was tired of eyeballing every layout change, so I put Playwright + headless Chromium on my dev server. Full-page screenshots at a few viewports, every push. Caught stuff no text diff ever would.
 

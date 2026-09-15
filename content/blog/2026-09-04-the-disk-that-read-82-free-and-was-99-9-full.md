@@ -2,7 +2,7 @@
 title: "The Disk That Read 82% Free and Was 99.9% Full"
 date: 2026-09-04
 category: Homelab
-summary: "A read-only audit of homelab services identified storage quota blind spots, silent retention job failures, and stalled automation workflows."
+summary: "Every storage dashboard showed room to spare while the account quota sat at 99.9%. The audit found several other services that were alive but no longer completing work."
 ---
 Read-only audit day. No patches, just documenting what the dashboards claim versus what's actually running. Biggest gap was storage, and it wasn't close.
 

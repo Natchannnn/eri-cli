@@ -34,7 +34,7 @@ npm run build:css
 # Compile Markdown articles into static blog pages
 npm run build:blog
 
-# Run comprehensive test suite
+# Run static repository checks
 npm test
 ```
 
@@ -44,9 +44,11 @@ npm test
 - Presence of required core documents.
 - CSS bundle freshness (verifies `style.css` matches source modules).
 - Tablet viewport geometry (verifies grid minimums remain under 900px).
-- Internal link integrity across all HTML pages.
+- Presence of the short-height overflow rule used by the About page.
+- Internal link integrity across root pages and generated blog pages.
 - Syntax validation for all first-party JavaScript files.
-- Blog route completeness.
+- Blog frontmatter, filename dates, unique slugs, generated routes, page titles, and meta descriptions.
+- Homepage featured-post title, date, and reading-time synchronization.
 
 ## Project structure
 
@@ -58,6 +60,8 @@ npm test
 ├── LICENSE.md              # Proprietary copyright notice (All Rights Reserved)
 ├── THIRD_PARTY_NOTICES.md  # Attributions for fonts and third-party libraries
 ├── package.json            # Build scripts, project metadata, private license
+├── .nojekyll               # Serve generated files without Jekyll processing
+├── _config.yml             # GitHub Pages exclusions for source-only files
 ├── .gitattributes          # GitHub Linguist rules for vendored and generated files
 ├── assets/
 │   ├── css/
@@ -81,6 +85,8 @@ npm test
 ├── scripts/
 │   ├── build-css.js        # Bundles modular CSS files into style.css
 │   ├── build-blog.js       # Static blog generator (Markdown to HTML)
+│   ├── blog-utils.js       # Shared frontmatter, slug, and HTML helpers
+│   ├── markdown.js         # Markdown subset renderer used by the blog build
 │   └── verify.js           # Verification test suite (npm test)
 └── templates/
     ├── blog-index.html     # Template for blog archive (/blog/index.html)
@@ -106,7 +112,7 @@ category: Homelab
 summary: "Corosync quorum configuration, shared ZFS storage, and migration testing."
 ---
 
-Article body in standard Markdown.
+Article body in the Markdown subset supported by `scripts/build-blog.js`: paragraphs, level-two and level-three headings, fenced code blocks, blockquotes, horizontal rules, ordered and unordered lists, links, emphasis, and inline code.
 ```
 
 To compile posts and update `blog/index.html`:

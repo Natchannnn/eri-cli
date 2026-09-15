@@ -2,7 +2,7 @@
 title: "Everything Redundant Turned Out to Share Something"
 date: 2026-08-11
 category: Homelab
-summary: "Shrinking and migrating VM 200, deploying Proxmox Backup Server, benchmarking async NFS, and auditing latent single-point-of-failure dependencies across the cluster."
+summary: "I moved VM 200 and proved a restore from the new backup server. The dependency audit then found how much of the cluster still shared one failure path."
 ---
 Three big jobs today: move VM 200 between nodes, stand up Proxmox Backup Server with proven restores, and audit every shared dependency my "redundant" systems quietly share.
 

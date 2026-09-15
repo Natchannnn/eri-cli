@@ -2,7 +2,7 @@
 title: "Discord In, Linux ISOs Out — Closing the Last Manual Gap"
 date: 2026-07-14
 category: Projects
-summary: "Bridging the final ingestion gap in a media management pipeline with a custom metadata router, tuning indexer network timeouts, and open-sourcing the Disclaude Sesh management bridge."
+summary: "The media pipeline still ended in two folders nobody watched. I wrote a deterministic router to close that gap and published the Discord bridge beside it."
 ---
 My home server handles media distros and open-source release images end to end — Discord requests in via Seerr, fetchers grab them. Except the last step was manual. Downloads just piled up in two flat staging folders the media server never watched. Seerr's tag/language routing couldn't decide overlaps deterministically — like animated stuff in Asian languages. Docs were vague. So I stopped guessing and wrote a sidecar.
 

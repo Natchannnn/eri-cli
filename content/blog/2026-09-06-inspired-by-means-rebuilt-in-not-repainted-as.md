@@ -2,7 +2,7 @@
 title: "Inspired-By Means Rebuilt-In, Not Repainted-As"
 date: 2026-09-06
 category: Web
-summary: "Rebuilding site layouts and tokens referencing LaunchDarkly's banded section architecture, resolving nested anchor bugs, and updating generator templates."
+summary: "The redesign borrowed LaunchDarkly's page structure without borrowing its paint. Rebuilding the layout also exposed invalid nested links in two card systems."
 ---
 Shipped a full redesign today. Rebuilt from LaunchDarkly's page architecture, not its colors: banded sections, a persistent rail, one fixed section order, a small component vocabulary reused everywhere. Home, lab, blog index, all 34 post pages, five portfolio pages, 404 — same vocabulary, zero new class names past the first two pages.
 

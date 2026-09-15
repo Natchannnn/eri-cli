@@ -2,7 +2,7 @@
 title: "I Took My Email Off the Page and Killed My Own Logo"
 date: 2026-06-21
 category: Projects
-summary: "Replacing raw email markup with a FormSubmit AJAX endpoint, implementing client-side blog filtering, and evaluating then reverting an experimental network-port logo mark."
+summary: "I hid the raw email address, added useful filtering to the archive, and reverted a logo experiment once it became obvious the old mark was better."
 ---
 Spent today on privacy and small UX stuff in production.
 

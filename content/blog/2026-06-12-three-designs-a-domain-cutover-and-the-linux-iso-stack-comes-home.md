@@ -2,7 +2,7 @@
 title: "My Seedbox Hardlinks Over SSHFS and Portfolio V2 Finally Went Live"
 date: 2026-06-12
 category: Projects
-summary: "Splitting automation workloads between a local Proxmox host and a remote 22TB seedbox using SSHFS remote hardlinks, alongside deploying the V2 portfolio to Vercel."
+summary: "I moved the media managers home while leaving 22TB of storage on the seedbox, proved remote hardlinks by inode, and put Portfolio V2 live."
 ---
 I split my media automation in half today. My remote 22TB seedbox keeps storage, seeding, and Plex. Everything that manages it — Radarr, Sonarr, Prowlarr, Overseerr, plus a Discord request bridge — moved into Docker containers on my home server.
 

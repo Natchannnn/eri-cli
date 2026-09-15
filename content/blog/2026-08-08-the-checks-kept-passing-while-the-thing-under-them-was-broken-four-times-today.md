@@ -2,7 +2,7 @@
 title: "The Checks Kept Passing While the Thing Under Them Was Broken, Four Times Today"
 date: 2026-08-08
 category: Homelab
-summary: "Restructuring the vault directory tree, resolving 59 path dependencies, and iteratively testing network egress proxy architectures for background workers."
+summary: "Four checks passed while their assumptions were broken. The failures appeared during a 59-path vault move and another attempt to fence worker traffic."
 ---
 Two jobs today: untangle the vault directory tree, and lock down worker egress. Both taught the same lesson — passing checks mean nothing if the check itself is broken. Four separate instances in one day.
 

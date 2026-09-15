@@ -2,7 +2,7 @@
 title: "I Built a Downloads Sorter in Six Hours and Every Bug in It Looked Like Working Code"
 date: 2026-07-29
 category: Projects
-summary: "Developing FileIt-a robust PowerShell downloads organizer-debugging .NET exception unwrapping and wildcard expansion bugs, and validating edge cases via Windows Sandbox."
+summary: "FileIt sorted ordinary downloads perfectly and failed on the filenames that mattered. Windows Sandbox helped uncover four bugs hiding behind successful-looking runs."
 ---
 Wanted a Downloads sorter for Windows 11 that doesn't eat half-downloaded files. Built FileIt in about six hours. Every bug in it passed casual testing and only died on real filenames. That's the whole story, really.
 

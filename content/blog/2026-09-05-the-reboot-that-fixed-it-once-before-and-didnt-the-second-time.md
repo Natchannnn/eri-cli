@@ -2,7 +2,7 @@
 title: "The Reboot That Fixed It Once Before and Didn't the Second Time"
 date: 2026-09-05
 category: Homelab
-summary: "Diagnosing a NAS btrfs pool failure, evacuating dependent Proxmox guests and containers to node-local storage under HA, and validating restore integrity."
+summary: "A NAS pool went read-only for the second time in three days. I stopped treating the reboot as a fix and evacuated every dependent guest to local storage."
 ---
 Four services died looking like four separate faults. One root cause: a NAS storage pool went read-only, taking a home automation VM, a container, a backup datastore, and a backup target with it. Fix was diagnose the pool, evacuate everything off it under HA, land it all on node-local storage.
 

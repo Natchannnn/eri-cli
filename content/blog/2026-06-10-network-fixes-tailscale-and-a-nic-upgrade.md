@@ -2,7 +2,7 @@
 title: "My Doorbell Was on the Wrong VLAN and My Printer Was on the Wrong Subnet"
 date: 2026-06-10
 category: Homelab
-summary: "Resolving cross-VLAN firewall routing for an Aqara doorbell and network printer, consolidating redundant Tailscale installations on Ubuntu, and migrating host networking to 2.5GbE."
+summary: "A doorbell on the wrong VLAN and a printer on the wrong subnet led to a firewall repair. I also removed a duplicate Tailscale install and moved the host to 2.5GbE."
 ---
 My Aqara G410 doorbell at `x.x.10.9` (VLAN 80, Camera net) stopped showing video in HomeKit and the Aqara app. mDNS repeating was on across all VLANs, so that wasn't it. Packet capture showed the camera phoning home — little 76-byte UDP bursts out to Aqara's relay — but the return video stream never started.
 

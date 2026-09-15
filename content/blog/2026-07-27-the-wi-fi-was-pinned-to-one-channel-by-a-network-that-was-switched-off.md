@@ -2,7 +2,7 @@
 title: "The Wi-Fi Was Pinned to One Channel by a Network That Was Switched Off"
 date: 2026-07-27
 category: Homelab
-summary: "Resolving site-wide 2.4 GHz channel locking in UniFi, tuning 5 GHz EIRP against regional regulatory limits, optimizing AP channel reuse via floor plans, and staging firewall rules for a secondary Proxmox host."
+summary: "A disabled IoT SSID was still pinning every access point to Channel 6. Removing that hidden constraint let the RF plan behave normally again."
 ---
 All four of my APs were stuck on 2.4 GHz Channel 6. Tried spreading them across 1/6/11 in the UniFi UI. Every attempt died with `This action could not be completed`. No reason given.
 

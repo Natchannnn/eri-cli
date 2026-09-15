@@ -2,7 +2,7 @@
 title: "The Validator Was Checking the Same Wrong Path as the Bug"
 date: 2026-08-27
 category: Homelab
-summary: "Resolving YAML indentation in model proxy spend caps, restructuring root instructions into tiered documentation, and evaluating secret store availability."
+summary: "A misplaced YAML key disabled the model gateway's spend cap. The validator passed because it looked up the same wrong path as the runtime code."
 ---
 My model proxy was running with no spend cap and telling me everything was fine. `max_budget` sat as a sibling of `parameters` instead of nested under it. Parser wanted `parameters.max_budget`, found nothing, initialized unconstrained — no syntax error, no startup warning. Silent unlimited spend.
 

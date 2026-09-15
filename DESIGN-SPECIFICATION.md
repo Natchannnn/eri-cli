@@ -47,7 +47,7 @@ Each family has a defined role:
 | Family | Use | Treatment |
 | --- | --- | --- |
 | PP Kyoto | Hero headline, major section headings and project titles | Display serif; line height `0.78`–`0.85`, tracking `-0.055em`–`-0.065em` |
-| AUTHENTIC Sans Pro | Body copy, project descriptions, article prose and primary navigation | The main reading face; registered as `'AUTHENTIC Sans'` in the CSS token |
+| AUTHENTIC Sans | Body copy, project descriptions, article prose and primary navigation | The main reading face; registered as `'AUTHENTIC Sans'` in the CSS token |
 | Pitch Sans | Metadata, timestamps, hardware statistics, categories and technical tags | Monospaced text, uppercase tracking where appropriate and `font-variant-numeric: tabular-nums` |
 
 PP Kyoto’s tight line spacing makes a multiline headline read as one compact shape. Longer explanations move into AUTHENTIC Sans. Pitch Sans handles details such as `2026-08-10 · 3 MIN READ`, giving dates and measurements a distinct place on the page.
@@ -174,7 +174,7 @@ The compact presentation avoids ongoing WebGL rendering and the desktop terrain 
 
 A consolidated wheel controller (`assets/js/snap-scroll.js`) manages slide transitions for both the Homepage and About pages. It normalizes `deltaMode` by treating pixel deltas directly, multiplying line deltas by `32`, and multiplying page deltas by `window.innerHeight`.
 
-The input threshold is `4px`, accepting gentle wheel notches while ignoring micro-jitters. The animation lock is set to `550ms` to guarantee predictable viewport docking without bounce-back.
+The input threshold is `4px`, accepting gentle wheel notches while ignoring micro-jitters. The animation lock lasts `550ms`, preventing another navigation request while the current transition settles.
 
 ArrowDown, ArrowUp, PageDown, PageUp and Spacebar provide accessible keyboard navigation. Focus guards ensure keyboard navigation does not intercept text inputs or buttons.
 
@@ -258,7 +258,7 @@ The publishing flow is:
 
 `content/blog/*.md` → `scripts/build-blog.js` → `blog/*/index.html`
 
-The generator produces standalone HTML articles, formats dates, calculates reading-time estimates and extracts opening paragraphs for meta descriptions. The project snapshot contains 46 articles and category filters for **Homelab**, **Projects** and **Web**.
+The generator produces standalone HTML articles, formats dates, calculates reading-time estimates and uses each post's frontmatter `summary` as its meta description. The project snapshot contains 46 articles and category filters for **Homelab**, **Projects** and **Web**.
 
 Articles are delivered as crawlable static HTML, with no client-side hydration framework or tracking scripts in the specified architecture.
 

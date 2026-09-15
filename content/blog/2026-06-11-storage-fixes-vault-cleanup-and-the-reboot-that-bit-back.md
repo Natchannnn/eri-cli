@@ -2,7 +2,7 @@
 title: "I Moved a Folder, Rebooted, and Home Assistant Forgot Who It Was"
 date: 2026-06-11
 category: Homelab
-summary: "Disabling UAS kernel drivers to eliminate severe I/O latency on external SSD storage, diagnosing empty bind-mounts after a host reboot, and automating dev server persistence."
+summary: "A USB storage quirk cut SSD latency from 4,864ms to 37ms. Later, one moved bind-mount directory made Home Assistant boot with an empty identity."
 ---
 My 2TB external drive used to live at `/mnt/photos`. Since I don't have the real NAS hardware yet, I re-mounted it at `/mnt/tmpnas` as a general host share — updated `/etc/fstab`, pointed Immich's `UPLOAD_LOCATION` at the new path.
 

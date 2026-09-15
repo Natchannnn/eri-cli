@@ -2,7 +2,7 @@
 title: "I Certified the Network at 2.5 Gigabit Then Lost Three Hours to a USB Dongle"
 date: 2026-07-16
 category: Homelab
-summary: "Benchmarking local LAN throughput across wired 2.5GbE and Wi-Fi 6 endpoints using iperf3, followed by a root-cause isolation pass on an asymmetric USB Ethernet adapter."
+summary: "The wired LAN reached its expected 2.5GbE ceiling. An asymmetric USB adapter then consumed three hours before the fault was isolated."
 ---
 Internet speed tests tell you about your ISP. I wanted my LAN numbers, so I set up `iperf3` properly. Started with OpenSpeedTest in a container — cute, did 22.6 Gbps over loopback via curl, but bridge NAT + CPU scheduling pollutes the numbers. Threw it out, ran plain `iperf3` with `--network host`. My server has a real 2.5GbE NIC, so ceiling is ~2.4 Gbps after MTU 1500 framing.
 

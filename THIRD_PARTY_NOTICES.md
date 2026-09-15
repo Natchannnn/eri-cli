@@ -1,19 +1,17 @@
-# Third-Party Notices and Acknowledgements
+# Third-Party Notices
 
-This project uses the following third-party software and typography assets:
+The project license does not cover the fonts or vendored library listed here.
 
 ## Typography
 
 ### PP Kyoto
 - **Copyright**: (c) 2023 Pangram Pangram Foundry.
-- **Usage**: Used under a private commercial webfont license for personal portfolio deployment.
-- **Notice**: Not covered by the repository license. Unlawful extraction, reverse-engineering, or redistribution of font binaries is strictly prohibited.
+- **Usage**: Licensed privately for this portfolio's web deployment.
 - **Website**: https://pangrampangram.com
 
 ### Pitch Sans
 - **Copyright**: (c) 2017 Klim Type Foundry. All rights reserved.
-- **Usage**: Used under a private commercial webfont license for personal portfolio deployment.
-- **Notice**: Not covered by the repository license. Unlawful extraction, reverse-engineering, or redistribution of font binaries is strictly prohibited.
+- **Usage**: Licensed privately for this portfolio's web deployment.
 - **Website**: https://klim.co.nz
 
 ### AUTHENTIC Sans

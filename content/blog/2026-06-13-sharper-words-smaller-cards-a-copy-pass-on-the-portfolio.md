@@ -2,7 +2,7 @@
 title: "My About Page Said Full-Stack Developer and Meant Nothing"
 date: 2026-06-13
 category: Projects
-summary: "Eliminating generic buzzwords from the About section, replacing non-interactive pill elements with anchor jumps, and implementing native HTML details elements for project cards."
+summary: "My About page sounded like a job-description generator. I replaced the claims with things I could prove and rebuilt the project cards around native HTML."
 ---
 Was working on staging (port 3002) today, just reading my own portfolio copy. My About said "passionate full-stack developer with deep expertise in building scalable solutions."
 
