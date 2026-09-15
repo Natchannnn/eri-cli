@@ -107,7 +107,7 @@ The three type families remain available across this section, but each element u
 | --- | --- |
 | `/projects.html` | The infrastructure and project archive |
 | `/about.html` | Personal background, narrative and roadmap |
-| `/blog/` | Technical articles and incident reviews; 46 articles in the project snapshot |
+| `/blog/` | Technical articles and incident reviews generated from the Markdown source collection |
 
 The header contains **Projects**, **About** and **Blog**. These links all lead to pages. Email is placed with contact information lower in the reading sequence, where visitors can choose it after reviewing the work. This also avoids making an email-client action part of the primary page navigation.
 
@@ -252,13 +252,15 @@ Claims about scale, availability or performance need supporting evidence; when i
 
 ### Blog generation
 
-The blog uses `scripts/build-blog.js`, a Node.js static generator with no third-party dependencies.
+The blog uses a small dependency-free Node.js build pipeline. Markdown files in `content/blog/` are the source of truth; files under `blog/` are generated output.
 
 The publishing flow is:
 
-`content/blog/*.md` → `scripts/build-blog.js` → `blog/*/index.html`
+`content/blog/*.md` + `templates/*.html` → `scripts/build-blog.js` → `blog/*/index.html`
 
-The generator produces standalone HTML articles, formats dates, calculates reading-time estimates and uses each post's frontmatter `summary` as its meta description. The project snapshot contains 46 articles and category filters for **Homelab**, **Projects** and **Web**.
+`scripts/blog-utils.js` owns frontmatter parsing, escaping, slug generation and reading-time calculation. `scripts/markdown.js` renders the supported Markdown subset. The build script validates required metadata, dates, categories and unique slugs before it replaces the generated blog directory.
+
+The generator produces standalone HTML articles, previous/next navigation and a filterable archive. It uses each post's frontmatter `summary` as its meta description and supports the categories **Homelab**, **Projects** and **Web**. The homepage's selected-post title, date and reading time are synchronized from the same source metadata.
 
 Articles are delivered as crawlable static HTML, with no client-side hydration framework or tracking scripts in the specified architecture.
 
@@ -303,6 +305,8 @@ Tokens defined in `assets/css/tokens.css` (and bundled into `assets/css/style.cs
 
 ### Components and implementation locations
 
+The modular files under `assets/css/` are the CSS source. `scripts/build-css.js` concatenates them in a fixed order into `assets/css/style.css`; the bundle should be regenerated instead of edited independently.
+
 | Identifier or path | Responsibility |
 | --- | --- |
 | `.site-header` | Identity and primary navigation |
@@ -316,8 +320,15 @@ Tokens defined in `assets/css/tokens.css` (and bundled into `assets/css/style.cs
 | `onScriptError` | Script failure handler |
 | `assets/js/three.min.js` | Three.js dependency |
 | `assets/js/terrain.js` | Terrain implementation |
-| `assets/css/style.css` | Shared design tokens and styles |
-| `scripts/build-blog.js` | Markdown-to-HTML blog generation |
+| `assets/css/*.css` | Modular design tokens, layout, components and page styles |
+| `assets/css/style.css` | Generated CSS bundle used by the pages |
+| `templates/blog-post.html` | Template for an individual generated article |
+| `templates/blog-index.html` | Template for the generated blog archive |
+| `scripts/build-css.js` | CSS bundle generation |
+| `scripts/blog-utils.js` | Shared frontmatter, slug, escaping and reading-time helpers |
+| `scripts/markdown.js` | Renderer for the supported Markdown subset |
+| `scripts/build-blog.js` | Blog validation and static route generation |
+| `scripts/verify.js` | Source/output, link, syntax and build-consistency checks |
 
 ## 9. Appendix: implementation excerpts
 
@@ -345,14 +356,17 @@ const roll = random();
 const count = roll < 0.15 ? 1 : roll < 0.50 ? 2 : roll < 0.84 ? 3 : 4;
 ```
 
-The terrace profile is:
+The terrace profile first measures normalized elliptical distance from a summit:
 
 ```text
-steep = clamp((frac(3.2 × dist) − 0.15) / 0.70, 0, 1)
-height = (floor(3.2 × dist) + steep² × (3 − 2 × steep)) / 3.2
+r = sqrt(((u − summitX) / summitWidth)² + ((d − ridgeCenter) / ridgeDepth)²)
+raw = cos(r × π / 2)
+t = 3.2 × raw
+steep = clamp((frac(t) − 0.15) / 0.70, 0, 1)
+height = (floor(t) + steep² × (3 − 2 × steep)) / 3.2
 ```
 
-Here, `frac` is the fractional part and `clamp` limits the value to the stated range. The definition and units of `dist` in this terrain calculation remain unspecified.
+The calculation runs only while `r < 1`. Here, `u` and `d` are normalized field coordinates, `frac` is the fractional part and `clamp` limits the value to the stated range. The result is multiplied by the summit's weight before contributing to the final pillar height.
 
 ### C. Wave profile
 
