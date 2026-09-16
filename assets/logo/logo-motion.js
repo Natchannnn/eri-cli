@@ -78,14 +78,15 @@ for(const el of document.querySelectorAll('.eri-cli-logo')){
  document.addEventListener('visibilitychange',()=>{if(document.hidden)seek(0);});
  reduce.addEventListener('change',()=>{if(reduce.matches)seek(0);});
  function updateSize(){
-  const dpr=Math.min(window.devicePixelRatio||1,2);
+  const screenDpr=window.devicePixelRatio||1;
+  const scale=Math.min(Math.max(screenDpr*2,4),6);
   const rect=el.getBoundingClientRect();
   const rawW=rect.width||el.clientWidth||132;
   const rawH=rect.height||el.clientHeight||132;
   const w=Math.min(Math.max(rawW,48),160);
   const h=Math.min(Math.max(rawH,48),160);
-  canvas.width=Math.round(w*dpr);
-  canvas.height=Math.round(h*dpr);
+  canvas.width=Math.round(w*scale);
+  canvas.height=Math.round(h*scale);
   render(progress);
  }
  new ResizeObserver(updateSize).observe(el);
