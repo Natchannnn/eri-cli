@@ -5,6 +5,11 @@
   padding-top: var(--head-space);
 }
 
+.blog-page .meta {
+  font-family: var(--authentic);
+  font-size: 12px;
+}
+
 .blog-intro {
   min-height: clamp(160px, 20vh, 240px);
   align-items: end;
@@ -13,8 +18,8 @@
 
 .blog-intro-label {
   grid-column: 1;
-  font-family: var(--pitch);
-  font-size: 11px;
+  font-family: var(--authentic);
+  font-size: 12px;
   line-height: 1.55;
   letter-spacing: .04em;
   text-transform: uppercase;
@@ -83,8 +88,8 @@
   border-radius: 0;
   background: transparent;
   color: var(--signal);
-  font-family: var(--pitch);
-  font-size: 13px;
+  font-family: var(--authentic);
+  font-size: 14px;
   letter-spacing: .02em;
   outline: none;
   transition: border-color 140ms ease;
@@ -105,8 +110,8 @@
   border: 0;
   background: transparent;
   color: var(--signal-48);
-  font-family: var(--pitch);
-  font-size: 11px;
+  font-family: var(--authentic);
+  font-size: 12px;
   text-transform: uppercase;
   cursor: pointer;
 }
@@ -130,8 +135,8 @@
   background: none;
   color: var(--signal-48);
   cursor: pointer;
-  font-family: var(--pitch);
-  font-size: 11px;
+  font-family: var(--authentic);
+  font-size: 12px;
   letter-spacing: .04em;
   text-transform: uppercase;
   text-underline-offset: 6px;
@@ -157,8 +162,8 @@
 .blog-result-count {
   text-align: right;
   margin: 8px 0 clamp(24px, 3vh, 40px);
-  font-family: var(--pitch);
-  font-size: 11px;
+  font-family: var(--authentic);
+  font-size: 12px;
   letter-spacing: .05em;
   text-transform: uppercase;
   color: var(--signal-48);
@@ -183,8 +188,8 @@
 
 .blog-rail-heading {
   display: block;
-  font-family: var(--pitch);
-  font-size: 11px;
+  font-family: var(--authentic);
+  font-size: 12px;
   letter-spacing: .06em;
   text-transform: uppercase;
   color: var(--signal-48);
@@ -202,8 +207,8 @@
   justify-content: space-between;
   align-items: baseline;
   padding: 4px 0;
-  font-family: var(--pitch);
-  font-size: 11px;
+  font-family: var(--authentic);
+  font-size: 12px;
   letter-spacing: .04em;
   text-transform: uppercase;
   color: var(--signal-48);
@@ -281,9 +286,9 @@
   justify-content: space-between;
   align-items: baseline;
   margin: 0;
-  font-family: var(--pitch);
-  font-size: 12px;
-  font-weight: normal;
+  font-family: var(--authentic);
+  font-size: 13px;
+  font-weight: 500;
   letter-spacing: .04em;
   text-transform: uppercase;
   color: var(--signal);
@@ -291,7 +296,7 @@
 }
 
 .archive-month h2 span {
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: .04em;
   color: var(--signal-48);
 }
@@ -314,8 +319,8 @@
   grid-column: 1;
   grid-row: 1;
   margin: 0;
-  font-family: var(--pitch);
-  font-size: 11px;
+  font-family: var(--authentic);
+  font-size: 12px;
   line-height: 1.4;
   letter-spacing: .03em;
   text-transform: uppercase;
@@ -330,8 +335,8 @@
   flex-direction: column;
   gap: 4px;
   margin: 14px 0 0;
-  font-family: var(--pitch);
-  font-size: 10px;
+  font-family: var(--authentic);
+  font-size: 11px;
   letter-spacing: .04em;
   text-transform: uppercase;
   color: var(--signal-48);
@@ -380,8 +385,8 @@
 
 .empty-filter-notice {
   padding: 48px 0;
-  font-family: var(--pitch);
-  font-size: 12px;
+  font-family: var(--authentic);
+  font-size: 13px;
   letter-spacing: .02em;
   text-transform: uppercase;
   color: var(--signal-48);
@@ -394,7 +399,7 @@
   border: 0;
   background: none;
   color: var(--accent);
-  font-family: var(--pitch);
+  font-family: var(--authentic);
   font-size: inherit;
   letter-spacing: inherit;
   text-transform: uppercase;
@@ -436,8 +441,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-family: var(--pitch);
-  font-size: 13px;
+  font-family: var(--authentic);
+  font-size: 14px;
   letter-spacing: .02em;
 }
 
@@ -613,7 +618,7 @@
   .blog-tools { position: static; display: flex; flex-direction: column; align-items: stretch; gap: 9px; min-height: 0; padding: 15px 0 12px; }
   .blog-search { width: 100%; }
   .blog-filters { justify-content: flex-start; gap: 8px 20px; }
-  .blog-filters button { padding: 5px 0; font-size: 10px; }
+  .blog-filters button { padding: 5px 0; font-size: 11px; }
   .blog-result-count { min-height: 0; padding: 8px 0; text-align: left; }
   .blog-register { display: block; }
   .blog-rail { margin: 2px 0 12px; }
@@ -630,7 +635,7 @@
   .archive-month h2 { scroll-margin-top: 20px; }
   .post-entry { grid-template-columns: 1fr auto; gap: 8px 16px; min-height: 0; padding: 15px 0 18px; }
   .post-date { grid-column: 1; padding: 0; }
-  .post-facts { grid-column: 2; grid-row: 1; flex-direction: row; gap: 9px; padding: 0; font-size: 10px; }
+  .post-facts { grid-column: 2; grid-row: 1; flex-direction: row; gap: 9px; padding: 0; font-size: 11px; }
   .post-copy { grid-column: 1 / -1; grid-row: 2; }
   .post-copy a { font-size: clamp(25px, 6.4vw, 31px); line-height: 1.07; overflow-wrap: break-word; }
   .post-summary { margin-top: 6px; font-size: 13px; }
