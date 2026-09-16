@@ -228,49 +228,79 @@
 
   document.querySelectorAll('[data-lattice]').forEach((host) => new ProceduralLattice(host));
 
-  const filters = document.querySelectorAll('[data-filter]');
-  const posts = document.querySelectorAll('[data-post-category]');
-  const months = document.querySelectorAll('[data-archive-month]');
+  const filters = [...document.querySelectorAll('[data-filter]')];
+  const searchInput = document.querySelector('[data-blog-search]');
+  const clearSearch = document.querySelector('[data-clear-search]');
+  const resetFilters = document.querySelector('[data-reset-filters]');
+  const posts = [...document.querySelectorAll('[data-post-category]')];
+  const months = [...document.querySelectorAll('[data-archive-month]')];
+  const monthLinks = [...document.querySelectorAll('[data-month-link]')];
   const statusAnnouncer = document.querySelector('[data-filter-status]');
-  const postList = document.querySelector('.post-list');
+  const emptyNotice = document.querySelector('[data-empty-notice]');
 
-  let emptyNotice = document.querySelector('.empty-filter-notice');
-  if (!emptyNotice && postList) {
-    emptyNotice = document.createElement('li');
-    emptyNotice.className = 'empty-filter-notice meta';
-    emptyNotice.setAttribute('role', 'status');
-    emptyNotice.textContent = 'No posts in this category.';
-    emptyNotice.hidden = true;
-    postList.appendChild(emptyNotice);
-  }
+  if (searchInput && filters.length && posts.length) {
+    const normalize = (value) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+    const searchText = new Map(posts.map((post) => [post, normalize(post.querySelector('.post-copy')?.textContent || '')]));
+    const categoryKeys = new Set(filters.map((filter) => filter.dataset.filter));
+    let category = 'all';
 
-  const updateMonths = () => {
-    months.forEach((month) => {
-      month.hidden = ![...posts].some((post) => post.dataset.postMonth === month.dataset.archiveMonth && !post.hidden);
-    });
-  };
-
-  filters.forEach((filter) => {
-    filter.addEventListener('click', () => {
-      const category = filter.dataset.filter;
-      filters.forEach((item) => item.setAttribute('aria-pressed', String(item === filter)));
+    const applyFilters = (updateUrl = true) => {
+      const query = normalize(searchInput.value);
+      const terms = query.split(/\s+/).filter(Boolean);
       let visibleCount = 0;
+      const visibleMonths = new Set();
+
       posts.forEach((post) => {
-        const matches = category === 'all' || post.dataset.postCategory === category;
+        const categoryMatches = category === 'all' || post.dataset.postCategory === category;
+        const titleOrSummary = searchText.get(post);
+        const matches = categoryMatches && terms.every((term) => titleOrSummary.includes(term));
         post.hidden = !matches;
-        if (matches) visibleCount += 1;
+        if (matches) {
+          visibleCount += 1;
+          visibleMonths.add(post.dataset.postMonth);
+        }
       });
-      updateMonths();
-      if (emptyNotice) {
-        emptyNotice.hidden = visibleCount > 0;
-      }
+      months.forEach((month) => { month.hidden = !visibleMonths.has(month.dataset.archiveMonth); });
+      monthLinks.forEach((link) => { link.hidden = !visibleMonths.has(link.dataset.monthLink); });
+      filters.forEach((filter) => filter.setAttribute('aria-pressed', String(filter.dataset.filter === category)));
+      if (clearSearch) clearSearch.hidden = searchInput.value.length === 0;
+      if (emptyNotice) emptyNotice.hidden = visibleCount > 0;
       if (statusAnnouncer) {
-        statusAnnouncer.textContent = category === 'all'
-          ? `Showing all ${visibleCount} posts.`
-          : `Showing ${visibleCount} ${filter.textContent.trim()} posts.`;
+        statusAnnouncer.textContent = visibleCount === 0
+          ? 'No posts match this search.'
+          : query || category !== 'all'
+            ? `Showing ${visibleCount} of ${posts.length} posts`
+            : `Showing all ${posts.length} posts`;
       }
+
+      if (updateUrl) {
+        const url = new URL(location.href);
+        if (searchInput.value.trim()) url.searchParams.set('q', searchInput.value.trim());
+        else url.searchParams.delete('q');
+        if (category !== 'all') url.searchParams.set('category', category);
+        else url.searchParams.delete('category');
+        if (url.hash && !visibleMonths.has(url.hash.replace('#month-', ''))) url.hash = '';
+        history.replaceState(null, '', url);
+      }
+    };
+
+    const restoreFromUrl = () => {
+      const params = new URLSearchParams(location.search);
+      const requested = params.get('category') || 'all';
+      category = categoryKeys.has(requested) ? requested : 'all';
+      searchInput.value = params.get('q') || '';
+      applyFilters(false);
+    };
+
+    filters.forEach((filter) => {
+      filter.addEventListener('click', () => { category = filter.dataset.filter; applyFilters(); });
     });
-  });
+    searchInput.addEventListener('input', () => applyFilters());
+    if (clearSearch) clearSearch.addEventListener('click', () => { searchInput.value = ''; applyFilters(); searchInput.focus(); });
+    if (resetFilters) resetFilters.addEventListener('click', () => { category = 'all'; searchInput.value = ''; applyFilters(); searchInput.focus(); });
+    window.addEventListener('popstate', restoreFromUrl);
+    restoreFromUrl();
+  }
 
   // Snappy full-slide scroll handler for multi-page layouts (about.html)
   if (typeof window.initSnapScroller === 'function') {

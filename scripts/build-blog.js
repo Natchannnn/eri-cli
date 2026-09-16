@@ -102,19 +102,38 @@ posts.forEach((post, index) => {
 
 let activeMonth = '';
 const archive = [];
+const monthNav = [];
+const categoryCounts = { Homelab: 0, Projects: 0, Web: 0 };
+const monthCounts = new Map();
+posts.forEach((post) => {
+  categoryCounts[post.category] += 1;
+  const month = post.date.slice(0, 7);
+  monthCounts.set(month, (monthCounts.get(month) || 0) + 1);
+});
 posts.forEach((post, index) => {
   const month = post.date.slice(0, 7);
   if (month !== activeMonth) {
     activeMonth = month;
-    archive.push(`<li class="archive-month" data-archive-month="${month}"><h2>${escapeHtml(formatMonth(post.date))}</h2></li>`);
+    const monthLabel = escapeHtml(formatMonth(post.date));
+    const monthCount = monthCounts.get(month);
+    archive.push(`<li class="archive-month" data-archive-month="${month}"><h2 id="month-${month}">${monthLabel} <span>${monthCount} ${monthCount === 1 ? 'entry' : 'entries'}</span></h2></li>`);
+    monthNav.push(`<a href="#month-${month}" data-month-link="${month}" aria-label="${monthLabel}, ${monthCount} ${monthCount === 1 ? 'post' : 'posts'}">${monthLabel} <span aria-hidden="true">${monthCount}</span></a>`);
   }
   archive.push(`<li class="post-entry" data-post-category="${post.category.toLowerCase()}" data-post-month="${month}" data-lattice-target="${index}">
-          <p class="post-date meta"><time datetime="${post.date}">${escapeHtml(formatDate(post.date))}</time><br>${escapeHtml(post.category)}<br>${post.readingTime} min read</p>
-          <article class="post-copy"><a href="./${escapeHtml(post.slug)}/index.html">${escapeHtml(post.title)}</a></article>
+          <p class="post-date meta"><time datetime="${post.date}">${escapeHtml(formatDate(post.date))}</time></p>
+          <article class="post-copy"><h3><a href="./${escapeHtml(post.slug)}/index.html">${escapeHtml(post.title)}</a></h3><p class="post-summary">${escapeHtml(post.summary)}</p></article>
+          <p class="post-facts meta"><span>${escapeHtml(post.category)}</span><span>${post.readingTime} min read</span></p>
         </li>`);
 });
 
-const indexHtml = renderTemplate(indexTemplate, { POSTS: archive.join('\n        ') });
+const indexHtml = renderTemplate(indexTemplate, {
+  POSTS: archive.join('\n        '),
+  MONTH_NAV: monthNav.join('\n          '),
+  POST_COUNT: posts.length,
+  HOMELAB_COUNT: categoryCounts.Homelab,
+  PROJECTS_COUNT: categoryCounts.Projects,
+  WEB_COUNT: categoryCounts.Web
+});
 fs.writeFileSync(path.join(tempDir, 'index.html'), indexHtml, 'utf8');
 
 if (fs.existsSync(outputDir)) {

@@ -26,23 +26,37 @@
 
   <main class="page-main blog-page" id="content">
     <header class="blog-intro three-grid">
-      <div class="archive-note">
-        <p class="page-note">Notes on the homelab, projects and this website, written while the work was still fresh.</p>
-        <div class="blog-filters" aria-label="Filter posts">
-          <button type="button" data-filter="all" aria-pressed="true">All</button>
-          <button type="button" data-filter="homelab" aria-pressed="false">Homelab</button>
-          <button type="button" data-filter="projects" aria-pressed="false">Projects</button>
-          <button type="button" data-filter="web" aria-pressed="false">Web</button>
-        </div>
-        <p class="filter-status sr-only" role="status" aria-live="polite" data-filter-status></p>
-      </div>
-      <h1 class="page-title">Blog</h1>
+      <div class="blog-intro-label meta">ERI / CLI<br>FIELD NOTES · {{POST_COUNT}} ENTRIES</div>
+      <h1 class="page-title">Blog<span class="blog-title-stop">.</span></h1>
+      <p class="page-note">Notes from the homelab, projects and this website. What changed, what failed, and what I learned.</p>
     </header>
 
+    <div class="blog-tools" role="search" aria-label="Find posts">
+      <div class="blog-search">
+        <label for="blog-search-input">Search the archive</label>
+        <input id="blog-search-input" type="search" autocomplete="off" placeholder="Title or topic" data-blog-search>
+        <button type="button" data-clear-search hidden aria-label="Clear search">Clear</button>
+      </div>
+      <div class="blog-filters" role="group" aria-label="Filter posts by category">
+        <button type="button" data-filter="all" aria-pressed="true">All <span>{{POST_COUNT}}</span></button>
+        <button type="button" data-filter="homelab" aria-pressed="false">Homelab <span>{{HOMELAB_COUNT}}</span></button>
+        <button type="button" data-filter="projects" aria-pressed="false">Projects <span>{{PROJECTS_COUNT}}</span></button>
+        <button type="button" data-filter="web" aria-pressed="false">Web <span>{{WEB_COUNT}}</span></button>
+      </div>
+    </div>
+    <p class="blog-result-count meta" role="status" aria-live="polite" data-filter-status>Showing all {{POST_COUNT}} posts</p>
+
     <section class="blog-register" aria-label="Post archive">
-      <div class="lattice-host blog-lattice" data-lattice="blog" aria-hidden="true"></div>
+      <aside class="blog-rail" aria-label="Archive navigation">
+        <nav class="blog-month-nav" aria-label="Jump to month">
+          <span class="blog-rail-heading meta">By month</span>
+          {{MONTH_NAV}}
+        </nav>
+        <div class="lattice-host blog-lattice" data-lattice="blog" aria-hidden="true"></div>
+      </aside>
       <ol class="post-list">
         {{POSTS}}
+        <li class="empty-filter-notice" data-empty-notice hidden>No posts match this search. <button type="button" data-reset-filters>Clear filters</button></li>
       </ol>
     </section>
   </main>

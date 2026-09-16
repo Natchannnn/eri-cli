@@ -26,210 +26,273 @@
 
   <main class="page-main blog-page" id="content">
     <header class="blog-intro three-grid">
-      <div class="archive-note">
-        <p class="page-note">Notes on the homelab, projects and this website, written while the work was still fresh.</p>
-        <div class="blog-filters" aria-label="Filter posts">
-          <button type="button" data-filter="all" aria-pressed="true">All</button>
-          <button type="button" data-filter="homelab" aria-pressed="false">Homelab</button>
-          <button type="button" data-filter="projects" aria-pressed="false">Projects</button>
-          <button type="button" data-filter="web" aria-pressed="false">Web</button>
-        </div>
-        <p class="filter-status sr-only" role="status" aria-live="polite" data-filter-status></p>
-      </div>
-      <h1 class="page-title">Blog</h1>
+      <div class="blog-intro-label meta">ERI / CLI<br>FIELD NOTES · 46 ENTRIES</div>
+      <h1 class="page-title">Blog<span class="blog-title-stop">.</span></h1>
+      <p class="page-note">Notes from the homelab, projects and this website. What changed, what failed, and what I learned.</p>
     </header>
 
+    <div class="blog-tools" role="search" aria-label="Find posts">
+      <div class="blog-search">
+        <label for="blog-search-input">Search the archive</label>
+        <input id="blog-search-input" type="search" autocomplete="off" placeholder="Title or topic" data-blog-search>
+        <button type="button" data-clear-search hidden aria-label="Clear search">Clear</button>
+      </div>
+      <div class="blog-filters" role="group" aria-label="Filter posts by category">
+        <button type="button" data-filter="all" aria-pressed="true">All <span>46</span></button>
+        <button type="button" data-filter="homelab" aria-pressed="false">Homelab <span>32</span></button>
+        <button type="button" data-filter="projects" aria-pressed="false">Projects <span>10</span></button>
+        <button type="button" data-filter="web" aria-pressed="false">Web <span>4</span></button>
+      </div>
+    </div>
+    <p class="blog-result-count meta" role="status" aria-live="polite" data-filter-status>Showing all 46 posts</p>
+
     <section class="blog-register" aria-label="Post archive">
-      <div class="lattice-host blog-lattice" data-lattice="blog" aria-hidden="true"></div>
+      <aside class="blog-rail" aria-label="Archive navigation">
+        <nav class="blog-month-nav" aria-label="Jump to month">
+          <span class="blog-rail-heading meta">By month</span>
+          <a href="#month-2026-09" data-month-link="2026-09" aria-label="September 2026, 5 posts">September 2026 <span aria-hidden="true">5</span></a>
+          <a href="#month-2026-08" data-month-link="2026-08" aria-label="August 2026, 15 posts">August 2026 <span aria-hidden="true">15</span></a>
+          <a href="#month-2026-07" data-month-link="2026-07" aria-label="July 2026, 14 posts">July 2026 <span aria-hidden="true">14</span></a>
+          <a href="#month-2026-06" data-month-link="2026-06" aria-label="June 2026, 12 posts">June 2026 <span aria-hidden="true">12</span></a>
+        </nav>
+        <div class="lattice-host blog-lattice" data-lattice="blog" aria-hidden="true"></div>
+      </aside>
       <ol class="post-list">
-        <li class="archive-month" data-archive-month="2026-09"><h2>September 2026</h2></li>
+        <li class="archive-month" data-archive-month="2026-09"><h2 id="month-2026-09">September 2026 <span>5 entries</span></h2></li>
         <li class="post-entry" data-post-category="web" data-post-month="2026-09" data-lattice-target="0">
-          <p class="post-date meta"><time datetime="2026-09-08">08 Sept 2026</time><br>Web<br>2 min read</p>
-          <article class="post-copy"><a href="./the-abort-on-failure-hook-had-one-failure-mode-it-couldnt-catch/index.html">The Abort-on-Failure Hook Had One Failure Mode It Couldn&#39;t Catch</a></article>
+          <p class="post-date meta"><time datetime="2026-09-08">08 Sept 2026</time></p>
+          <article class="post-copy"><h3><a href="./the-abort-on-failure-hook-had-one-failure-mode-it-couldnt-catch/index.html">The Abort-on-Failure Hook Had One Failure Mode It Couldn&#39;t Catch</a></h3><p class="post-summary">The pre-commit guard lived only in one machine&#39;s untracked hooks directory. I moved it into the repository before building the isolated v3 preview.</p></article>
+          <p class="post-facts meta"><span>Web</span><span>2 min read</span></p>
         </li>
         <li class="post-entry" data-post-category="web" data-post-month="2026-09" data-lattice-target="1">
-          <p class="post-date meta"><time datetime="2026-09-07">07 Sept 2026</time><br>Web<br>2 min read</p>
-          <article class="post-copy"><a href="./an-animation-you-cannot-pause-is-one-you-cannot-review/index.html">An Animation You Cannot Pause Is One You Cannot Review</a></article>
+          <p class="post-date meta"><time datetime="2026-09-07">07 Sept 2026</time></p>
+          <article class="post-copy"><h3><a href="./an-animation-you-cannot-pause-is-one-you-cannot-review/index.html">An Animation You Cannot Pause Is One You Cannot Review</a></h3><p class="post-summary">A reviewable animation needed a clock I could stop at an exact frame. Seventeen review rounds later, only one of three homepage pieces was ready to ship.</p></article>
+          <p class="post-facts meta"><span>Web</span><span>2 min read</span></p>
         </li>
         <li class="post-entry" data-post-category="web" data-post-month="2026-09" data-lattice-target="2">
-          <p class="post-date meta"><time datetime="2026-09-06">06 Sept 2026</time><br>Web<br>2 min read</p>
-          <article class="post-copy"><a href="./inspired-by-means-rebuilt-in-not-repainted-as/index.html">Inspired-By Means Rebuilt-In, Not Repainted-As</a></article>
+          <p class="post-date meta"><time datetime="2026-09-06">06 Sept 2026</time></p>
+          <article class="post-copy"><h3><a href="./inspired-by-means-rebuilt-in-not-repainted-as/index.html">Inspired-By Means Rebuilt-In, Not Repainted-As</a></h3><p class="post-summary">The redesign borrowed LaunchDarkly&#39;s page structure without borrowing its paint. Rebuilding the layout also exposed invalid nested links in two card systems.</p></article>
+          <p class="post-facts meta"><span>Web</span><span>2 min read</span></p>
         </li>
         <li class="post-entry" data-post-category="homelab" data-post-month="2026-09" data-lattice-target="3">
-          <p class="post-date meta"><time datetime="2026-09-05">05 Sept 2026</time><br>Homelab<br>2 min read</p>
-          <article class="post-copy"><a href="./the-reboot-that-fixed-it-once-before-and-didnt-the-second-time/index.html">The Reboot That Fixed It Once Before and Didn&#39;t the Second Time</a></article>
+          <p class="post-date meta"><time datetime="2026-09-05">05 Sept 2026</time></p>
+          <article class="post-copy"><h3><a href="./the-reboot-that-fixed-it-once-before-and-didnt-the-second-time/index.html">The Reboot That Fixed It Once Before and Didn&#39;t the Second Time</a></h3><p class="post-summary">A NAS pool went read-only for the second time in three days. I stopped treating the reboot as a fix and evacuated every dependent guest to local storage.</p></article>
+          <p class="post-facts meta"><span>Homelab</span><span>2 min read</span></p>
         </li>
         <li class="post-entry" data-post-category="homelab" data-post-month="2026-09" data-lattice-target="4">
-          <p class="post-date meta"><time datetime="2026-09-04">04 Sept 2026</time><br>Homelab<br>2 min read</p>
-          <article class="post-copy"><a href="./the-disk-that-read-82-free-and-was-99-9-full/index.html">The Disk That Read 82% Free and Was 99.9% Full</a></article>
+          <p class="post-date meta"><time datetime="2026-09-04">04 Sept 2026</time></p>
+          <article class="post-copy"><h3><a href="./the-disk-that-read-82-free-and-was-99-9-full/index.html">The Disk That Read 82% Free and Was 99.9% Full</a></h3><p class="post-summary">Every storage dashboard showed room to spare while the account quota sat at 99.9%. The audit found several other services that were alive but no longer completing work.</p></article>
+          <p class="post-facts meta"><span>Homelab</span><span>2 min read</span></p>
         </li>
-        <li class="archive-month" data-archive-month="2026-08"><h2>August 2026</h2></li>
+        <li class="archive-month" data-archive-month="2026-08"><h2 id="month-2026-08">August 2026 <span>15 entries</span></h2></li>
         <li class="post-entry" data-post-category="homelab" data-post-month="2026-08" data-lattice-target="5">
-          <p class="post-date meta"><time datetime="2026-08-28">28 Aug 2026</time><br>Homelab<br>2 min read</p>
-          <article class="post-copy"><a href="./a-line-passing-through-a-switch-read-as-a-connection/index.html">A Line Passing Through a Switch Read as a Connection</a></article>
+          <p class="post-date meta"><time datetime="2026-08-28">28 Aug 2026</time></p>
+          <article class="post-copy"><h3><a href="./a-line-passing-through-a-switch-read-as-a-connection/index.html">A Line Passing Through a Switch Read as a Connection</a></h3><p class="post-summary">A storage move recovered the VM from a failing NAS pool. In the architecture diagram, one innocent line also made an isolated switch look directly connected.</p></article>
+          <p class="post-facts meta"><span>Homelab</span><span>2 min read</span></p>
         </li>
         <li class="post-entry" data-post-category="homelab" data-post-month="2026-08" data-lattice-target="6">
-          <p class="post-date meta"><time datetime="2026-08-27">27 Aug 2026</time><br>Homelab<br>2 min read</p>
-          <article class="post-copy"><a href="./the-validator-was-checking-the-same-wrong-path-as-the-bug/index.html">The Validator Was Checking the Same Wrong Path as the Bug</a></article>
+          <p class="post-date meta"><time datetime="2026-08-27">27 Aug 2026</time></p>
+          <article class="post-copy"><h3><a href="./the-validator-was-checking-the-same-wrong-path-as-the-bug/index.html">The Validator Was Checking the Same Wrong Path as the Bug</a></h3><p class="post-summary">A misplaced YAML key disabled the model gateway&#39;s spend cap. The validator passed because it looked up the same wrong path as the runtime code.</p></article>
+          <p class="post-facts meta"><span>Homelab</span><span>2 min read</span></p>
         </li>
         <li class="post-entry" data-post-category="homelab" data-post-month="2026-08" data-lattice-target="7">
-          <p class="post-date meta"><time datetime="2026-08-26">26 Aug 2026</time><br>Homelab<br>2 min read</p>
-          <article class="post-copy"><a href="./a-restart-that-reported-success-and-changed-nothing/index.html">A Restart That Reported Success and Changed Nothing</a></article>
+          <p class="post-date meta"><time datetime="2026-08-26">26 Aug 2026</time></p>
+          <article class="post-copy"><h3><a href="./a-restart-that-reported-success-and-changed-nothing/index.html">A Restart That Reported Success and Changed Nothing</a></h3><p class="post-summary">Systemd reported a successful restart while the old container kept running. The gateway work also exposed where prompt caching stopped paying for itself.</p></article>
+          <p class="post-facts meta"><span>Homelab</span><span>2 min read</span></p>
         </li>
         <li class="post-entry" data-post-category="homelab" data-post-month="2026-08" data-lattice-target="8">
-          <p class="post-date meta"><time datetime="2026-08-25">25 Aug 2026</time><br>Homelab<br>2 min read</p>
-          <article class="post-copy"><a href="./the-check-meant-to-avoid-touching-a-secret-printed-it-anyway/index.html">The Check Meant to Avoid Touching a Secret Printed It Anyway</a></article>
+          <p class="post-date meta"><time datetime="2026-08-25">25 Aug 2026</time></p>
+          <article class="post-copy"><h3><a href="./the-check-meant-to-avoid-touching-a-secret-printed-it-anyway/index.html">The Check Meant to Avoid Touching a Secret Printed It Anyway</a></h3><p class="post-summary">A shell expression meant to check whether a token existed printed the token itself. I revoked two credentials and replaced the unsafe pattern everywhere.</p></article>
+          <p class="post-facts meta"><span>Homelab</span><span>2 min read</span></p>
         </li>
         <li class="post-entry" data-post-category="homelab" data-post-month="2026-08" data-lattice-target="9">
-          <p class="post-date meta"><time datetime="2026-08-24">24 Aug 2026</time><br>Homelab<br>2 min read</p>
-          <article class="post-copy"><a href="./the-file-that-was-actually-being-read-was-three-layers-down/index.html">The File That Was Actually Being Read Was Three Layers Down</a></article>
+          <p class="post-date meta"><time datetime="2026-08-24">24 Aug 2026</time></p>
+          <article class="post-copy"><h3><a href="./the-file-that-was-actually-being-read-was-three-layers-down/index.html">The File That Was Actually Being Read Was Three Layers Down</a></h3><p class="post-summary">I edited the right setting in the wrong file twice. Runtime tracing found the cached configuration three layers below the path named in the docs.</p></article>
+          <p class="post-facts meta"><span>Homelab</span><span>2 min read</span></p>
         </li>
         <li class="post-entry" data-post-category="homelab" data-post-month="2026-08" data-lattice-target="10">
-          <p class="post-date meta"><time datetime="2026-08-23">23 Aug 2026</time><br>Homelab<br>2 min read</p>
-          <article class="post-copy"><a href="./the-rule-that-could-only-see-one-user-in-thirty-one/index.html">The Rule That Could Only See One User in Thirty-One</a></article>
+          <p class="post-date meta"><time datetime="2026-08-23">23 Aug 2026</time></p>
+          <article class="post-copy"><h3><a href="./the-rule-that-could-only-see-one-user-in-thirty-one/index.html">The Rule That Could Only See One User in Thirty-One</a></h3><p class="post-summary">A retention rule covering 31 users had only been checking one of them. Its dry run wanted to remove 3,161GiB before the data model was fixed.</p></article>
+          <p class="post-facts meta"><span>Homelab</span><span>2 min read</span></p>
         </li>
         <li class="post-entry" data-post-category="homelab" data-post-month="2026-08" data-lattice-target="11">
-          <p class="post-date meta"><time datetime="2026-08-22">22 Aug 2026</time><br>Homelab<br>4 min read</p>
-          <article class="post-copy"><a href="./every-number-i-started-with-was-measuring-something-else/index.html">Every Number I Started With Was Measuring Something Else</a></article>
+          <p class="post-date meta"><time datetime="2026-08-22">22 Aug 2026</time></p>
+          <article class="post-copy"><h3><a href="./every-number-i-started-with-was-measuring-something-else/index.html">Every Number I Started With Was Measuring Something Else</a></h3><p class="post-summary">The host was not truly at 98% memory, and the target address was not actually free. Both numbers belonged to a different layer than I first assumed.</p></article>
+          <p class="post-facts meta"><span>Homelab</span><span>4 min read</span></p>
         </li>
         <li class="post-entry" data-post-category="homelab" data-post-month="2026-08" data-lattice-target="12">
-          <p class="post-date meta"><time datetime="2026-08-21">21 Aug 2026</time><br>Homelab<br>2 min read</p>
-          <article class="post-copy"><a href="./the-hardlink-that-never-once-linked-anything/index.html">The Hardlink That Never Once Linked Anything</a></article>
+          <p class="post-date meta"><time datetime="2026-08-21">21 Aug 2026</time></p>
+          <article class="post-copy"><h3><a href="./the-hardlink-that-never-once-linked-anything/index.html">The Hardlink That Never Once Linked Anything</a></h3><p class="post-summary">Separate ZFS datasets had forced Radarr and Sonarr to copy every import for months. The inode check accounted for 229GB of duplicated data.</p></article>
+          <p class="post-facts meta"><span>Homelab</span><span>2 min read</span></p>
         </li>
         <li class="post-entry" data-post-category="web" data-post-month="2026-08" data-lattice-target="13">
-          <p class="post-date meta"><time datetime="2026-08-13">13 Aug 2026</time><br>Web<br>2 min read</p>
-          <article class="post-copy"><a href="./a-regex-ate-half-a-selector-and-css-didnt-complain/index.html">A Regex Ate Half a Selector and CSS Didn&#39;t Complain</a></article>
+          <p class="post-date meta"><time datetime="2026-08-13">13 Aug 2026</time></p>
+          <article class="post-copy"><h3><a href="./a-regex-ate-half-a-selector-and-css-didnt-complain/index.html">A Regex Ate Half a Selector and CSS Didn&#39;t Complain</a></h3><p class="post-summary">A cleanup regex removed half a selector without producing invalid CSS. The build stayed green while the hero quietly broke.</p></article>
+          <p class="post-facts meta"><span>Web</span><span>2 min read</span></p>
         </li>
         <li class="post-entry" data-post-category="homelab" data-post-month="2026-08" data-lattice-target="14">
-          <p class="post-date meta"><time datetime="2026-08-12">12 Aug 2026</time><br>Homelab<br>3 min read</p>
-          <article class="post-copy"><a href="./four-things-were-quietly-doing-nothing-and-all-of-them-looked-fine/index.html">Four Things Were Quietly Doing Nothing and All of Them Looked Fine</a></article>
+          <p class="post-date meta"><time datetime="2026-08-12">12 Aug 2026</time></p>
+          <article class="post-copy"><h3><a href="./four-things-were-quietly-doing-nothing-and-all-of-them-looked-fine/index.html">Four Things Were Quietly Doing Nothing and All of Them Looked Fine</a></h3><p class="post-summary">A plugin, a remote, and a drift check all looked healthy while doing nothing useful. Each failure lived below the layer I had been watching.</p></article>
+          <p class="post-facts meta"><span>Homelab</span><span>3 min read</span></p>
         </li>
         <li class="post-entry" data-post-category="homelab" data-post-month="2026-08" data-lattice-target="15">
-          <p class="post-date meta"><time datetime="2026-08-11">11 Aug 2026</time><br>Homelab<br>4 min read</p>
-          <article class="post-copy"><a href="./everything-redundant-turned-out-to-share-something/index.html">Everything Redundant Turned Out to Share Something</a></article>
+          <p class="post-date meta"><time datetime="2026-08-11">11 Aug 2026</time></p>
+          <article class="post-copy"><h3><a href="./everything-redundant-turned-out-to-share-something/index.html">Everything Redundant Turned Out to Share Something</a></h3><p class="post-summary">I moved VM 200 and proved a restore from the new backup server. The dependency audit then found how much of the cluster still shared one failure path.</p></article>
+          <p class="post-facts meta"><span>Homelab</span><span>4 min read</span></p>
         </li>
         <li class="post-entry" data-post-category="homelab" data-post-month="2026-08" data-lattice-target="16">
-          <p class="post-date meta"><time datetime="2026-08-10">10 Aug 2026</time><br>Homelab<br>2 min read</p>
-          <article class="post-copy"><a href="./the-host-wasnt-dead-and-the-backups-werent-real-both-passed-every-check-anyway/index.html">The Host Wasn&#39;t Dead and the Backups Weren&#39;t Real, Both Passed Every Check Anyway</a></article>
+          <p class="post-date meta"><time datetime="2026-08-10">10 Aug 2026</time></p>
+          <article class="post-copy"><h3><a href="./the-host-wasnt-dead-and-the-backups-werent-real-both-passed-every-check-anyway/index.html">The Host Wasn&#39;t Dead and the Backups Weren&#39;t Real, Both Passed Every Check Anyway</a></h3><p class="post-summary">A third Proxmox node gave the cluster quorum, but a NIC hang and a dishonest backup hook showed why green status alone was not enough.</p></article>
+          <p class="post-facts meta"><span>Homelab</span><span>2 min read</span></p>
         </li>
         <li class="post-entry" data-post-category="homelab" data-post-month="2026-08" data-lattice-target="17">
-          <p class="post-date meta"><time datetime="2026-08-09">09 Aug 2026</time><br>Homelab<br>3 min read</p>
-          <article class="post-copy"><a href="./three-times-this-morning-something-told-me-it-worked-and-hadnt/index.html">Three Times This Morning Something Told Me It Worked and Hadn&#39;t</a></article>
+          <p class="post-date meta"><time datetime="2026-08-09">09 Aug 2026</time></p>
+          <article class="post-copy"><h3><a href="./three-times-this-morning-something-told-me-it-worked-and-hadnt/index.html">Three Times This Morning Something Told Me It Worked and Hadn&#39;t</a></h3><p class="post-summary">Three systems reported success without changing the intended state. The evidence came from the host, the GitHub mirror, and the production deployment.</p></article>
+          <p class="post-facts meta"><span>Homelab</span><span>3 min read</span></p>
         </li>
         <li class="post-entry" data-post-category="homelab" data-post-month="2026-08" data-lattice-target="18">
-          <p class="post-date meta"><time datetime="2026-08-08">08 Aug 2026</time><br>Homelab<br>4 min read</p>
-          <article class="post-copy"><a href="./the-checks-kept-passing-while-the-thing-under-them-was-broken-four-times-today/index.html">The Checks Kept Passing While the Thing Under Them Was Broken, Four Times Today</a></article>
+          <p class="post-date meta"><time datetime="2026-08-08">08 Aug 2026</time></p>
+          <article class="post-copy"><h3><a href="./the-checks-kept-passing-while-the-thing-under-them-was-broken-four-times-today/index.html">The Checks Kept Passing While the Thing Under Them Was Broken, Four Times Today</a></h3><p class="post-summary">Four checks passed while their assumptions were broken. The failures appeared during a 59-path vault move and another attempt to fence worker traffic.</p></article>
+          <p class="post-facts meta"><span>Homelab</span><span>4 min read</span></p>
         </li>
         <li class="post-entry" data-post-category="homelab" data-post-month="2026-08" data-lattice-target="19">
-          <p class="post-date meta"><time datetime="2026-08-07">07 Aug 2026</time><br>Homelab<br>3 min read</p>
-          <article class="post-copy"><a href="./a-repo-containing-the-cli-but-not-the-deployment-is-half-of-it/index.html">A Repo Containing the CLI but Not the Deployment Is Half of It</a></article>
+          <p class="post-date meta"><time datetime="2026-08-07">07 Aug 2026</time></p>
+          <article class="post-copy"><h3><a href="./a-repo-containing-the-cli-but-not-the-deployment-is-half-of-it/index.html">A Repo Containing the CLI but Not the Deployment Is Half of It</a></h3><p class="post-summary">The n5-board repository contained the client but none of the units that kept it alive. I brought the deployment under version control and separated the public package.</p></article>
+          <p class="post-facts meta"><span>Homelab</span><span>3 min read</span></p>
         </li>
-        <li class="archive-month" data-archive-month="2026-07"><h2>July 2026</h2></li>
+        <li class="archive-month" data-archive-month="2026-07"><h2 id="month-2026-07">July 2026 <span>14 entries</span></h2></li>
         <li class="post-entry" data-post-category="homelab" data-post-month="2026-07" data-lattice-target="20">
-          <p class="post-date meta"><time datetime="2026-07-31">31 Jul 2026</time><br>Homelab<br>3 min read</p>
-          <article class="post-copy"><a href="./the-night-i-learned-a-model-cant-be-trusted-to-report-on-itself/index.html">The Night I Learned a Model Can&#39;t Be Trusted to Report on Itself</a></article>
+          <p class="post-date meta"><time datetime="2026-07-31">31 Jul 2026</time></p>
+          <article class="post-copy"><h3><a href="./the-night-i-learned-a-model-cant-be-trusted-to-report-on-itself/index.html">The Night I Learned a Model Can&#39;t Be Trusted to Report on Itself</a></h3><p class="post-summary">Three model reports said the work was safe; three mechanical checks showed otherwise. The night ended with stricter harness boundaries and logs I could trust.</p></article>
+          <p class="post-facts meta"><span>Homelab</span><span>3 min read</span></p>
         </li>
         <li class="post-entry" data-post-category="homelab" data-post-month="2026-07" data-lattice-target="21">
-          <p class="post-date meta"><time datetime="2026-07-30">30 Jul 2026</time><br>Homelab<br>3 min read</p>
-          <article class="post-copy"><a href="./the-only-backup-was-still-open-in-the-chat-window/index.html">The Only Backup Was Still Open in the Chat Window</a></article>
+          <p class="post-date meta"><time datetime="2026-07-30">30 Jul 2026</time></p>
+          <article class="post-copy"><h3><a href="./the-only-backup-was-still-open-in-the-chat-window/index.html">The Only Backup Was Still Open in the Chat Window</a></h3><p class="post-summary">An uninstaller erased four rule files that had never reached backup. Their last intact copies were still sitting in a live chat buffer.</p></article>
+          <p class="post-facts meta"><span>Homelab</span><span>3 min read</span></p>
         </li>
         <li class="post-entry" data-post-category="projects" data-post-month="2026-07" data-lattice-target="22">
-          <p class="post-date meta"><time datetime="2026-07-29">29 Jul 2026</time><br>Projects<br>3 min read</p>
-          <article class="post-copy"><a href="./i-built-a-downloads-sorter-in-six-hours-and-every-bug-in-it-looked-like-working-code/index.html">I Built a Downloads Sorter in Six Hours and Every Bug in It Looked Like Working Code</a></article>
+          <p class="post-date meta"><time datetime="2026-07-29">29 Jul 2026</time></p>
+          <article class="post-copy"><h3><a href="./i-built-a-downloads-sorter-in-six-hours-and-every-bug-in-it-looked-like-working-code/index.html">I Built a Downloads Sorter in Six Hours and Every Bug in It Looked Like Working Code</a></h3><p class="post-summary">FileIt sorted ordinary downloads perfectly and failed on the filenames that mattered. Windows Sandbox helped uncover four bugs hiding behind successful-looking runs.</p></article>
+          <p class="post-facts meta"><span>Projects</span><span>3 min read</span></p>
         </li>
         <li class="post-entry" data-post-category="homelab" data-post-month="2026-07" data-lattice-target="23">
-          <p class="post-date meta"><time datetime="2026-07-28">28 Jul 2026</time><br>Homelab<br>4 min read</p>
-          <article class="post-copy"><a href="./a-second-server-in-the-morning-an-open-front-door-by-midnight/index.html">A Second Server in the Morning, an Open Front Door by Midnight</a></article>
+          <p class="post-date meta"><time datetime="2026-07-28">28 Jul 2026</time></p>
+          <article class="post-copy"><h3><a href="./a-second-server-in-the-morning-an-open-front-door-by-midnight/index.html">A Second Server in the Morning, an Open Front Door by Midnight</a></h3><p class="post-summary">The second Proxmox node survived a live link failure with no lost pings. Hours later, an audit found an unauthenticated webhook exposed to the internet.</p></article>
+          <p class="post-facts meta"><span>Homelab</span><span>4 min read</span></p>
         </li>
         <li class="post-entry" data-post-category="homelab" data-post-month="2026-07" data-lattice-target="24">
-          <p class="post-date meta"><time datetime="2026-07-27">27 Jul 2026</time><br>Homelab<br>3 min read</p>
-          <article class="post-copy"><a href="./the-wi-fi-was-pinned-to-one-channel-by-a-network-that-was-switched-off/index.html">The Wi-Fi Was Pinned to One Channel by a Network That Was Switched Off</a></article>
+          <p class="post-date meta"><time datetime="2026-07-27">27 Jul 2026</time></p>
+          <article class="post-copy"><h3><a href="./the-wi-fi-was-pinned-to-one-channel-by-a-network-that-was-switched-off/index.html">The Wi-Fi Was Pinned to One Channel by a Network That Was Switched Off</a></h3><p class="post-summary">A disabled IoT SSID was still pinning every access point to Channel 6. Removing that hidden constraint let the RF plan behave normally again.</p></article>
+          <p class="post-facts meta"><span>Homelab</span><span>3 min read</span></p>
         </li>
         <li class="post-entry" data-post-category="homelab" data-post-month="2026-07" data-lattice-target="25">
-          <p class="post-date meta"><time datetime="2026-07-26">26 Jul 2026</time><br>Homelab<br>3 min read</p>
-          <article class="post-copy"><a href="./i-diagnosed-the-same-outage-twice-and-got-two-different-answers/index.html">I Diagnosed the Same Outage Twice and Got Two Different Answers</a></article>
+          <p class="post-date meta"><time datetime="2026-07-26">26 Jul 2026</time></p>
+          <article class="post-copy"><h3><a href="./i-diagnosed-the-same-outage-twice-and-got-two-different-answers/index.html">I Diagnosed the Same Outage Twice and Got Two Different Answers</a></h3><p class="post-summary">I blamed the same camera outage on two different layers in one day. Proxy logs eventually cleared the physical link and exposed the real failure.</p></article>
+          <p class="post-facts meta"><span>Homelab</span><span>3 min read</span></p>
         </li>
         <li class="post-entry" data-post-category="projects" data-post-month="2026-07" data-lattice-target="26">
-          <p class="post-date meta"><time datetime="2026-07-25">25 Jul 2026</time><br>Projects<br>2 min read</p>
-          <article class="post-copy"><a href="./twenty-three-cents-to-read-a-photo-and-almost-none-of-it-was-the-photo/index.html">Twenty-Three Cents to Read a Photo and Almost None of It Was the Photo</a></article>
+          <p class="post-date meta"><time datetime="2026-07-25">25 Jul 2026</time></p>
+          <article class="post-copy"><h3><a href="./twenty-three-cents-to-read-a-photo-and-almost-none-of-it-was-the-photo/index.html">Twenty-Three Cents to Read a Photo and Almost None of It Was the Photo</a></h3><p class="post-summary">A single photo cost about $0.23 to transcribe because 97% of the tokens belonged to scaffolding and cache churn, not the image.</p></article>
+          <p class="post-facts meta"><span>Projects</span><span>2 min read</span></p>
         </li>
         <li class="post-entry" data-post-category="homelab" data-post-month="2026-07" data-lattice-target="27">
-          <p class="post-date meta"><time datetime="2026-07-24">24 Jul 2026</time><br>Homelab<br>3 min read</p>
-          <article class="post-copy"><a href="./i-asked-if-my-containers-were-up-to-date-and-ended-the-day-running-my-own-git-forge/index.html">I Asked If My Containers Were Up to Date and Ended the Day Running My Own Git Forge</a></article>
+          <p class="post-date meta"><time datetime="2026-07-24">24 Jul 2026</time></p>
+          <article class="post-copy"><h3><a href="./i-asked-if-my-containers-were-up-to-date-and-ended-the-day-running-my-own-git-forge/index.html">I Asked If My Containers Were Up to Date and Ended the Day Running My Own Git Forge</a></h3><p class="post-summary">A routine update check became an n8n triage pipeline, then a shell expansion bug made unchanged packages look new. I finished the day with Forgejo running locally.</p></article>
+          <p class="post-facts meta"><span>Homelab</span><span>3 min read</span></p>
         </li>
         <li class="post-entry" data-post-category="homelab" data-post-month="2026-07" data-lattice-target="28">
-          <p class="post-date meta"><time datetime="2026-07-16">16 Jul 2026</time><br>Homelab<br>2 min read</p>
-          <article class="post-copy"><a href="./i-certified-the-network-at-2-5-gigabit-then-spent-three-hours-losing-to-a-usb-dongle/index.html">I Certified the Network at 2.5 Gigabit Then Lost Three Hours to a USB Dongle</a></article>
+          <p class="post-date meta"><time datetime="2026-07-16">16 Jul 2026</time></p>
+          <article class="post-copy"><h3><a href="./i-certified-the-network-at-2-5-gigabit-then-spent-three-hours-losing-to-a-usb-dongle/index.html">I Certified the Network at 2.5 Gigabit Then Lost Three Hours to a USB Dongle</a></h3><p class="post-summary">The wired LAN reached its expected 2.5GbE ceiling. An asymmetric USB adapter then consumed three hours before the fault was isolated.</p></article>
+          <p class="post-facts meta"><span>Homelab</span><span>2 min read</span></p>
         </li>
         <li class="post-entry" data-post-category="projects" data-post-month="2026-07" data-lattice-target="29">
-          <p class="post-date meta"><time datetime="2026-07-14">14 Jul 2026</time><br>Projects<br>2 min read</p>
-          <article class="post-copy"><a href="./discord-in-linux-isos-out/index.html">Discord In, Linux ISOs Out — Closing the Last Manual Gap</a></article>
+          <p class="post-date meta"><time datetime="2026-07-14">14 Jul 2026</time></p>
+          <article class="post-copy"><h3><a href="./discord-in-linux-isos-out/index.html">Discord In, Linux ISOs Out — Closing the Last Manual Gap</a></h3><p class="post-summary">The media pipeline still ended in two folders nobody watched. I wrote a deterministic router to close that gap and published the Discord bridge beside it.</p></article>
+          <p class="post-facts meta"><span>Projects</span><span>2 min read</span></p>
         </li>
         <li class="post-entry" data-post-category="projects" data-post-month="2026-07" data-lattice-target="30">
-          <p class="post-date meta"><time datetime="2026-07-13">13 Jul 2026</time><br>Projects<br>2 min read</p>
-          <article class="post-copy"><a href="./i-gave-the-ai-a-browser-and-we-shipped-the-redesign/index.html">I Gave the AI a Browser and We Shipped the Redesign</a></article>
+          <p class="post-date meta"><time datetime="2026-07-13">13 Jul 2026</time></p>
+          <article class="post-copy"><h3><a href="./i-gave-the-ai-a-browser-and-we-shipped-the-redesign/index.html">I Gave the AI a Browser and We Shipped the Redesign</a></h3><p class="post-summary">Once the development workflow could take its own screenshots, it found layout and font failures that every text-only check had missed.</p></article>
+          <p class="post-facts meta"><span>Projects</span><span>2 min read</span></p>
         </li>
         <li class="post-entry" data-post-category="homelab" data-post-month="2026-07" data-lattice-target="31">
-          <p class="post-date meta"><time datetime="2026-07-12">12 Jul 2026</time><br>Homelab<br>3 min read</p>
-          <article class="post-copy"><a href="./two-rooms-that-turn-themselves-off-once-i-worked-out-what-they-were-called/index.html">Two Rooms That Turn Themselves Off Once I Worked Out What They Were Called</a></article>
+          <p class="post-date meta"><time datetime="2026-07-12">12 Jul 2026</time></p>
+          <article class="post-copy"><h3><a href="./two-rooms-that-turn-themselves-off-once-i-worked-out-what-they-were-called/index.html">Two Rooms That Turn Themselves Off Once I Worked Out What They Were Called</a></h3><p class="post-summary">I used recorder history to choose a five-minute vacancy timeout, cleaned up an old firewall rule, and made a CSS change I could not yet see.</p></article>
+          <p class="post-facts meta"><span>Homelab</span><span>3 min read</span></p>
         </li>
         <li class="post-entry" data-post-category="homelab" data-post-month="2026-07" data-lattice-target="32">
-          <p class="post-date meta"><time datetime="2026-07-02">02 Jul 2026</time><br>Homelab<br>2 min read</p>
-          <article class="post-copy"><a href="./i-sat-down-to-add-one-button-and-rebuilt-half-my-smart-home/index.html">I Sat Down to Add One Button and Rebuilt Half My Smart Home</a></article>
+          <p class="post-date meta"><time datetime="2026-07-02">02 Jul 2026</time></p>
+          <article class="post-copy"><h3><a href="./i-sat-down-to-add-one-button-and-rebuilt-half-my-smart-home/index.html">I Sat Down to Add One Button and Rebuilt Half My Smart Home</a></h3><p class="post-summary">One Stream Deck button turned into a Home Assistant audit. By the end, Matter had its own server and fifteen devices had moved to local control.</p></article>
+          <p class="post-facts meta"><span>Homelab</span><span>2 min read</span></p>
         </li>
         <li class="post-entry" data-post-category="homelab" data-post-month="2026-07" data-lattice-target="33">
-          <p class="post-date meta"><time datetime="2026-07-01">01 Jul 2026</time><br>Homelab<br>2 min read</p>
-          <article class="post-copy"><a href="./i-built-a-status-page-and-it-caught-my-nas-crashing-before-i-finished-setting-it-up/index.html">I Built a Status Page and It Caught My NAS Crashing Before I Finished Setting It Up</a></article>
+          <p class="post-date meta"><time datetime="2026-07-01">01 Jul 2026</time></p>
+          <article class="post-copy"><h3><a href="./i-built-a-status-page-and-it-caught-my-nas-crashing-before-i-finished-setting-it-up/index.html">I Built a Status Page and It Caught My NAS Crashing Before I Finished Setting It Up</a></h3><p class="post-summary">Before I finished adding 33 monitors to Uptime Kuma, it caught Immich failing behind a Samba process that crashed on every affected handshake.</p></article>
+          <p class="post-facts meta"><span>Homelab</span><span>2 min read</span></p>
         </li>
-        <li class="archive-month" data-archive-month="2026-06"><h2>June 2026</h2></li>
+        <li class="archive-month" data-archive-month="2026-06"><h2 id="month-2026-06">June 2026 <span>12 entries</span></h2></li>
         <li class="post-entry" data-post-category="homelab" data-post-month="2026-06" data-lattice-target="34">
-          <p class="post-date meta"><time datetime="2026-06-30">30 Jun 2026</time><br>Homelab<br>2 min read</p>
-          <article class="post-copy"><a href="./the-outage-was-already-over-and-the-fake-flash-drive-wasnt-fake/index.html">I Moved One WAN Cable and Lost Three Minutes of Edge</a></article>
+          <p class="post-date meta"><time datetime="2026-06-30">30 Jun 2026</time></p>
+          <article class="post-copy"><h3><a href="./the-outage-was-already-over-and-the-fake-flash-drive-wasnt-fake/index.html">I Moved One WAN Cable and Lost Three Minutes of Edge</a></h3><p class="post-summary">Moving one WAN cable cost three minutes of edge connectivity. The suspicious USB drive later turned out to be real; Windows had simply locked the disk service.</p></article>
+          <p class="post-facts meta"><span>Homelab</span><span>2 min read</span></p>
         </li>
         <li class="post-entry" data-post-category="homelab" data-post-month="2026-06" data-lattice-target="35">
-          <p class="post-date meta"><time datetime="2026-06-29">29 Jun 2026</time><br>Homelab<br>3 min read</p>
-          <article class="post-copy"><a href="./twenty-five-containers-updated-and-the-cleanup-that-ate-my-rollback/index.html">Twenty-Five Containers Updated and the Cleanup That Ate My Rollback</a></article>
+          <p class="post-date meta"><time datetime="2026-06-29">29 Jun 2026</time></p>
+          <article class="post-copy"><h3><a href="./twenty-five-containers-updated-and-the-cleanup-that-ate-my-rollback/index.html">Twenty-Five Containers Updated and the Cleanup That Ate My Rollback</a></h3><p class="post-summary">Twenty-five containers came back healthy, but the tunnel did not. The same maintenance window exposed a 9-byte upstream binary and a cleanup that removed my rollback.</p></article>
+          <p class="post-facts meta"><span>Homelab</span><span>3 min read</span></p>
         </li>
         <li class="post-entry" data-post-category="homelab" data-post-month="2026-06" data-lattice-target="36">
-          <p class="post-date meta"><time datetime="2026-06-28">28 Jun 2026</time><br>Homelab<br>2 min read</p>
-          <article class="post-copy"><a href="./moving-immich-to-the-nas-and-the-drive-that-tried-to-take-my-photos-with-it/index.html">Moving 135GB of Photos and the USB Cable That Almost Killed Them</a></article>
+          <p class="post-date meta"><time datetime="2026-06-28">28 Jun 2026</time></p>
+          <article class="post-copy"><h3><a href="./moving-immich-to-the-nas-and-the-drive-that-tried-to-take-my-photos-with-it/index.html">Moving 135GB of Photos and the USB Cable That Almost Killed Them</a></h3><p class="post-summary">A 135GB Immich move nearly failed when the USB link began dropping under sustained load. A cable swap held 107 MB/s, and the source and destination counts matched.</p></article>
+          <p class="post-facts meta"><span>Homelab</span><span>2 min read</span></p>
         </li>
         <li class="post-entry" data-post-category="projects" data-post-month="2026-06" data-lattice-target="37">
-          <p class="post-date meta"><time datetime="2026-06-21">21 Jun 2026</time><br>Projects<br>2 min read</p>
-          <article class="post-copy"><a href="./taking-the-email-off-the-page-and-knowing-when-to-undo-a-logo/index.html">I Took My Email Off the Page and Killed My Own Logo</a></article>
+          <p class="post-date meta"><time datetime="2026-06-21">21 Jun 2026</time></p>
+          <article class="post-copy"><h3><a href="./taking-the-email-off-the-page-and-knowing-when-to-undo-a-logo/index.html">I Took My Email Off the Page and Killed My Own Logo</a></h3><p class="post-summary">I hid the raw email address, added useful filtering to the archive, and reverted a logo experiment once it became obvious the old mark was better.</p></article>
+          <p class="post-facts meta"><span>Projects</span><span>2 min read</span></p>
         </li>
         <li class="post-entry" data-post-category="projects" data-post-month="2026-06" data-lattice-target="38">
-          <p class="post-date meta"><time datetime="2026-06-20">20 Jun 2026</time><br>Projects<br>2 min read</p>
-          <article class="post-copy"><a href="./the-copy-goes-live-and-the-lab-page-turns-personal/index.html">My Lab Page Was Leaking Internal IPs So I Gutted It</a></article>
+          <p class="post-date meta"><time datetime="2026-06-20">20 Jun 2026</time></p>
+          <article class="post-copy"><h3><a href="./the-copy-goes-live-and-the-lab-page-turns-personal/index.html">My Lab Page Was Leaking Internal IPs So I Gutted It</a></h3><p class="post-summary">The revised portfolio went live, but the Lab page still exposed too much internal detail. I cut it back to a small launcher for services already behind the tunnel.</p></article>
+          <p class="post-facts meta"><span>Projects</span><span>2 min read</span></p>
         </li>
         <li class="post-entry" data-post-category="projects" data-post-month="2026-06" data-lattice-target="39">
-          <p class="post-date meta"><time datetime="2026-06-13">13 Jun 2026</time><br>Projects<br>2 min read</p>
-          <article class="post-copy"><a href="./sharper-words-smaller-cards-a-copy-pass-on-the-portfolio/index.html">My About Page Said Full-Stack Developer and Meant Nothing</a></article>
+          <p class="post-date meta"><time datetime="2026-06-13">13 Jun 2026</time></p>
+          <article class="post-copy"><h3><a href="./sharper-words-smaller-cards-a-copy-pass-on-the-portfolio/index.html">My About Page Said Full-Stack Developer and Meant Nothing</a></h3><p class="post-summary">My About page sounded like a job-description generator. I replaced the claims with things I could prove and rebuilt the project cards around native HTML.</p></article>
+          <p class="post-facts meta"><span>Projects</span><span>2 min read</span></p>
         </li>
         <li class="post-entry" data-post-category="projects" data-post-month="2026-06" data-lattice-target="40">
-          <p class="post-date meta"><time datetime="2026-06-12">12 Jun 2026</time><br>Projects<br>2 min read</p>
-          <article class="post-copy"><a href="./three-designs-a-domain-cutover-and-the-linux-iso-stack-comes-home/index.html">My Seedbox Hardlinks Over SSHFS and Portfolio V2 Finally Went Live</a></article>
+          <p class="post-date meta"><time datetime="2026-06-12">12 Jun 2026</time></p>
+          <article class="post-copy"><h3><a href="./three-designs-a-domain-cutover-and-the-linux-iso-stack-comes-home/index.html">My Seedbox Hardlinks Over SSHFS and Portfolio V2 Finally Went Live</a></h3><p class="post-summary">I moved the media managers home while leaving 22TB of storage on the seedbox, proved remote hardlinks by inode, and put Portfolio V2 live.</p></article>
+          <p class="post-facts meta"><span>Projects</span><span>2 min read</span></p>
         </li>
         <li class="post-entry" data-post-category="homelab" data-post-month="2026-06" data-lattice-target="41">
-          <p class="post-date meta"><time datetime="2026-06-11">11 Jun 2026</time><br>Homelab<br>2 min read</p>
-          <article class="post-copy"><a href="./storage-fixes-vault-cleanup-and-the-reboot-that-bit-back/index.html">I Moved a Folder, Rebooted, and Home Assistant Forgot Who It Was</a></article>
+          <p class="post-date meta"><time datetime="2026-06-11">11 Jun 2026</time></p>
+          <article class="post-copy"><h3><a href="./storage-fixes-vault-cleanup-and-the-reboot-that-bit-back/index.html">I Moved a Folder, Rebooted, and Home Assistant Forgot Who It Was</a></h3><p class="post-summary">A USB storage quirk cut SSD latency from 4,864ms to 37ms. Later, one moved bind-mount directory made Home Assistant boot with an empty identity.</p></article>
+          <p class="post-facts meta"><span>Homelab</span><span>2 min read</span></p>
         </li>
         <li class="post-entry" data-post-category="homelab" data-post-month="2026-06" data-lattice-target="42">
-          <p class="post-date meta"><time datetime="2026-06-10">10 Jun 2026</time><br>Homelab<br>2 min read</p>
-          <article class="post-copy"><a href="./network-fixes-tailscale-and-a-nic-upgrade/index.html">My Doorbell Was on the Wrong VLAN and My Printer Was on the Wrong Subnet</a></article>
+          <p class="post-date meta"><time datetime="2026-06-10">10 Jun 2026</time></p>
+          <article class="post-copy"><h3><a href="./network-fixes-tailscale-and-a-nic-upgrade/index.html">My Doorbell Was on the Wrong VLAN and My Printer Was on the Wrong Subnet</a></h3><p class="post-summary">A doorbell on the wrong VLAN and a printer on the wrong subnet led to a firewall repair. I also removed a duplicate Tailscale install and moved the host to 2.5GbE.</p></article>
+          <p class="post-facts meta"><span>Homelab</span><span>2 min read</span></p>
         </li>
         <li class="post-entry" data-post-category="projects" data-post-month="2026-06" data-lattice-target="43">
-          <p class="post-date meta"><time datetime="2026-06-09">09 Jun 2026</time><br>Projects<br>1 min read</p>
-          <article class="post-copy"><a href="./automating-the-blog-and-cleaning-up-the-portfolio/index.html">GitHub Actions Committed Before I Could Push</a></article>
+          <p class="post-date meta"><time datetime="2026-06-09">09 Jun 2026</time></p>
+          <article class="post-copy"><h3><a href="./automating-the-blog-and-cleaning-up-the-portfolio/index.html">GitHub Actions Committed Before I Could Push</a></h3><p class="post-summary">The first automated blog publish committed before my local push, so I had to fix the workflow race before cleaning up the site.</p></article>
+          <p class="post-facts meta"><span>Projects</span><span>1 min read</span></p>
         </li>
         <li class="post-entry" data-post-category="projects" data-post-month="2026-06" data-lattice-target="44">
-          <p class="post-date meta"><time datetime="2026-06-08">08 Jun 2026</time><br>Projects<br>2 min read</p>
-          <article class="post-copy"><a href="./building-momentum-homelab-services-website-launch/index.html">My Monitoring Stack Lies About WAN Uptime and My Site Builds From Obsidian</a></article>
+          <p class="post-date meta"><time datetime="2026-06-08">08 Jun 2026</time></p>
+          <article class="post-copy"><h3><a href="./building-momentum-homelab-services-website-launch/index.html">My Monitoring Stack Lies About WAN Uptime and My Site Builds From Obsidian</a></h3><p class="post-summary">I brought up the monitoring stack, then learned that one green WAN panel was measuring the wrong thing. The same day, my Obsidian notes became a static site.</p></article>
+          <p class="post-facts meta"><span>Projects</span><span>2 min read</span></p>
         </li>
         <li class="post-entry" data-post-category="homelab" data-post-month="2026-06" data-lattice-target="45">
-          <p class="post-date meta"><time datetime="2026-06-07">07 Jun 2026</time><br>Homelab<br>2 min read</p>
-          <article class="post-copy"><a href="./home-assistant-goes-public/index.html">The 502 Was Just a Typo in Trusted Proxies</a></article>
+          <p class="post-date meta"><time datetime="2026-06-07">07 Jun 2026</time></p>
+          <article class="post-copy"><h3><a href="./home-assistant-goes-public/index.html">The 502 Was Just a Typo in Trusted Proxies</a></h3><p class="post-summary">A Cloudflare Tunnel reached Home Assistant only after I fixed host-network DNS and a mistyped trusted proxy.</p></article>
+          <p class="post-facts meta"><span>Homelab</span><span>2 min read</span></p>
         </li>
+        <li class="empty-filter-notice" data-empty-notice hidden>No posts match this search. <button type="button" data-reset-filters>Clear filters</button></li>
       </ol>
     </section>
   </main>
