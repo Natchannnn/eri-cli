@@ -28,13 +28,13 @@
 
 /* ERI / CLI Pillar Motion Logo Component */
 .eri-cli-logo {
-  --logo-size: clamp(100px, 7.6vw, 132px);
+  --logo-size: clamp(110px, 8.4vw, 145px);
   position: relative;
   display: inline-block;
   width: var(--logo-size);
   height: var(--logo-size);
-  max-width: 132px;
-  max-height: 132px;
+  max-width: 145px;
+  max-height: 145px;
   flex-shrink: 0;
   vertical-align: middle;
   line-height: 0;
@@ -157,18 +157,18 @@
 @media (max-width: 820px) {
   .site-head {
     display: grid;
-    grid-template-columns: 88px minmax(0, 1fr);
+    grid-template-columns: 96px minmax(0, 1fr);
     gap: 18px;
   }
 
   .eri-cli-logo {
-    --logo-size: 88px;
-    max-width: 88px;
-    max-height: 88px;
+    --logo-size: 96px;
+    max-width: 96px;
+    max-height: 96px;
   }
 
   .brand img {
-    width: 82px;
+    width: 90px;
   }
 
   .site-nav {
