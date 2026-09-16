@@ -30,10 +30,13 @@ html.about-snap-html {
 
 .about-intro .page-title {
   grid-column: 1 / 3;
-  font-size: clamp(94px, 15vw, 244px);
-  line-height: .78;
-  letter-spacing: -.065em;
+  font-family: var(--kyoto);
+  font-size: clamp(82px, 11vw, 150px);
+  font-weight: 400;
+  line-height: .88;
+  letter-spacing: -.03em;
   margin: 0;
+  color: var(--signal);
 }
 
 .about-intro .about-lead {
@@ -91,9 +94,23 @@ html.about-snap-html {
   justify-content: center;
 }
 
+.about-roadmap-head {
+  align-items: end;
+  padding-bottom: 24px;
+}
+
+.about-col-meta {
+  padding-bottom: 8px;
+}
+
 .roadmap-title {
-  font-size: clamp(62px, 8.5vw, 140px);
-  line-height: .82;
+  font-family: var(--kyoto);
+  font-size: clamp(82px, 11vw, 150px);
+  font-weight: 400;
+  line-height: .88;
+  letter-spacing: -.03em;
+  margin: 0;
+  color: var(--signal);
 }
 
 .roadmap-note {
@@ -152,8 +169,12 @@ html.about-snap-html {
     display: block;
   }
 
-  .about-intro .page-title {
-    font-size: clamp(68px, 22vw, 92px);
+  .about-intro .page-title,
+  .roadmap-title {
+    margin: 0;
+    font-size: clamp(76px, 18vw, 110px);
+    line-height: .88;
+    letter-spacing: -.03em;
   }
 
   .about-intro .about-lead {

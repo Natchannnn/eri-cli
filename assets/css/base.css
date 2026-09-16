@@ -82,6 +82,11 @@ button {
   letter-spacing: -.065em;
 }
 
+.title-stop,
+.blog-title-stop {
+  color: var(--accent);
+}
+
 .page-note {
   margin: 0;
   max-width: 39ch;

@@ -7,7 +7,13 @@
 
 .projects-intro .page-title {
   grid-column: 1 / 3;
-  font-size: clamp(84px, 13.5vw, 218px);
+  font-family: var(--kyoto);
+  font-size: clamp(82px, 11vw, 150px);
+  font-weight: 400;
+  line-height: .88;
+  letter-spacing: -.03em;
+  margin: 0;
+  color: var(--signal);
 }
 
 .projects-intro .page-note {
@@ -133,7 +139,10 @@
   }
 
   .projects-intro .page-title {
-    font-size: clamp(64px, 21vw, 84px);
+    margin: 0;
+    font-size: clamp(76px, 18vw, 110px);
+    line-height: .88;
+    letter-spacing: -.03em;
     white-space: nowrap;
   }
 
