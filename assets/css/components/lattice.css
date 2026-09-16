@@ -47,15 +47,26 @@
   z-index: -1;
   top: clamp(130px, 18vw, 250px);
   left: calc(var(--edge) * -1);
-  width: 100vw;
+  width: calc(100% + var(--edge) * 2);
   height: clamp(460px, 53vw, 760px);
   opacity: .78;
+  overflow: hidden;
+  -webkit-mask-image:
+    linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.4) clamp(24px, 4vw, 64px), black clamp(64px, 10vw, 160px), black calc(100% - clamp(64px, 10vw, 160px)), rgba(0, 0, 0, 0.4) calc(100% - clamp(24px, 4vw, 64px)), transparent 100%),
+    linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+  mask-image:
+    linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.4) clamp(24px, 4vw, 64px), black clamp(64px, 10vw, 160px), black calc(100% - clamp(64px, 10vw, 160px)), rgba(0, 0, 0, 0.4) calc(100% - clamp(24px, 4vw, 64px)), transparent 100%),
+    linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
 }
 
 .project-lattice .lattice-svg {
-  width: max(1080px, 100vw);
-  max-width: none;
-  transform: translateX(calc((100vw - max(1080px, 100vw)) / 2));
+  width: 100%;
+  min-width: 1000px;
+  max-width: 1600px;
+  height: 100%;
+  margin: 0 auto;
 }
 
 /* About Lattice Tier */

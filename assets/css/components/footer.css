@@ -58,9 +58,9 @@
 /* ==========================================================================
    Footer Responsive Breakpoints
    ========================================================================== */
-@media (min-width: 1920px) {
+@media (min-width: 1536px) {
   .site-foot {
-    max-width: 1800px;
+    max-width: 1680px;
     margin-inline: auto;
   }
 }

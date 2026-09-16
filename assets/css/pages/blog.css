@@ -77,18 +77,28 @@
   z-index: -1;
   top: 0;
   bottom: 0;
-  left: 15.5%;
-  width: 19%;
-  min-width: 210px;
+  left: 10%;
+  width: 36%;
+  min-width: 320px;
   opacity: .84;
+  overflow: hidden;
+  -webkit-mask-image:
+    linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.35) 8%, black 24%, black 76%, rgba(0, 0, 0, 0.35) 92%, transparent 100%),
+    linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%);
+  mask-image:
+    linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.35) 8%, black 24%, black 76%, rgba(0, 0, 0, 0.35) 92%, transparent 100%),
+    linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
 }
 
 .blog-lattice .lattice-svg {
   position: sticky;
   top: 5vh;
+  left: 0;
   width: 760px;
   height: min(1100px, 90vh);
-  transform: translateX(-43%);
+  transform: translateX(-20%);
 }
 
 .post-list {
@@ -169,11 +179,44 @@
   padding-bottom: clamp(16px, 3vh, 32px);
 }
 
-.reader-head .page-title {
+.reader-head .reader-title-wrap {
   grid-column: 2 / 4;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(16px, 2.4vh, 26px);
+}
+
+.reader-head .page-title {
   max-width: 100%;
   font-size: clamp(46px, 5.8vw, 102px);
   line-height: .92;
+  margin: 0;
+}
+
+.reader-quicknav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--pitch);
+  font-size: 13px;
+  letter-spacing: .02em;
+}
+
+.reader-quicknav a {
+  color: var(--signal-48);
+  text-decoration: none;
+  transition: color 140ms ease;
+}
+
+.reader-quicknav a:hover {
+  color: var(--signal);
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+}
+
+.reader-quicknav .quicknav-empty {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .reader-lattice .lattice-svg {
@@ -389,12 +432,23 @@
     padding: 0;
   }
 
+  .reader-head .reader-title-wrap {
+    display: flex;
+    flex-direction: column;
+    margin-top: 24px;
+    gap: 16px;
+  }
+
   .reader-head .page-title {
     max-width: 100%;
-    margin-top: 24px;
+    margin-top: 0;
     font-size: clamp(38px, 10vw, 56px);
     line-height: 1.02;
     overflow-wrap: break-word;
+  }
+
+  .reader-quicknav {
+    font-size: 12px;
   }
 
   .reader-cut {

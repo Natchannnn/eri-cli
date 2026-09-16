@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="120 -12 760 760"
+     width="100%"
+     height="100%"
+     shape-rendering="geometricPrecision">
+  <defs>
+    <style>
+      .cube-edge {
+        fill: none;
+        stroke: #E5E7EB;
+        stroke-width: 16;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+    </style>
+  </defs>
+
+  <!-- Left Face (Empty, Dark Solid Shading) -->
+  <path d="M140 253.7 L487.5 440 L487.5 656 L140 469.7 Z" fill="#0A0C10"/>
+
+  <!-- Right Face (Empty, Light Solid Shading) -->
+  <path d="M487.5 440 L860 266.3 L860 482.3 L487.5 656 Z" fill="#13161F"/>
+
+  <!-- Top Face (Maze Monogram) -->
+  <path d="M512.5 80 L860 266.3 L487.5 440 L140 253.7 Z" fill="#08090C"/>
+  <g transform="matrix(.3475 .1863 -.3725 .1737 512.5 80)">
+    <g transform="scale(3.030303)">
+      <path fill="#E5E7EB"
+            fill-rule="evenodd"
+            clip-rule="evenodd"
+            d="M1 0H330V330H1Z
+M116 87 207 180 278 181V274H169L89 193H87V236L156 305H306V150L217 149 187 119 250 118V87Z
+M25 42V262L68 305 112 304 56 249V117H58L182 243H250V212H195Z
+M54 25 84 56H278V118H306V25Z"/>
+    </g>
+  </g>
+
+  <!-- Cube Wireframe Edges -->
+  <!-- Outer boundary silhouette -->
+  <path class="cube-edge" d="M512.5 80 L860 266.3 L860 482.3 L487.5 656 L140 469.7 L140 253.7 Z"/>
+  
+  <!-- Front vertical spine -->
+  <path class="cube-edge" d="M487.5 440 L487.5 656"/>
+
+  <!-- Top face front edges -->
+  <path class="cube-edge" d="M140 253.7 L487.5 440 L860 266.3"/>
+</svg>

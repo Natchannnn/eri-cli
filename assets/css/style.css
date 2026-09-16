@@ -222,17 +222,18 @@ button {
 }
 
 /* ==========================================================================
-   Ultrawide Display Optimization (21:9 & 32:9 displays >= 1920px)
+   Large & 2K Display Optimization (>= 1536px)
    ========================================================================== */
-@media (min-width: 1920px) {
+@media (min-width: 1536px) {
   .page-main,
+  .about-snap-page,
   .three-grid,
   .projects-intro,
   .about-story-grid,
   .roadmap-groups,
   .reader-head,
   .reader-body {
-    max-width: 1800px;
+    max-width: 1680px;
     margin-inline: auto;
   }
 }
@@ -295,6 +296,44 @@ button {
 
 .brand {
   display: block;
+}
+
+/* ERI / CLI Pillar Motion Logo Component */
+.eri-cli-logo {
+  --logo-size: clamp(100px, 7.6vw, 132px);
+  position: relative;
+  display: inline-block;
+  width: var(--logo-size);
+  height: var(--logo-size);
+  flex-shrink: 0;
+  vertical-align: middle;
+  line-height: 0;
+  text-decoration: none;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.eri-cli-logo > canvas,
+.eri-cli-logo > img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: none !important;
+  transition: none;
+}
+
+.eri-cli-logo.eri-cli-logo-ready > img {
+  visibility: hidden;
+}
+
+.eri-cli-logo:focus-visible {
+  outline: 1px solid #718bce;
+  outline-offset: 3px;
 }
 
 .brand img {
@@ -366,9 +405,11 @@ button {
 /* ==========================================================================
    Header Responsive Breakpoints
    ========================================================================== */
-@media (min-width: 1920px) {
-  .site-head {
-    max-width: 1800px;
+@media (min-width: 1536px) {
+  .site-head,
+  .site-head-fixed,
+  .site-header {
+    max-width: 1680px;
     margin-inline: auto;
     left: 0;
     right: 0;
@@ -378,8 +419,12 @@ button {
 @media (max-width: 820px) {
   .site-head {
     display: grid;
-    grid-template-columns: 82px minmax(0, 1fr);
+    grid-template-columns: 88px minmax(0, 1fr);
     gap: 18px;
+  }
+
+  .eri-cli-logo {
+    --logo-size: 88px;
   }
 
   .brand img {
@@ -474,9 +519,9 @@ button {
 /* ==========================================================================
    Footer Responsive Breakpoints
    ========================================================================== */
-@media (min-width: 1920px) {
+@media (min-width: 1536px) {
   .site-foot {
-    max-width: 1800px;
+    max-width: 1680px;
     margin-inline: auto;
   }
 }
@@ -549,15 +594,26 @@ button {
   z-index: -1;
   top: clamp(130px, 18vw, 250px);
   left: calc(var(--edge) * -1);
-  width: 100vw;
+  width: calc(100% + var(--edge) * 2);
   height: clamp(460px, 53vw, 760px);
   opacity: .78;
+  overflow: hidden;
+  -webkit-mask-image:
+    linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.4) clamp(24px, 4vw, 64px), black clamp(64px, 10vw, 160px), black calc(100% - clamp(64px, 10vw, 160px)), rgba(0, 0, 0, 0.4) calc(100% - clamp(24px, 4vw, 64px)), transparent 100%),
+    linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+  mask-image:
+    linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.4) clamp(24px, 4vw, 64px), black clamp(64px, 10vw, 160px), black calc(100% - clamp(64px, 10vw, 160px)), rgba(0, 0, 0, 0.4) calc(100% - clamp(24px, 4vw, 64px)), transparent 100%),
+    linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
 }
 
 .project-lattice .lattice-svg {
-  width: max(1080px, 100vw);
-  max-width: none;
-  transform: translateX(calc((100vw - max(1080px, 100vw)) / 2));
+  width: 100%;
+  min-width: 1000px;
+  max-width: 1600px;
+  height: 100%;
+  margin: 0 auto;
 }
 
 /* About Lattice Tier */
@@ -964,9 +1020,9 @@ html.curtain-running #terrain-stage {
 }
 
 /* Viewport adaptations */
-@media (min-width: 1920px) {
+@media (min-width: 1536px) {
   .page {
-    max-width: 1800px;
+    max-width: 1680px;
     margin-inline: auto;
   }
 }
@@ -1653,18 +1709,28 @@ html.about-snap-html {
   z-index: -1;
   top: 0;
   bottom: 0;
-  left: 15.5%;
-  width: 19%;
-  min-width: 210px;
+  left: 10%;
+  width: 36%;
+  min-width: 320px;
   opacity: .84;
+  overflow: hidden;
+  -webkit-mask-image:
+    linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.35) 8%, black 24%, black 76%, rgba(0, 0, 0, 0.35) 92%, transparent 100%),
+    linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%);
+  mask-image:
+    linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.35) 8%, black 24%, black 76%, rgba(0, 0, 0, 0.35) 92%, transparent 100%),
+    linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
 }
 
 .blog-lattice .lattice-svg {
   position: sticky;
   top: 5vh;
+  left: 0;
   width: 760px;
   height: min(1100px, 90vh);
-  transform: translateX(-43%);
+  transform: translateX(-20%);
 }
 
 .post-list {
@@ -1745,11 +1811,44 @@ html.about-snap-html {
   padding-bottom: clamp(16px, 3vh, 32px);
 }
 
-.reader-head .page-title {
+.reader-head .reader-title-wrap {
   grid-column: 2 / 4;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(16px, 2.4vh, 26px);
+}
+
+.reader-head .page-title {
   max-width: 100%;
   font-size: clamp(46px, 5.8vw, 102px);
   line-height: .92;
+  margin: 0;
+}
+
+.reader-quicknav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--pitch);
+  font-size: 13px;
+  letter-spacing: .02em;
+}
+
+.reader-quicknav a {
+  color: var(--signal-48);
+  text-decoration: none;
+  transition: color 140ms ease;
+}
+
+.reader-quicknav a:hover {
+  color: var(--signal);
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+}
+
+.reader-quicknav .quicknav-empty {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .reader-lattice .lattice-svg {
@@ -1965,12 +2064,23 @@ html.about-snap-html {
     padding: 0;
   }
 
+  .reader-head .reader-title-wrap {
+    display: flex;
+    flex-direction: column;
+    margin-top: 24px;
+    gap: 16px;
+  }
+
   .reader-head .page-title {
     max-width: 100%;
-    margin-top: 24px;
+    margin-top: 0;
     font-size: clamp(38px, 10vw, 56px);
     line-height: 1.02;
     overflow-wrap: break-word;
+  }
+
+  .reader-quicknav {
+    font-size: 12px;
   }
 
   .reader-cut {

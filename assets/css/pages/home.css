@@ -221,9 +221,9 @@ html.curtain-running #terrain-stage {
 }
 
 /* Viewport adaptations */
-@media (min-width: 1920px) {
+@media (min-width: 1536px) {
   .page {
-    max-width: 1800px;
+    max-width: 1680px;
     margin-inline: auto;
   }
 }

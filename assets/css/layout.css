@@ -14,17 +14,18 @@
 }
 
 /* ==========================================================================
-   Ultrawide Display Optimization (21:9 & 32:9 displays >= 1920px)
+   Large & 2K Display Optimization (>= 1536px)
    ========================================================================== */
-@media (min-width: 1920px) {
+@media (min-width: 1536px) {
   .page-main,
+  .about-snap-page,
   .three-grid,
   .projects-intro,
   .about-story-grid,
   .roadmap-groups,
   .reader-head,
   .reader-body {
-    max-width: 1800px;
+    max-width: 1680px;
     margin-inline: auto;
   }
 }
