@@ -77,7 +77,19 @@ for(const el of document.querySelectorAll('.eri-cli-logo')){
  el.addEventListener('keydown',e=>{if(e.key==='Escape')seek(0);});
  document.addEventListener('visibilitychange',()=>{if(document.hidden)seek(0);});
  reduce.addEventListener('change',()=>{if(reduce.matches)seek(0);});
- new ResizeObserver(()=>{const dpr=Math.min(devicePixelRatio,2);canvas.width=el.clientWidth*dpr;canvas.height=el.clientHeight*dpr;render(progress);}).observe(el);
- canvas.width=Math.max(1,el.clientWidth)*Math.min(devicePixelRatio,2);canvas.height=Math.max(1,el.clientHeight)*Math.min(devicePixelRatio,2);render(0);el.classList.add('eri-cli-logo-ready');
+ function updateSize(){
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  const rect=el.getBoundingClientRect();
+  const rawW=rect.width||el.clientWidth||132;
+  const rawH=rect.height||el.clientHeight||132;
+  const w=Math.min(Math.max(rawW,48),160);
+  const h=Math.min(Math.max(rawH,48),160);
+  canvas.width=Math.round(w*dpr);
+  canvas.height=Math.round(h*dpr);
+  render(progress);
+ }
+ new ResizeObserver(updateSize).observe(el);
+ updateSize();
+ el.classList.add('eri-cli-logo-ready');
 }
 })();

@@ -305,6 +305,8 @@ button {
   display: inline-block;
   width: var(--logo-size);
   height: var(--logo-size);
+  max-width: 132px;
+  max-height: 132px;
   flex-shrink: 0;
   vertical-align: middle;
   line-height: 0;
@@ -322,6 +324,8 @@ button {
   display: block;
   width: 100%;
   height: 100%;
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
   filter: none !important;
   transition: none;
@@ -377,6 +381,8 @@ button {
   top: 0;
   left: 0;
   width: 100%;
+  box-sizing: border-box;
+  max-height: 160px;
   padding: max(16px, env(safe-area-inset-top)) var(--page-x) 20px;
   display: flex;
   align-items: flex-start;
@@ -388,6 +394,10 @@ button {
 
 .site-header a {
   pointer-events: auto;
+}
+
+.site-header .site-nav {
+  flex-shrink: 0;
 }
 
 .site-header .logo {
@@ -425,6 +435,8 @@ button {
 
   .eri-cli-logo {
     --logo-size: 88px;
+    max-width: 88px;
+    max-height: 88px;
   }
 
   .brand img {

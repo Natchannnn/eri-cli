@@ -137,6 +137,7 @@ const jsFiles = [
   'assets/js/home.js',
   'assets/js/pages.js',
   'assets/js/terrain.js',
+  'assets/logo/logo-motion.js',
   'scripts/build-css.js',
   'scripts/build-blog.js',
   'scripts/blog-utils.js',
