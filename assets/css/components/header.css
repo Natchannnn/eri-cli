@@ -19,7 +19,8 @@
 }
 
 .site-head-fixed a,
-.site-head-fixed button {
+.site-head-fixed button,
+.site-head-fixed .site-nav {
   pointer-events: auto;
 }
 
@@ -115,6 +116,7 @@
   transition: color 140ms ease;
   display: inline-flex;
   align-items: center;
+  pointer-events: auto;
 }
 
 .theme-toggle:hover {
@@ -146,7 +148,8 @@
 }
 
 .site-header a,
-.site-header button {
+.site-header button,
+.site-header .site-nav {
   pointer-events: auto;
 }
 

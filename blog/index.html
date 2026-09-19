@@ -13,14 +13,47 @@
       try {
         const s = localStorage.getItem('eri-theme');
         const p = matchMedia('(prefers-color-scheme: light)').matches;
-        if (s === 'light' || (!s && p)) document.documentElement.dataset.theme = 'light';
+        if (s === 'light' || (!s && p)) {
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
       } catch (_) {}
+
+      function syncButtons() {
+        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+        document.querySelectorAll('[data-theme-toggle]').forEach((btn) => {
+          btn.textContent = isLight ? 'DARK' : 'LIGHT';
+          btn.setAttribute('aria-label', isLight ? 'Switch to dark theme' : 'Switch to light theme');
+        });
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', syncButtons);
+      } else {
+        syncButtons();
+      }
+
+      document.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-theme-toggle]');
+        if (!btn) return;
+        e.preventDefault();
+        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+        const next = isLight ? 'dark' : 'light';
+        if (next === 'light') {
+          document.documentElement.setAttribute('data-theme', 'light');
+        } else {
+          document.documentElement.removeAttribute('data-theme');
+        }
+        try {
+          localStorage.setItem('eri-theme', next);
+        } catch (_) {}
+        syncButtons();
+      });
     })();
   </script>
-  <link rel="stylesheet" href="../assets/css/style.css?v=1.2.2">
-  <link rel="stylesheet" href="../assets/logo/logo-motion.css">
-  <script defer src="../assets/js/pages.js"></script>
-  <script defer src="../assets/logo/logo-motion.js"></script>
+  <link rel="stylesheet" href="../assets/css/style.css?v=1.3.0">
+  <link rel="stylesheet" href="../assets/logo/logo-motion.css?v=1.3.0">
+  <script defer src="../assets/js/pages.js?v=1.3.0"></script>
+  <script defer src="../assets/logo/logo-motion.js?v=1.3.0"></script>
 </head>
 <body>
   <a class="skip-link" href="#content">Skip to the archive</a>

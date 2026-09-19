@@ -83,6 +83,7 @@
   --page-x: clamp(18px, 3vw, 58px);
 }
 
+:root[data-theme="light"],
 [data-theme="light"] {
   /* Semantic tokens — 1:1 Inverted Brand Palette */
   --ink: var(--color-white);
@@ -311,7 +312,8 @@ button {
 }
 
 .site-head-fixed a,
-.site-head-fixed button {
+.site-head-fixed button,
+.site-head-fixed .site-nav {
   pointer-events: auto;
 }
 
@@ -407,6 +409,7 @@ button {
   transition: color 140ms ease;
   display: inline-flex;
   align-items: center;
+  pointer-events: auto;
 }
 
 .theme-toggle:hover {
@@ -438,7 +441,8 @@ button {
 }
 
 .site-header a,
-.site-header button {
+.site-header button,
+.site-header .site-nav {
   pointer-events: auto;
 }
 

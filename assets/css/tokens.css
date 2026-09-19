@@ -80,6 +80,7 @@
   --page-x: clamp(18px, 3vw, 58px);
 }
 
+:root[data-theme="light"],
 [data-theme="light"] {
   /* Semantic tokens — 1:1 Inverted Brand Palette */
   --ink: var(--color-white);
