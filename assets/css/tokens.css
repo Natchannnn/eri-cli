@@ -79,3 +79,18 @@
   --head-space: clamp(132px, 15vh, 176px);
   --page-x: clamp(18px, 3vw, 58px);
 }
+
+[data-theme="light"] {
+  /* Semantic tokens — 1:1 Inverted Brand Palette */
+  --ink: var(--color-white);
+  --structure: #dfe2e6;
+  --signal: var(--color-black);
+
+  /* Calibrated contrast tokens (tuned for WCAG AAA against Titan White --ink) */
+  --signal-high: rgba(8, 9, 12, .85);
+  --signal-48: #4b5565;
+  --signal-24: rgba(75, 85, 101, .25);
+  --signal-12: rgba(75, 85, 101, .15);
+  --signal-10: rgba(75, 85, 101, .12);
+  --accent: var(--color-klein);
+}

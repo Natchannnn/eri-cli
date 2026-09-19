@@ -18,7 +18,8 @@
   pointer-events: none;
 }
 
-.site-head-fixed a {
+.site-head-fixed a,
+.site-head-fixed button {
   pointer-events: auto;
 }
 
@@ -102,6 +103,26 @@
   text-decoration-color: var(--accent);
 }
 
+.theme-toggle {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font-family: inherit;
+  font-size: inherit;
+  color: var(--signal-48);
+  cursor: pointer;
+  text-underline-offset: 4px;
+  transition: color 140ms ease;
+  display: inline-flex;
+  align-items: center;
+}
+
+.theme-toggle:hover {
+  color: var(--signal);
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+}
+
 /* Fixed Overlay Header (Homepage Variant) */
 .site-header {
   position: fixed;
@@ -120,7 +141,12 @@
   background: linear-gradient(to bottom, var(--ink) 0%, rgba(8, 9, 12, 0.88) 60%, transparent 100%);
 }
 
-.site-header a {
+[data-theme="light"] .site-header {
+  background: linear-gradient(to bottom, var(--ink) 0%, rgba(229, 231, 235, 0.88) 60%, transparent 100%);
+}
+
+.site-header a,
+.site-header button {
   pointer-events: auto;
 }
 

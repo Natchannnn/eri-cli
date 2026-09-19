@@ -10,6 +10,7 @@
   vertical-align: middle;
   line-height: 0;
   text-decoration: none;
+  color: var(--signal);
   background: transparent;
   border: 0;
   padding: 0;

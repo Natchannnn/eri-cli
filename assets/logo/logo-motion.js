@@ -66,7 +66,7 @@ for(const el of document.querySelectorAll('.eri-cli-logo')){
    ctx.beginPath();ctx.moveTo(...C);ctx.lineTo(...c);ctx.strokeStyle='#6d85bf';ctx.lineWidth=.65;ctx.stroke();
   }
   ctx.beginPath();l.contours.forEach(c=>{c.from.forEach((a,k)=>{const b=c.to[k],v=point((mix(a[0],b[0],s.m)-.5)*s.w,(mix(a[1],b[1],s.m)-.5)*s.h,s.z);k?ctx.lineTo(...v):ctx.moveTo(...v);});ctx.closePath();});
-  ctx.fillStyle='#e5e7eb';ctx.fill('evenodd');
+  ctx.fillStyle=document.documentElement.dataset.theme==='light'?'#08090c':'#e5e7eb';ctx.fill('evenodd');
  });
  el.dataset.running=String(running);el.dataset.progress=p.toFixed(4);
  }
@@ -77,6 +77,9 @@ for(const el of document.querySelectorAll('.eri-cli-logo')){
  el.addEventListener('keydown',e=>{if(e.key==='Escape')seek(0);});
  document.addEventListener('visibilitychange',()=>{if(document.hidden)seek(0);});
  reduce.addEventListener('change',()=>{if(reduce.matches)seek(0);});
+ if(typeof MutationObserver!=='undefined'){
+  new MutationObserver(()=>{if(!running)render(parseFloat(el.dataset.progress)||0);}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+ }
  function updateSize(){
   const screenDpr=window.devicePixelRatio||1;
   const scale=Math.min(Math.max(screenDpr*2,4),6);

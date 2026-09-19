@@ -3,11 +3,20 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="dark">
+  <meta name="color-scheme" content="dark light">
   <meta name="description" content="The redesign borrowed LaunchDarkly&#39;s page structure without borrowing its paint. Rebuilding the layout also exposed invalid nested links in two card systems.">
   <link rel="icon" href="../../assets/img/favicon.svg" type="image/svg+xml">
   <link rel="alternate icon" href="../../assets/img/favicon.png" type="image/png">
   <title>Inspired-By Means Rebuilt-In, Not Repainted-As — ERI / CLI</title>
+  <script>
+    (() => {
+      try {
+        const s = localStorage.getItem('eri-theme');
+        const p = matchMedia('(prefers-color-scheme: light)').matches;
+        if (s === 'light' || (!s && p)) document.documentElement.dataset.theme = 'light';
+      } catch (_) {}
+    })();
+  </script>
   <link rel="stylesheet" href="../../assets/css/style.css?v=1.2.2">
   <link rel="stylesheet" href="../../assets/logo/logo-motion.css">
   <script defer src="../../assets/js/pages.js"></script>
@@ -21,6 +30,7 @@
       <a href="../../projects.html">Projects</a>
       <a href="../../about.html">About</a>
       <a href="../../blog/index.html" aria-current="page">Blog</a>
+      <button type="button" class="theme-toggle" data-theme-toggle aria-label="Toggle color theme">LIGHT</button>
     </nav>
   </header>
 

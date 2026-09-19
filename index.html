@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="dark">
+  <meta name="color-scheme" content="dark light">
   <meta name="description" content="Eric Li runs a self-hosted homelab while building toward network engineering and site reliability.">
   <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
   <link rel="alternate icon" href="assets/img/favicon.png" type="image/png">
@@ -12,6 +12,11 @@
   <link rel="preload" href="./assets/js/terrain.js" as="script" media="(min-width: 821px)">
   <script>
     (() => {
+      try {
+        const s = localStorage.getItem('eri-theme');
+        const p = matchMedia('(prefers-color-scheme: light)').matches;
+        if (s === 'light' || (!s && p)) document.documentElement.dataset.theme = 'light';
+      } catch (_) {}
       const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
       const compact = matchMedia('(max-width: 820px)').matches;
       const navigation = performance.getEntriesByType?.('navigation')?.[0];
@@ -63,6 +68,7 @@
       <a href="projects.html">Projects</a>
       <a href="about.html">About</a>
       <a href="blog/index.html">Blog</a>
+      <button type="button" class="theme-toggle" data-theme-toggle aria-label="Toggle color theme">LIGHT</button>
     </nav>
   </header>
 

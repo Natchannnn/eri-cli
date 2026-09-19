@@ -83,6 +83,21 @@
   --page-x: clamp(18px, 3vw, 58px);
 }
 
+[data-theme="light"] {
+  /* Semantic tokens — 1:1 Inverted Brand Palette */
+  --ink: var(--color-white);
+  --structure: #dfe2e6;
+  --signal: var(--color-black);
+
+  /* Calibrated contrast tokens (tuned for WCAG AAA against Titan White --ink) */
+  --signal-high: rgba(8, 9, 12, .85);
+  --signal-48: #4b5565;
+  --signal-24: rgba(75, 85, 101, .25);
+  --signal-12: rgba(75, 85, 101, .15);
+  --signal-10: rgba(75, 85, 101, .12);
+  --accent: var(--color-klein);
+}
+
 /* --- base.css --- */
 /* Base */
 
@@ -295,7 +310,8 @@ button {
   pointer-events: none;
 }
 
-.site-head-fixed a {
+.site-head-fixed a,
+.site-head-fixed button {
   pointer-events: auto;
 }
 
@@ -379,6 +395,26 @@ button {
   text-decoration-color: var(--accent);
 }
 
+.theme-toggle {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font-family: inherit;
+  font-size: inherit;
+  color: var(--signal-48);
+  cursor: pointer;
+  text-underline-offset: 4px;
+  transition: color 140ms ease;
+  display: inline-flex;
+  align-items: center;
+}
+
+.theme-toggle:hover {
+  color: var(--signal);
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+}
+
 /* Fixed Overlay Header (Homepage Variant) */
 .site-header {
   position: fixed;
@@ -397,7 +433,12 @@ button {
   background: linear-gradient(to bottom, var(--ink) 0%, rgba(8, 9, 12, 0.88) 60%, transparent 100%);
 }
 
-.site-header a {
+[data-theme="light"] .site-header {
+  background: linear-gradient(to bottom, var(--ink) 0%, rgba(229, 231, 235, 0.88) 60%, transparent 100%);
+}
+
+.site-header a,
+.site-header button {
   pointer-events: auto;
 }
 
@@ -601,6 +642,22 @@ button {
 .pillar-cap {
   fill: rgba(0, 47, 167, calc(.04 + var(--height-strength) * .32));
   stroke: var(--signal);
+  stroke: color-mix(in srgb, var(--signal), var(--accent) calc(var(--height-strength) * 85%));
+  stroke-opacity: calc(.28 + var(--height-strength) * .72);
+}
+
+[data-theme="light"] .pillar-left {
+  fill: rgba(8, 9, 12, calc(.06 + var(--height-strength) * .20));
+  stroke-opacity: calc(.15 + var(--height-strength) * .56);
+}
+
+[data-theme="light"] .pillar-right {
+  fill: rgba(255, 255, 255, calc(.20 + var(--height-strength) * .35));
+  stroke-opacity: calc(.10 + var(--height-strength) * .43);
+}
+
+[data-theme="light"] .pillar-cap {
+  fill: rgba(0, 47, 167, calc(.08 + var(--height-strength) * .35));
   stroke: color-mix(in srgb, var(--signal), var(--accent) calc(var(--height-strength) * 85%));
   stroke-opacity: calc(.28 + var(--height-strength) * .72);
 }

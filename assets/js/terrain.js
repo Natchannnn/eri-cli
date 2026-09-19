@@ -10,11 +10,12 @@
   const curtainEligible = document.documentElement.classList.contains('curtain-pending');
   if (!window.THREE || !fallback || !stage || !canvas) return;
 
+  const isLight = document.documentElement.dataset.theme === 'light';
   const config = {
     palette: {
-      black: 0x08090c,
-      mass: 0x0a0b0e,
-      signal: 0xe5e7eb,
+      black: isLight ? 0xe5e7eb : 0x08090c,
+      mass: isLight ? 0xdfe2e6 : 0x0a0b0e,
+      signal: isLight ? 0x08090c : 0xe5e7eb,
       accent: 0x002fa7,
       slate: 0x4b5565
     },
@@ -1086,5 +1087,25 @@
       shocks.length = Math.min(shocks.length, 3);
     }
   };
+  function updateThemePalette() {
+    const light = document.documentElement.dataset.theme === 'light';
+    const mass = light ? 0xdfe2e6 : 0x0a0b0e;
+    const signal = light ? 0x08090c : 0xe5e7eb;
+    uniforms.uMassColor.value.setHex(mass);
+    uniforms.uSignalColor.value.setHex(signal);
+    if (typeof curtain !== 'undefined' && curtain && curtain.uniforms) {
+      if (curtain.uniforms.uCurtainMass) curtain.uniforms.uCurtainMass.value.setHex(mass);
+      if (curtain.uniforms.uCurtainSignal) curtain.uniforms.uCurtainSignal.value.setHex(signal);
+    }
+    scheduleFrame();
+  }
+
+  if (typeof MutationObserver !== 'undefined') {
+    new MutationObserver(updateThemePalette).observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme']
+    });
+  }
+
   scheduleFrame();
 })();

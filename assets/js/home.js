@@ -65,11 +65,12 @@
         ctx.lineTo(terrain[0][0], 0);
       }
       ctx.closePath();
-      ctx.fillStyle = '#0a0b0e';
+      const isLight = document.documentElement.dataset.theme === 'light';
+      ctx.fillStyle = isLight ? '#dfe2e6' : '#0a0b0e';
       ctx.fill();
       ctx.beginPath();
       terrain.forEach(([x, y], index) => index ? ctx.lineTo(x, y) : ctx.moveTo(x, y));
-      ctx.strokeStyle = '#E5E7EB';
+      ctx.strokeStyle = isLight ? '#08090C' : '#E5E7EB';
       ctx.lineWidth = 1.3;
       ctx.stroke();
       ctx.save();
@@ -235,4 +236,27 @@
       }
     }
   });
+
+  function initThemeToggle() {
+    const btn = document.querySelector('[data-theme-toggle]');
+    if (!btn) return;
+    const sync = () => {
+      const isLight = document.documentElement.dataset.theme === 'light';
+      btn.textContent = isLight ? 'DARK' : 'LIGHT';
+      btn.setAttribute('aria-label', isLight ? 'Switch to dark theme' : 'Switch to light theme');
+    };
+    sync();
+    btn.addEventListener('click', () => {
+      const isLight = document.documentElement.dataset.theme === 'light';
+      if (isLight) {
+        delete document.documentElement.dataset.theme;
+        try { localStorage.setItem('eri-theme', 'dark'); } catch (_) {}
+      } else {
+        document.documentElement.dataset.theme = 'light';
+        try { localStorage.setItem('eri-theme', 'light'); } catch (_) {}
+      }
+      sync();
+    });
+  }
+  initThemeToggle();
 })();
