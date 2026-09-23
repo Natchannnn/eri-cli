@@ -112,17 +112,42 @@
   font-size: inherit;
   color: var(--signal-48);
   cursor: pointer;
-  text-underline-offset: 4px;
-  transition: color 140ms ease;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   pointer-events: auto;
+  line-height: 1;
+  transition: color 140ms ease;
 }
 
 .theme-toggle:hover {
   color: var(--signal);
-  text-decoration: underline;
-  text-decoration-color: var(--accent);
+}
+
+.theme-toggle-svg {
+  display: block;
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  transition: transform 380ms cubic-bezier(0.16, 1, 0.3, 1), color 140ms ease;
+  transform: rotate(0deg);
+  transform-origin: center;
+}
+
+.theme-toggle:hover .theme-toggle-svg {
+  transform: rotate(180deg);
+}
+
+.theme-toggle:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-toggle-svg {
+    transition: color 140ms ease;
+    transform: none !important;
+  }
 }
 
 /* Fixed Overlay Header (Homepage Variant) */
